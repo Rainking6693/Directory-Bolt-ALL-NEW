@@ -1,19 +1,31 @@
 import { createClient } from '@supabase/supabase-js'
 
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-  throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL')
-}
+// Lazy initialization to avoid build-time errors
+let supabaseServerInstance: ReturnType<typeof createClient> | null = null
 
-if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY')
-}
+function getSupabaseServer() {
+  if (supabaseServerInstance) {
+    return supabaseServerInstance
+  }
 
-export const supabaseServer = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !serviceKey) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL) or SUPABASE_SERVICE_ROLE_KEY')
+  }
+
+  supabaseServerInstance = createClient(supabaseUrl, serviceKey, {
     auth: {
       persistSession: false
     }
+  })
+
+  return supabaseServerInstance
+}
+
+export const supabaseServer = new Proxy({} as ReturnType<typeof createClient>, {
+  get(_target, prop) {
+    return getSupabaseServer()[prop as keyof ReturnType<typeof createClient>]
   }
-)
+})
