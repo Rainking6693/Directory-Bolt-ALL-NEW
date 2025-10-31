@@ -701,7 +701,7 @@ export class BusinessIntelligenceService {
     return Array.from(reasons.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
-      .map(([reason]) => reason)
+      .map(([reason]: [string, number]) => reason)
   }
 
   private normalizeFailureReason(reason: string): string {

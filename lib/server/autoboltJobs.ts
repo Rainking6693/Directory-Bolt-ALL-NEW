@@ -489,8 +489,8 @@ export async function completeJob(options: {
     throw new Error(`Failed to fetch job results: ${resultsError.message}`)
   }
 
-  const completed = results?.filter((row) => row.status === 'submitted').length || 0
-  const failed = results?.filter((row) => row.status === 'failed').length || 0
+  const completed = results?.filter((row: any) => row.status === 'submitted').length || 0
+  const failed = results?.filter((row: any) => row.status === 'failed').length || 0
   const total = updatedJob.package_size || summary?.totalDirectories || 0
   const totalProcessingTime = summary?.processingTimeSeconds || 0
   const successRate = total > 0 ? Math.round((completed / total) * 100) : 0
@@ -544,7 +544,7 @@ export async function getQueueSnapshot(): Promise<JobProgressSnapshot> {
     throw new Error(`Failed to load jobs: ${jobsError.message}`)
   }
 
-  const jobIds = jobs?.map((job) => job.id) || []
+  const jobIds = jobs?.map((job: any) => job.id) || []
   let resultsByJob: Record<string, { completed: number; failed: number; total: number }> = {}
 
   // Aggregate counts from job_results for all jobs
@@ -571,7 +571,7 @@ export async function getQueueSnapshot(): Promise<JobProgressSnapshot> {
   }
 
   // Build lookup of customers for nicer display if job rows lack names/emails
-  const uniqueCustomerIds = Array.from(new Set((jobs || []).map((j) => j.customer_id).filter(Boolean)))
+  const uniqueCustomerIds = Array.from(new Set((jobs || []).map((j: any) => j.customer_id).filter(Boolean)))
   let customerById: Record<string, { business_name?: string | null; email?: string | null }> = {}
   if (uniqueCustomerIds.length > 0) {
     const customersResponse = await executeSupabaseQuery(fn, 'customers.select names for queue', async () =>
@@ -586,7 +586,7 @@ export async function getQueueSnapshot(): Promise<JobProgressSnapshot> {
     }
   }
 
-  const queueJobs = (jobs || []).map((job) => {
+  const queueJobs = (jobs || []).map((job: any) => {
     const stats = resultsByJob[job.id] || { completed: 0, failed: 0, total: 0 }
     const total = Math.max(job.package_size || 0, stats.total)
     const processed = stats.completed + stats.failed

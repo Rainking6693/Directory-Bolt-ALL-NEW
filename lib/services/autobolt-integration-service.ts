@@ -297,13 +297,13 @@ export class AutoBoltIntegrationService {
         return []
       }
 
-      const customers = (data || []).filter((customer) => {
+      const customers = (data || []).filter((customer: any) => {
         const total = customer.total_directories_allocated ?? 0
         const submitted = customer.directories_submitted ?? 0
         return submitted < total
       })
 
-      return customers.map(customer => ({
+      return customers.map((customer: any) => ({
         customer_id: customer.customer_id,
         business_name: customer.business_name,
         package_type: customer.package_type,

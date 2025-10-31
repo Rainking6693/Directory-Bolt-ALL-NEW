@@ -397,7 +397,7 @@ class QueueManager extends EventEmitter {
       case 'completed':
         const completedArray = Array.from(this.completedJobs.entries())
           .slice(-limit)
-          .map(([jobId, data]) => ({
+          .map(([jobId, data]: [string, any]) => ({
             id: jobId,
             ...data
           }));

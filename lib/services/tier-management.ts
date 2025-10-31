@@ -467,8 +467,8 @@ export class TierManagementService {
       improvements: {
         analysisLimit: target.monthlyAnalysisLimit === -1 ? 'Unlimited' : `${target.monthlyAnalysisLimit - current.monthlyAnalysisLimit} more analyses`,
         newFeatures: Object.entries(target.features)
-          .filter(([key, value]) => value && !current.features[key as keyof typeof current.features])
-          .map(([key]) => key)
+          .filter(([key, value]: [string, any]) => value && !current.features[key as keyof typeof current.features])
+          .map(([key]: [string, any]) => key)
       }
     }
   }

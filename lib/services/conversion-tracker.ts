@@ -701,7 +701,7 @@ export class ConversionTracker {
     }
     
     return Array.from(eventCounts.entries())
-      .map(([event, count]) => ({event, count}))
+      .map(([event, count]: [string, number]) => ({event, count}))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10)
   }

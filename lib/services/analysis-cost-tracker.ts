@@ -382,7 +382,7 @@ export class AnalysisCostTracker {
       enterprise: -1 // Unlimited
     }
 
-    return Object.entries(tierPricing).map(([tier, cost]) => {
+    return Object.entries(tierPricing).map(([tier, cost]: [string, number]) => {
       const tierLimit = tierLimits[tier as SubscriptionTier]
       const effectiveAnalyses = tierLimit === -1 ? monthlyAnalyses : Math.min(monthlyAnalyses, tierLimit)
       const monthlyValue = effectiveAnalyses * averageAnalysisValue
