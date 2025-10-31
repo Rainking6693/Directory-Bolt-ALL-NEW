@@ -30,15 +30,16 @@ function getSupabaseClient(): ReturnType<typeof createClient> {
 }
 
 // Direct access to supabase client with lazy initialization
-// This preserves all Supabase types while avoiding build-time initialization
-const supabase = new Proxy({} as ReturnType<typeof createClient>, {
+// We use 'any' here because the Proxy breaks Supabase's complex generic types
+// but we validate types at runtime and use explicit type assertions at call sites
+const supabase = new Proxy({} as any, {
   get(_target, prop) {
     const client = getSupabaseClient()
-    const value = client[prop as keyof typeof client]
+    const value = (client as any)[prop]
     // Return function bindings to preserve 'this' context
     return typeof value === 'function' ? value.bind(client) : value
   }
-})
+}) as ReturnType<typeof createClient>
 
 export interface AdminUser {
   id: string
@@ -97,7 +98,7 @@ export interface UserSession {
 export class AdminStaffDatabase {
   // Admin User Operations
   async getAdminByUsername(username: string): Promise<AdminUser | null> {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('admin_users')
       .select('*')
       .eq('username', username)
@@ -109,7 +110,7 @@ export class AdminStaffDatabase {
   }
 
   async getAdminByApiKey(apiKey: string): Promise<AdminUser | null> {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('admin_users')
       .select('*')
       .eq('api_key', apiKey)
@@ -121,7 +122,7 @@ export class AdminStaffDatabase {
   }
 
   async verifyAdminPassword(username: string, password: string): Promise<AdminUser | null> {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('admin_users')
       .select('id, username, email, first_name, last_name, role, permissions, api_key, is_active, last_login, created_at, updated_at, password_hash')
       .eq('username', username)
@@ -143,7 +144,7 @@ export class AdminStaffDatabase {
   }
 
   async updateAdminLastLogin(adminId: string): Promise<void> {
-    await supabase
+    await (supabase as any)
       .from('admin_users')
       .update({ last_login: new Date().toISOString() })
       .eq('id', adminId)
@@ -151,7 +152,7 @@ export class AdminStaffDatabase {
 
   // Staff User Operations
   async getStaffByUsername(username: string): Promise<StaffUser | null> {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('staff_users')
       .select('*')
       .eq('username', username)
@@ -163,7 +164,7 @@ export class AdminStaffDatabase {
   }
 
   async getStaffByApiKey(apiKey: string): Promise<StaffUser | null> {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('staff_users')
       .select('*')
       .eq('api_key', apiKey)
@@ -175,7 +176,7 @@ export class AdminStaffDatabase {
   }
 
   async verifyStaffPassword(username: string, password: string): Promise<StaffUser | null> {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('staff_users')
       .select('id, username, email, first_name, last_name, role, permissions, api_key, is_active, last_login, created_at, updated_at, password_hash')
       .eq('username', username)
@@ -197,7 +198,7 @@ export class AdminStaffDatabase {
   }
 
   async updateStaffLastLogin(staffId: string): Promise<void> {
-    await supabase
+    await (supabase as any)
       .from('staff_users')
       .update({ last_login: new Date().toISOString() })
       .eq('id', staffId)
@@ -214,7 +215,7 @@ export class AdminStaffDatabase {
     const refreshToken = this.generateToken()
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('user_sessions')
       .insert({
         user_id: userId,
@@ -234,7 +235,7 @@ export class AdminStaffDatabase {
   }
 
   async getSession(sessionToken: string): Promise<UserSession | null> {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('user_sessions')
       .select('*')
       .eq('session_token', sessionToken)
@@ -247,21 +248,21 @@ export class AdminStaffDatabase {
   }
 
   async updateSessionActivity(sessionId: string): Promise<void> {
-    await supabase
+    await (supabase as any)
       .from('user_sessions')
       .update({ last_activity: new Date().toISOString() })
       .eq('id', sessionId)
   }
 
   async invalidateSession(sessionToken: string): Promise<void> {
-    await supabase
+    await (supabase as any)
       .from('user_sessions')
       .update({ is_active: false })
       .eq('session_token', sessionToken)
   }
 
   async invalidateAllUserSessions(userId: string, userType: 'admin' | 'staff'): Promise<void> {
-    await supabase
+    await (supabase as any)
       .from('user_sessions')
       .update({ is_active: false })
       .eq('user_id', userId)
@@ -269,7 +270,7 @@ export class AdminStaffDatabase {
   }
 
   async cleanupExpiredSessions(): Promise<number> {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .rpc('cleanup_expired_sessions')
 
     if (error) return 0
