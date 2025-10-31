@@ -151,7 +151,7 @@ export class EnhancedErrorHandler {
     if (!tracking || !tracking.autoSaveEnabled) return
 
     try {
-      await this.supabase
+      await (this.supabase as any)
         .from('form_auto_saves')
         .upsert({
           form_id: formId,
@@ -181,7 +181,7 @@ export class EnhancedErrorHandler {
     formData: Record<string, any>
   ): Promise<void> {
     try {
-      await this.supabase
+      await (this.supabase as any)
         .from('form_states')
         .upsert({
           form_id: formId,
@@ -201,7 +201,7 @@ export class EnhancedErrorHandler {
    */
   async recoverFormData(formId: string, userId: string): Promise<Record<string, any> | null> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await (this.supabase as any)
         .from('form_auto_saves')
         .select('form_data, saved_at')
         .eq('form_id', formId)

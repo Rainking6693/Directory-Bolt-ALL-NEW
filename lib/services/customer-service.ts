@@ -54,7 +54,7 @@ export async function findByCustomerId(customerId: string): Promise<CustomerProf
     throw new Error('customerId is required')
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('customers')
     .select('*')
     .eq('customer_id', customerId)
@@ -72,7 +72,7 @@ export async function findPendingCustomerBySessionOrEmail(
   sessionId: string | null,
   email: string
 ): Promise<CustomerProfile | null> {
-  let query = supabase
+  let query = (supabase as any)
     .from('customers')
     .select('*')
     .eq('status', 'pending')
@@ -118,7 +118,7 @@ export async function createOrUpdateCustomer(profile: Partial<CustomerProfile>):
     metadata: profile.metadata ?? null
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('customers')
     .upsert(payload, { onConflict: 'customer_id' })
     .select('*')
@@ -145,7 +145,7 @@ export async function updateDirectoryStats(
     failed_directories: failed
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('customers')
     .update(update)
     .eq('customer_id', customerId)
@@ -186,7 +186,7 @@ export async function updateSubmissionStatus(
     update.failed_directories = failedDirectories
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('customers')
     .update(update)
     .eq('customer_id', customerId)

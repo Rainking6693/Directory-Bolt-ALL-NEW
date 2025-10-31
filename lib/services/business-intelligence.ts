@@ -244,7 +244,7 @@ export class BusinessIntelligenceService {
    */
   async getIndustryBenchmarks(): Promise<IndustryBenchmark[]> {
     try {
-      const { data: submissions, error } = await this.supabase
+      const { data: submissions, error } = await (this.supabase as any)
         .from('submissions')
         .select(`
           status,
@@ -374,7 +374,7 @@ export class BusinessIntelligenceService {
     try {
       const testId = `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       
-      const { error } = await this.supabase
+      const { error } = await (this.supabase as any)
         .from('ab_tests')
         .insert({
           test_id: testId,
@@ -405,7 +405,7 @@ export class BusinessIntelligenceService {
    */
   async startABTest(testId: string): Promise<void> {
     try {
-      const { error } = await this.supabase
+      const { error } = await (this.supabase as any)
         .from('ab_tests')
         .update({ 
           status: 'running',
@@ -429,7 +429,7 @@ export class BusinessIntelligenceService {
     variantId: string
   ): Promise<void> {
     try {
-      await this.supabase
+      await (this.supabase as any)
         .from('ab_test_participants')
         .upsert({
           test_id: testId,
@@ -453,7 +453,7 @@ export class BusinessIntelligenceService {
     conversionValue?: number
   ): Promise<void> {
     try {
-      await this.supabase
+      await (this.supabase as any)
         .from('ab_test_conversions')
         .insert({
           test_id: testId,
@@ -472,7 +472,7 @@ export class BusinessIntelligenceService {
   async analyzeABTestResults(testId: string): Promise<ABTestResults> {
     try {
       // Get test configuration
-      const { data: test, error: testError } = await this.supabase
+      const { data: test, error: testError } = await (this.supabase as any)
         .from('ab_tests')
         .select('*')
         .eq('test_id', testId)

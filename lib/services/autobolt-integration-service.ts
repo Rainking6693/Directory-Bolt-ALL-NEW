@@ -56,7 +56,7 @@ export class AutoBoltIntegrationService {
    */
   static async getCustomerData(customerId: string): Promise<CustomerData | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('customers')
         .select(`
           customer_id,
@@ -108,7 +108,7 @@ export class AutoBoltIntegrationService {
    */
   static async getPendingSubmissions(customerId: string): Promise<DirectorySubmission[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('directory_submissions')
         .select('*')
         .eq('customer_id', customerId)
@@ -148,7 +148,7 @@ export class AutoBoltIntegrationService {
         updateData.approved_at = new Date().toISOString()
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('directory_submissions')
         .update(updateData)
         .eq('id', submissionId)
@@ -199,7 +199,7 @@ export class AutoBoltIntegrationService {
         updated_at: new Date().toISOString()
       }))
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('directory_submissions')
         .insert(submissions)
 
@@ -225,7 +225,7 @@ export class AutoBoltIntegrationService {
     directoriesFailed: number
   ): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('customers')
         .update({
           directories_submitted: directoriesCompleted,
@@ -240,7 +240,7 @@ export class AutoBoltIntegrationService {
       }
 
       // Update queue history
-      await supabase
+      await (supabase as any)
         .from('queue_history')
         .insert([{
           id: crypto.randomUUID(),
@@ -277,7 +277,7 @@ export class AutoBoltIntegrationService {
     created_at: string
   }>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('customers')
         .select(`
           customer_id,
@@ -329,7 +329,7 @@ export class AutoBoltIntegrationService {
     actionText?: string
   ): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('customer_notifications')
         .insert([{
           id: crypto.randomUUID(),
@@ -365,7 +365,7 @@ export class AutoBoltIntegrationService {
     eventData: Record<string, any> = {}
   ): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('analytics_events')
         .insert([{
           id: crypto.randomUUID(),

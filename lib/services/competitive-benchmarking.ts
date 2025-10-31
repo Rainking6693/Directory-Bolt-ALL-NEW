@@ -435,7 +435,7 @@ export class CompetitiveBenchmarkingService {
 
   async getBenchmarkHistory(website: string, limit: number = 10): Promise<CompetitiveBenchmarkResult[]> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await (this.supabase as any)
         .from('competitive_benchmarks')
         .select('analysis_data')
         .eq('target_website', website)
