@@ -89,3 +89,7 @@ screenshots/
 *.pem
 *.key
 secrets/
+
+
+#Ignore cursor AI rules
+.cursor\rules\codacy.mdc

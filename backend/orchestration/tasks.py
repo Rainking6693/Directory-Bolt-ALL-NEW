@@ -1,7 +1,8 @@
 """Prefect tasks for directory submissions."""
 import os
+import time
+from typing import Dict, List, Any, Optional
 from prefect import task, get_run_logger
-from typing import Dict, List
 from db.dao import (
     upsert_job_result,
     set_job_status,
@@ -14,33 +15,63 @@ from brain.client import get_plan
 from workers.submission_runner import run_plan
 from utils.ids import make_idempotency_key
 from utils.retry import exponential_backoff_with_jitter
-import time
+from utils.logging import setup_logger
+
+logger = setup_logger(__name__)
 
 # AI services (optional - only if enabled)
-ENABLE_AI_FEATURES = os.getenv('ENABLE_AI_FEATURES', 'true').lower() == 'true'
-ENABLE_CONTENT_CUSTOMIZATION = os.getenv('ENABLE_CONTENT_CUSTOMIZATION', 'true').lower() == 'true'
+enable_ai_features = os.getenv('ENABLE_AI_FEATURES', 'true').lower() == 'true'
+enable_content_customization = os.getenv('ENABLE_CONTENT_CUSTOMIZATION', 'true').lower() == 'true'
 
-if ENABLE_AI_FEATURES:
+# Initialize AI services at module level
+description_customizer: Optional[Any] = None
+ai_enabled = False
+
+if enable_ai_features:
     try:
         from ai.description_customizer import DescriptionCustomizer
-        description_customizer = DescriptionCustomizer() if ENABLE_CONTENT_CUSTOMIZATION else None
+        description_customizer = DescriptionCustomizer() if enable_content_customization else None
         ai_enabled = True
+        logger.info("AI services initialized successfully")
+    except ImportError as e:
+        logger.warning(f"AI services not available (import error): {e}")
+        description_customizer = None
+        ai_enabled = False
     except Exception as e:
-        print(f"Warning: AI services not available: {e}")
+        logger.warning(f"AI services initialization failed: {e}")
         description_customizer = None
         ai_enabled = False
 else:
-    description_customizer = None
-    ai_enabled = False
+    logger.info("AI features disabled via environment variable")
 
 
 @task(name="mark_in_progress")
-def mark_in_progress(job_id: str):
-    """Mark job as in_progress."""
+def mark_in_progress(job_id: str) -> None:
+    """
+    Mark job as in_progress.
+    
+    Args:
+        job_id: UUID of the job (must be non-empty string)
+    
+    Raises:
+        ValueError: If job_id is invalid
+    """
+    # Input validation
+    if not job_id or not isinstance(job_id, str) or len(job_id.strip()) == 0:
+        raise ValueError("job_id must be a non-empty string")
+    
     logger = get_run_logger()
     logger.info(f"Marking job {job_id} as in_progress")
-    set_job_status(job_id, "in_progress")
-    record_history(job_id, None, "job_started", {})
+    
+    try:
+        set_job_status(job_id, "in_progress")
+        record_history(job_id, None, "job_started", {})
+    except ValueError as e:
+        logger.error(f"Invalid job_id in mark_in_progress: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Failed to mark job as in_progress: {e}")
+        raise
 
 
 @task(name="list_directories")
@@ -64,120 +95,206 @@ def list_directories_for_job(job_id: str) -> List[str]:
     timeout_seconds=480,
     log_prints=True
 )
-async def submit_directory(job_id: str, directory: str, priority: str = "starter") -> Dict:
+async def submit_directory(job_id: str, directory: str, priority: str = "starter") -> Dict[str, Any]:
     """
     Submit business to a single directory with idempotency and retries.
     
     Args:
-        job_id: UUID of the job
-        directory: Directory name/domain
-        priority: Package priority for rate limiting
+        job_id: UUID of the job (must be non-empty string)
+        directory: Directory name/domain (must be non-empty string)
+        priority: Package priority for rate limiting (starter, pro, enterprise)
     
     Returns:
-        Dict with status and details
+        Dict with status, directory, and duration_ms
+    
+    Raises:
+        ValueError: If inputs are invalid
+        RuntimeError: If critical operations fail
     """
+    # Input validation
+    if not job_id or not isinstance(job_id, str) or len(job_id.strip()) == 0:
+        raise ValueError("job_id must be a non-empty string")
+    if not directory or not isinstance(directory, str) or len(directory.strip()) == 0:
+        raise ValueError("directory must be a non-empty string")
+    
+    valid_priorities = ["starter", "pro", "enterprise"]
+    if priority not in valid_priorities:
+        logger = get_run_logger()
+        logger.warning(f"Invalid priority '{priority}', defaulting to 'starter'")
+        priority = "starter"
+    
     logger = get_run_logger()
-    logger.info(f"Processing {directory} for job {job_id}")
+    logger.info(f"Processing {directory} for job {job_id}", extra={"priority": priority})
+    
+    business: Optional[Dict[str, Any]] = None
     
     try:
         # Get business profile
-        business = get_business_profile(job_id)
+        try:
+            business = get_business_profile(job_id)
+        except ValueError as e:
+            logger.error(f"Invalid job_id when fetching business profile: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Failed to fetch business profile: {e}")
+            raise RuntimeError(f"Failed to fetch business profile: {e}")
         
-        if not business or not business.get("business_name"):
+        if not business or not isinstance(business, dict) or not business.get("business_name"):
             logger.error(f"No business profile found for job {job_id}")
-            record_history(job_id, directory, "error_no_profile", {})
-            return {"status": "failed", "reason": "no_business_profile"}
+            try:
+                record_history(job_id, directory, "error_no_profile", {})
+            except Exception as e:
+                logger.warning(f"Failed to record error_no_profile history: {e}")
+            return {"status": "failed", "reason": "no_business_profile", "directory": directory}
         
         # AI: Customize description for this directory (if enabled)
         if ai_enabled and description_customizer:
             try:
                 directory_info = get_directory_info(directory)
-                if directory_info and business.get("business_description"):
+                original_description = business.get("business_description") or business.get("description") or ""
+                
+                if directory_info and original_description:
+                    # Validate customization request
+                    if not isinstance(directory_info, dict):
+                        raise ValueError("Invalid directory_info format")
+                    
                     customization_request = {
                         'directory_id': directory_info.get('id', directory),
                         'business_data': business,
-                        'original_description': business.get("business_description")
+                        'original_description': original_description
                     }
                     
+                    # Properly await async method
                     customization_result = await description_customizer.customize_description(customization_request)
                     
-                    if customization_result and customization_result.get('primary_customization'):
+                    if customization_result and isinstance(customization_result, dict) and customization_result.get('primary_customization'):
                         customized = customization_result['primary_customization']
-                        business['business_description'] = customized.get('description', business.get("business_description"))
-                        
-                        logger.info(f"AI: Customized description for {directory} (confidence: {customized.get('confidence', 0)*100:.1f}%)")
-                        record_history(job_id, directory, "ai_content_customized", {
-                            'original_length': len(customization_request['original_description']),
-                            'customized_length': len(business['business_description']),
-                            'confidence': customized.get('confidence', 0)
-                        })
+                        if isinstance(customized, dict) and 'description' in customized:
+                            business['business_description'] = customized.get('description', original_description)
+                            
+                            confidence = customized.get('confidence', 0)
+                            logger.info(f"AI: Customized description for {directory} (confidence: {confidence*100:.1f}%)")
+                            try:
+                                record_history(job_id, directory, "ai_content_customized", {
+                                    'original_length': len(original_description),
+                                    'customized_length': len(business['business_description']),
+                                    'confidence': confidence
+                                })
+                            except Exception as e:
+                                logger.warning(f"Failed to record AI customization history: {e}")
+            except ValueError as e:
+                logger.warning(f"Invalid input for AI customization: {e}")
+                # Continue with original description
             except Exception as e:
-                logger.warning(f"AI description customization failed for {directory}: {e}")
+                logger.warning(f"AI description customization failed for {directory}: {e}", extra={"error_type": type(e).__name__})
                 # Continue with original description
         
         # Get submission plan from CrewAI brain
         logger.info(f"Getting plan from CrewAI for {directory}")
-        plan = get_plan(directory, business)
+        try:
+            plan = get_plan(directory, business)
+            if not plan or not isinstance(plan, dict):
+                raise ValueError("Invalid plan response format")
+        except ValueError as e:
+            logger.error(f"Invalid plan response: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Failed to get plan: {e}")
+            raise RuntimeError(f"Failed to get submission plan: {e}")
         
         # Generate idempotency key
-        idem_factors = plan.get("idempotency_factors", {
-            "name": business.get("business_name"),
-            "dir": directory
-        })
+        idem_factors = plan.get("idempotency_factors", {})
+        if not idem_factors:
+            idem_factors = {
+                "name": business.get("business_name", ""),
+                "dir": directory
+            }
         idem = make_idempotency_key(job_id, directory, idem_factors)
         
         # Pre-write to prevent duplicates on retry
         logger.info(f"Checking idempotency for {directory}")
-        dup_status = upsert_job_result(
-            job_id=job_id,
-            directory=directory,
-            status="submitting",
-            idem=idem,
-            payload={"business": business, "plan": plan}
-        )
+        try:
+            dup_status = upsert_job_result(
+                job_id=job_id,
+                directory=directory,
+                status="submitting",
+                idem=idem,
+                payload={"business": business, "plan": plan}
+            )
+        except Exception as e:
+            logger.error(f"Failed to check idempotency: {e}")
+            raise RuntimeError(f"Failed to check idempotency: {e}")
         
         if dup_status == "duplicate_success":
             logger.info(f"Skipping {directory} - already successfully submitted")
-            record_history(job_id, directory, "skipped_duplicate", {"idem": idem})
+            try:
+                record_history(job_id, directory, "skipped_duplicate", {"idem": idem})
+            except Exception as e:
+                logger.warning(f"Failed to record skipped_duplicate history: {e}")
             return {"status": "skipped", "directory": directory}
         
         # Record submission attempt
-        record_history(job_id, directory, "submitting", {"idem": idem})
+        try:
+            record_history(job_id, directory, "submitting", {"idem": idem})
+        except Exception as e:
+            logger.warning(f"Failed to record submitting history: {e}")
         
         # Apply rate limiting based on priority
-        rate_limit_ms = plan.get("constraints", {}).get("rateLimitMs", 1500)
+        constraints = plan.get("constraints", {})
+        rate_limit_ms = constraints.get("rateLimitMs", 1500)
+        if not isinstance(rate_limit_ms, (int, float)) or rate_limit_ms < 0:
+            rate_limit_ms = 1500
+        
         if priority == "enterprise":
             rate_limit_ms = max(rate_limit_ms * 0.5, 500)  # Faster for enterprise
         elif priority == "starter":
             rate_limit_ms = rate_limit_ms * 1.5  # Slower for starter
         
-        time.sleep(rate_limit_ms / 1000.0)
+        # Use asyncio.sleep instead of time.sleep in async function
+        import asyncio
+        await asyncio.sleep(rate_limit_ms / 1000.0)
         
         # Execute submission with Playwright
         logger.info(f"Executing submission to {directory}")
-        result = run_plan(job_id, directory, plan, business)
+        try:
+            result = run_plan(job_id, directory, plan, business)
+            if not result or not isinstance(result, dict):
+                raise ValueError("Invalid result format from run_plan")
+        except ValueError as e:
+            logger.error(f"Invalid result from run_plan: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Failed to execute submission: {e}")
+            raise RuntimeError(f"Failed to execute submission: {e}")
         
         # Update result in database
-        upsert_job_result(
-            job_id=job_id,
-            directory=directory,
-            status=result["status"],
-            idem=idem,
-            response_log=result.get("response_log", {}),
-            error_message=result.get("error_message")
-        )
+        try:
+            upsert_job_result(
+                job_id=job_id,
+                directory=directory,
+                status=result.get("status", "unknown"),
+                idem=idem,
+                response_log=result.get("response_log", {}),
+                error_message=result.get("error_message")
+            )
+        except Exception as e:
+            logger.error(f"Failed to update job result: {e}")
+            # Continue execution - don't fail the task if DB update fails
         
         # Record outcome
-        record_history(job_id, directory, result["status"], {
-            "idem": idem,
-            "duration_ms": result.get("duration_ms"),
-            "screenshot_url": result.get("screenshot_url")
-        })
+        try:
+            record_history(job_id, directory, result.get("status", "unknown"), {
+                "idem": idem,
+                "duration_ms": result.get("duration_ms"),
+                "screenshot_url": result.get("screenshot_url")
+            })
+        except Exception as e:
+            logger.warning(f"Failed to record outcome history: {e}")
         
-        logger.info(f"Completed {directory} with status: {result['status']}")
+        logger.info(f"Completed {directory} with status: {result.get('status', 'unknown')}")
         
         # AI: Analyze failure and recommend retry if submission failed
-        if result['status'] == 'failed' and ai_enabled:
+        if result.get('status') == 'failed' and ai_enabled:
             try:
                 from ai.retry_analyzer import IntelligentRetryAnalyzer
                 retry_analyzer = IntelligentRetryAnalyzer()
@@ -185,10 +302,10 @@ async def submit_directory(job_id: str, directory: str, priority: str = "starter
                 directory_info = get_directory_info(directory)
                 failure_data = {
                     'submission_id': f"{job_id}_{directory}",
-                    'directory_id': directory_info.get('id', directory) if directory_info else directory,
-                    'business_name': business.get('business_name', ''),
-                    'business_category': business.get('business_category', ''),
-                    'business_description': business.get('business_description', ''),
+                    'directory_id': directory_info.get('id', directory) if directory_info and isinstance(directory_info, dict) else directory,
+                    'business_name': business.get('business_name', '') if business else '',
+                    'business_category': business.get('business_category', '') if business else '',
+                    'business_description': business.get('business_description', '') if business else '',
                     'rejection_reason': result.get('error_message', 'Submission failed'),
                     'error_message': result.get('error_message', ''),
                     'status': 'failed',
@@ -196,28 +313,56 @@ async def submit_directory(job_id: str, directory: str, priority: str = "starter
                     'submitted_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
                 }
                 
+                # Properly await async method
                 retry_analysis = await retry_analyzer.analyze_failure_and_recommend_retry(failure_data)
                 
-                if retry_analysis.get('retry_recommendation'):
-                    logger.info(f"AI: Retry recommended for {directory} (probability: {retry_analysis.get('retry_probability', {}).get('probability', 0)*100:.1f}%)")
-                    record_history(job_id, directory, "ai_retry_recommended", {
-                        'retry_probability': retry_analysis.get('retry_probability', {}).get('probability', 0),
-                        'retry_date': retry_analysis.get('optimal_timing', {}).get('retry_date'),
-                        'failure_category': retry_analysis.get('failure_analysis', {}).get('category')
-                    })
+                if retry_analysis and isinstance(retry_analysis, dict) and retry_analysis.get('retry_recommendation'):
+                    retry_probability = retry_analysis.get('retry_probability', {})
+                    probability = retry_probability.get('probability', 0) if isinstance(retry_probability, dict) else 0
+                    
+                    logger.info(f"AI: Retry recommended for {directory} (probability: {probability*100:.1f}%)")
+                    try:
+                        record_history(job_id, directory, "ai_retry_recommended", {
+                            'retry_probability': probability,
+                            'retry_date': retry_analysis.get('optimal_timing', {}).get('retry_date') if isinstance(retry_analysis.get('optimal_timing'), dict) else None,
+                            'failure_category': retry_analysis.get('failure_analysis', {}).get('category') if isinstance(retry_analysis.get('failure_analysis'), dict) else None
+                        })
+                    except Exception as e:
+                        logger.warning(f"Failed to record AI retry recommendation: {e}")
                     # TODO: Schedule retry based on optimal_timing
+            except ImportError as e:
+                logger.warning(f"AI retry analyzer not available: {e}")
+            except ValueError as e:
+                logger.warning(f"Invalid input for AI retry analysis: {e}")
             except Exception as e:
-                logger.warning(f"AI retry analysis failed for {directory}: {e}")
+                logger.warning(f"AI retry analysis failed for {directory}: {e}", extra={"error_type": type(e).__name__})
         
         return {
-            "status": result["status"],
+            "status": result.get("status", "unknown"),
             "directory": directory,
             "duration_ms": result.get("duration_ms")
         }
         
+    except ValueError as e:
+        logger.error(f"Invalid input error submitting to {directory}: {e}")
+        try:
+            record_history(job_id, directory, "error", {"error": str(e), "error_type": "ValueError"})
+        except Exception:
+            pass
+        raise
+    except RuntimeError as e:
+        logger.error(f"Runtime error submitting to {directory}: {e}")
+        try:
+            record_history(job_id, directory, "error", {"error": str(e), "error_type": "RuntimeError"})
+        except Exception:
+            pass
+        raise
     except Exception as e:
-        logger.error(f"Error submitting to {directory}: {str(e)}")
-        record_history(job_id, directory, "error", {"error": str(e)})
+        logger.error(f"Error submitting to {directory}: {e}", extra={"error_type": type(e).__name__})
+        try:
+            record_history(job_id, directory, "error", {"error": str(e), "error_type": type(e).__name__})
+        except Exception:
+            pass
         
         # AI: Analyze error for retry recommendation
         if ai_enabled:
@@ -228,18 +373,19 @@ async def submit_directory(job_id: str, directory: str, priority: str = "starter
                 directory_info = get_directory_info(directory) if directory else None
                 failure_data = {
                     'submission_id': f"{job_id}_{directory}",
-                    'directory_id': directory_info.get('id', directory) if directory_info else directory,
-                    'business_name': business.get('business_name', '') if business else '',
+                    'directory_id': directory_info.get('id', directory) if directory_info and isinstance(directory_info, dict) else directory,
+                    'business_name': business.get('business_name', '') if business and isinstance(business, dict) else '',
                     'rejection_reason': str(e),
                     'error_message': str(e),
                     'status': 'error',
                     'attempt_number': 1
                 }
                 
+                # Properly await async method
                 retry_analysis = await retry_analyzer.analyze_failure_and_recommend_retry(failure_data)
-                logger.info(f"AI: Error analysis for {directory} - Retry: {retry_analysis.get('retry_recommendation', False)}")
-            except:
-                pass  # Don't fail on AI analysis error
+                logger.info(f"AI: Error analysis for {directory} - Retry: {retry_analysis.get('retry_recommendation', False) if isinstance(retry_analysis, dict) else False}")
+            except Exception as e:
+                logger.debug(f"AI retry analysis error (non-critical): {e}")
         
         # Update as failed
         try:
@@ -250,35 +396,48 @@ async def submit_directory(job_id: str, directory: str, priority: str = "starter
                 idem=make_idempotency_key(job_id, directory, {"error": True}),
                 error_message=str(e)
             )
-        except:
-            pass  # Don't fail if we can't update
+        except Exception as e:
+            logger.warning(f"Failed to update job result on error: {e}")
         
         # Re-raise for Prefect retry logic
         raise
 
 
 @task(name="finalize_job")
-def finalize_job(job_id: str, results: List[Dict]):
+def finalize_job(job_id: str, results: List[Dict[str, Any]]) -> None:
     """
     Finalize job based on task results.
     
     Args:
-        job_id: UUID of the job
+        job_id: UUID of the job (must be non-empty string)
         results: List of result dicts from submit_directory tasks
+    
+    Raises:
+        ValueError: If job_id is invalid
     """
+    # Input validation
+    if not job_id or not isinstance(job_id, str) or len(job_id.strip()) == 0:
+        raise ValueError("job_id must be a non-empty string")
+    
+    if not isinstance(results, list):
+        raise ValueError("results must be a list")
+    
     logger = get_run_logger()
     
     if not results:
         logger.warning(f"No results for job {job_id}, marking as failed")
-        set_job_status(job_id, "failed", "No directories processed")
-        record_history(job_id, None, "job_failed", {"reason": "no_results"})
+        try:
+            set_job_status(job_id, "failed", "No directories processed")
+            record_history(job_id, None, "job_failed", {"reason": "no_results"})
+        except Exception as e:
+            logger.error(f"Failed to finalize job with no results: {e}")
         return
     
     # Calculate stats
     total = len(results)
-    submitted = sum(1 for r in results if r.get("status") == "submitted")
-    failed = sum(1 for r in results if r.get("status") == "failed")
-    skipped = sum(1 for r in results if r.get("status") == "skipped")
+    submitted = sum(1 for r in results if isinstance(r, dict) and r.get("status") == "submitted")
+    failed = sum(1 for r in results if isinstance(r, dict) and r.get("status") == "failed")
+    skipped = sum(1 for r in results if isinstance(r, dict) and r.get("status") == "skipped")
     
     # Determine final status
     if failed == total:
@@ -293,11 +452,18 @@ def finalize_job(job_id: str, results: List[Dict]):
     
     logger.info(f"Finalizing job {job_id}: {final_status} ({submitted} submitted, {failed} failed, {skipped} skipped)")
     
-    set_job_status(job_id, final_status, error_msg)
-    record_history(job_id, None, "job_finalized", {
-        "final_status": final_status,
-        "total": total,
-        "submitted": submitted,
-        "failed": failed,
-        "skipped": skipped
-    })
+    try:
+        set_job_status(job_id, final_status, error_msg)
+        record_history(job_id, None, "job_finalized", {
+            "final_status": final_status,
+            "total": total,
+            "submitted": submitted,
+            "failed": failed,
+            "skipped": skipped
+        })
+    except ValueError as e:
+        logger.error(f"Invalid job_id in finalize_job: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Failed to finalize job: {e}")
+        raise RuntimeError(f"Failed to finalize job: {e}")

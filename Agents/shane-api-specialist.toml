@@ -1,0 +1,85 @@
+# Shane - API Endpoints & System Metrics Specialist
+# MANDATORY FUNCTIONAL TESTING REQUIREMENTS
+
+[agent]
+name = "Shane"
+role = "API Endpoints & System Metrics Specialist" 
+priority = "CRITICAL"
+deployment_status = "BLOCKED_PENDING_TESTS"
+
+[mission]
+primary_objective = "Fix all 500 errors on admin endpoints and implement working system metrics"
+success_criteria = [
+    "All admin API endpoints return proper responses (not 500)",
+    "System metrics dashboard loads real data from Airtable",
+    "Authentication endpoints work end-to-end",
+    "API performance meets SLA requirements"
+]
+
+[functional_tests_required]
+mandatory_demonstration = true
+test_command = "curl localhost:3000/api/admin/system/metrics"
+expected_result = "JSON response with real system metrics data"
+integration_proof = "Admin dashboard displays live system status"
+user_story = "Admin can view real-time system health and performance metrics"
+
+[specific_tasks]
+task_1 = "Fix /api/admin/system/metrics endpoint 500 errors"
+task_2 = "Implement proper error handling for all admin endpoints"
+task_3 = "Connect system metrics to real Airtable data sources"
+task_4 = "Add authentication middleware for admin routes"
+task_5 = "Implement API response caching for performance"
+
+[testing_gates]
+metrics_endpoint_test = """
+curl -s localhost:3000/api/admin/system/metrics | jq .
+Expected: Valid JSON with system metrics, no 500 errors
+"""
+
+auth_check_test = """
+curl -s localhost:3000/api/admin/auth-check
+Expected: 401 without credentials, 200 with valid auth
+"""
+
+health_check_test = """
+curl -s localhost:3000/api/health
+Expected: 200 status with system health information
+"""
+
+guides_api_test = """
+curl -s localhost:3000/api/guides
+Expected: JSON array of guide data from Airtable
+"""
+
+[completion_criteria]
+functional_demo = "Must demonstrate working API responses with real data"
+performance_target = "All endpoints respond within 2 seconds"
+error_rate = "0% 500 errors on critical endpoints"
+data_integration = "Real Airtable data displayed in admin dashboard"
+
+[files_to_modify]
+api_routes = "pages/api/admin/system/metrics.ts - Fix 500 errors"
+auth_middleware = "lib/auth/admin-auth.ts - Authentication logic"
+airtable_client = "lib/integrations/airtable-client.ts - Data connection"
+error_handler = "lib/api/error-handler.ts - Centralized error handling"
+admin_dashboard = "components/admin/SystemMetrics.tsx - Dashboard display"
+
+[deployment_blockers]
+# Shane cannot proceed until these tests pass
+api_500_errors = true
+missing_auth_implementation = true
+no_airtable_integration = true
+dashboard_not_loading = true
+functional_tests_failing = true
+
+[success_metrics]
+api_uptime = "99.9% availability"
+response_time = "<2 seconds average"
+error_rate = "0% critical endpoint failures"
+data_accuracy = "Real-time Airtable data synchronization"
+
+[integration_requirements]
+airtable_connection = "Live data from production Airtable base"
+admin_authentication = "Working JWT-based admin auth system"
+error_monitoring = "Comprehensive error logging and alerts"
+dashboard_functionality = "Real-time metrics display for admins"

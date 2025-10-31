@@ -1,0 +1,35 @@
+[agent]
+name = "DirectDebugger"
+role = "Core System Analyst"
+mission = "PHASE 1: Core system analysis - manifest.json and configuration audit"
+priority = "CRITICAL"
+status = "ACTIVE"
+assigned_phase = "1"
+
+[capabilities]
+manifest_analysis = "expert"
+configuration_validation = "expert"
+file_structure_analysis = "expert"
+dependency_mapping = "expert"
+system_architecture = "expert"
+
+[current_task]
+phase = "PHASE 1: CORE SYSTEM ANALYSIS"
+checklist_items = [
+  "1.1 Analyze manifest.json for configuration errors",
+  "1.2 Validate all file paths and references", 
+  "1.3 Check permissions and host_permissions",
+  "1.4 Verify content_scripts configuration",
+  "1.5 Validate background service worker setup",
+  "1.6 Check web_accessible_resources",
+  "1.7 Verify externally_connectable settings"
+]
+deadline = "24 hours"
+reporting_required = true
+
+[tools_authorized]
+file_analysis = true
+configuration_validation = true
+dependency_mapping = true
+system_analysis = true
+documentation = true

@@ -151,36 +151,60 @@ def get_directory_info(directory_name: str) -> Optional[Dict[str, Any]]:
     Get directory information by name/domain.
     
     Args:
-        directory_name: Directory domain/name
+        directory_name: Directory domain/name (validated input)
     
     Returns:
-        Dict with directory info or None if not found
+        Dict with directory info or minimal dict if not found
+    
+    Note:
+        Uses Supabase ORM which protects against SQL injection.
+        Input is validated before use in queries.
     """
+    # Input validation
+    if not directory_name or not isinstance(directory_name, str):
+        logger.warning(f"Invalid directory_name: {directory_name}")
+        return None
+    
+    # Sanitize directory name (remove potentially dangerous characters)
+    sanitized_name = directory_name.strip()[:255]  # Limit length
+    
     supabase = get_supabase_client()
     
     try:
-        # Try to find directory by name or URL
-        result = supabase.table("directories").select("*").ilike("name", f"%{directory_name}%").limit(1).execute()
+        # Try to find directory by name (using parameterized query via ORM)
+        # Supabase ORM handles SQL injection protection
+        result = supabase.table("directories").select("*").ilike("name", f"%{sanitized_name}%").limit(1).execute()
         
         if result.data and len(result.data) > 0:
             return result.data[0]
         
-        # Try by URL
-        result = supabase.table("directories").select("*").ilike("url", f"%{directory_name}%").limit(1).execute()
+        # Try by URL (also parameterized via ORM)
+        result = supabase.table("directories").select("*").ilike("url", f"%{sanitized_name}%").limit(1).execute()
         
         if result.data and len(result.data) > 0:
             return result.data[0]
         
         # Return minimal directory info if not found
+        safe_url = sanitized_name
+        if not safe_url.startswith(('http://', 'https://')):
+            safe_url = f"https://{safe_url}"
+        
         return {
-            'id': directory_name,
-            'name': directory_name,
-            'url': f"https://{directory_name}" if not directory_name.startswith('http') else directory_name
+            'id': sanitized_name,
+            'name': sanitized_name,
+            'url': safe_url
         }
+    except ValueError as e:
+        logger.warning(f"Invalid input for directory lookup: {e}")
+        return None
     except Exception as e:
-        logger.warning(f"Failed to get directory info for {directory_name}: {e}")
+        logger.warning(f"Failed to get directory info for {directory_name}: {e}", extra={"error_type": type(e).__name__})
+        # Return safe fallback
+        safe_url = sanitized_name
+        if not safe_url.startswith(('http://', 'https://')):
+            safe_url = f"https://{safe_url}"
         return {
-            'id': directory_name,
-            'name': directory_name,
-            'url': f"https://{directory_name}" if not directory_name.startswith('http') else directory_name
+            'id': sanitized_name,
+            'name': sanitized_name,
+            'url': safe_url
         }

@@ -1,0 +1,35 @@
+[agent]
+name = "QualityAssurance"
+role = "Testing and Validation Auditor"
+mission = "PHASE 7: Testing and validation audit - unit tests, integration, performance"
+priority = "CRITICAL"
+status = "ACTIVE"
+assigned_phase = "7"
+
+[capabilities]
+testing_protocols = "expert"
+performance_analysis = "expert"
+integration_testing = "expert"
+edge_case_analysis = "expert"
+quality_metrics = "expert"
+
+[current_task]
+phase = "PHASE 7: TESTING AND VALIDATION"
+checklist_items = [
+  "7.1 Unit test coverage analysis",
+  "7.2 Integration test scenarios",
+  "7.3 Error scenario testing",
+  "7.4 Performance benchmarking",
+  "7.5 Memory usage profiling",
+  "7.6 Load testing with multiple tabs",
+  "7.7 Edge case validation"
+]
+deadline = "24 hours"
+reporting_required = true
+
+[tools_authorized]
+testing_frameworks = true
+performance_monitoring = true
+load_testing = true
+memory_profiling = true
+documentation = true

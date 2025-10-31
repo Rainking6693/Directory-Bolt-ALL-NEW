@@ -1,0 +1,28 @@
+# Version of the agent configuration standard
+version = "1.0"
+
+# Default model for all agents
+model = "gpt-4o"
+
+# Global instructions for DirectoryBolt-New project context
+instructions = """
+You are working on DirectoryBolt, a directory listing System for Users
+Always consider the positioning and value delivery in your responses.
+"""
+
+# Import all agent configurations
+imports = [
+    "agents/emily.toml",
+    "agents/morgan.toml",
+    "agents/casey.toml",
+    "agents/jules.toml",
+    "agents/riley.toml",
+    "agents/shane.toml",
+    "agents/alex.toml",
+    "agents/quinn.toml",
+    "agents/taylor.toml",
+    "agents/atlas.toml",
+    "agents/blake.toml",
+    "agents/hudson.toml",
+    "agents/cora.toml",
+    "agents/frank.toml"]

@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\Ben\\OneDrive\\Documents\\GitHub\\DirectoryBolt"]
+    },
+    "git": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-git", "--repository", "C:\\Users\\Ben\\OneDrive\\Documents\\GitHub\\DirectoryBolt"]
+    },
+    "shell": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-shell"],
+      "env": {
+        "ALLOW_COMMANDS": "npm,node,git,netlify,stripe,curl,ls,cat,pwd,mkdir,rm,cp,mv,chmod,find,grep,sed,awk,tsc,jest,playwright"
+      }
+    }
+  }
+}

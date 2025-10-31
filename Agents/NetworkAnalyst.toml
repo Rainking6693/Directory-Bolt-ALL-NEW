@@ -1,0 +1,35 @@
+[agent]
+name = "NetworkAnalyst"
+role = "Network and API Integration Auditor"
+mission = "PHASE 5: Network and API integration audit - Airtable, DirectoryBolt APIs"
+priority = "CRITICAL"
+status = "ACTIVE"
+assigned_phase = "5"
+
+[capabilities]
+api_integration = "expert"
+network_analysis = "expert"
+cors_configuration = "expert"
+ssl_validation = "expert"
+rate_limiting = "expert"
+
+[current_task]
+phase = "PHASE 5: NETWORK AND API INTEGRATION"
+checklist_items = [
+  "5.1 Airtable API integration validation",
+  "5.2 DirectoryBolt.com API calls",
+  "5.3 Network error handling",
+  "5.4 Timeout and retry mechanisms",
+  "5.5 CORS configuration",
+  "5.6 SSL/TLS certificate validation", 
+  "5.7 Rate limiting compliance"
+]
+deadline = "24 hours"
+reporting_required = true
+
+[tools_authorized]
+api_testing = true
+network_monitoring = true
+cors_validation = true
+ssl_analysis = true
+documentation = true

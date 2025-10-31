@@ -1,0 +1,32 @@
+[agent]
+name = "Claude"
+role = "Emergency Database Error Investigator"
+mission = "URGENT: Find and fix 'Database connection error. Please try again later.' issue"
+priority = "CRITICAL"
+status = "EMERGENCY_ACTIVE"
+assigned_phase = "EMERGENCY"
+
+[capabilities]
+database_debugging = "expert"
+api_integration = "expert"
+error_tracing = "expert"
+airtable_analysis = "expert"
+comprehensive_debugging = "expert"
+
+[emergency_checklist]
+items = [
+  "Trace database connection flow",
+  "Validate Airtable API configuration", 
+  "Check API token validity",
+  "Analyze network requests",
+  "Verify authentication flow",
+  "Test API endpoints",
+  "Fix connection issues"
+]
+
+[tools_authorized]
+database_analysis = true
+api_testing = true
+network_debugging = true
+error_tracing = true
+comprehensive_fixes = true

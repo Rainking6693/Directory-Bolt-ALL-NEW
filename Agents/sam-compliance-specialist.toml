@@ -1,0 +1,94 @@
+# Sam - Compliance & Cookie Consent Specialist
+# MANDATORY FUNCTIONAL TESTING REQUIREMENTS
+
+[agent]
+name = "Sam"
+role = "Compliance & Cookie Consent Specialist"
+priority = "HIGH" 
+deployment_status = "BLOCKED_PENDING_TESTS"
+
+[mission]
+primary_objective = "Implement GDPR compliance and functional cookie consent system"
+success_criteria = [
+    "Cookie consent banner displays on homepage and is functional",
+    "GDPR deletion endpoint properly handles requests", 
+    "Privacy policy accessible and comprehensive",
+    "User consent choices are properly stored and respected"
+]
+
+[functional_tests_required]
+mandatory_demonstration = true
+test_command = "curl localhost:3000 | grep -i cookie"
+expected_result = "Cookie consent elements visible in homepage HTML"
+integration_proof = "User can accept/reject cookies and choice persists"
+user_story = "Visitor sees cookie banner, can make choice, and it's remembered"
+
+[specific_tasks]
+task_1 = "Create functional cookie consent banner component"
+task_2 = "Implement GDPR data deletion endpoint"
+task_3 = "Create comprehensive privacy policy page"
+task_4 = "Add cookie preference management system"
+task_5 = "Implement consent logging for compliance"
+
+[testing_gates]
+cookie_consent_test = """
+curl -s localhost:3000 | grep -E "(cookie|consent|accept|decline)"
+Expected: Cookie consent banner HTML present in homepage
+"""
+
+gdpr_deletion_test = """
+curl -X POST localhost:3000/api/gdpr/deletion-request -d '{"email":"test@example.com"}'
+Expected: 200/202 status, deletion request processed
+"""
+
+privacy_policy_test = """
+curl -s localhost:3000/privacy
+Expected: 200 status, comprehensive privacy policy content
+"""
+
+consent_storage_test = """
+Test cookie acceptance/rejection and verify persistence across sessions
+Expected: User preferences remembered and respected
+"""
+
+[completion_criteria]
+functional_demo = "Must demonstrate working cookie consent flow"
+legal_compliance = "GDPR Article 7 compliant consent mechanism"
+user_experience = "Non-intrusive but compliant consent process"
+data_handling = "Proper consent logging and user data management"
+
+[files_to_modify]
+consent_banner = "components/compliance/CookieConsent.tsx - Main banner"
+gdpr_api = "pages/api/gdpr/deletion-request.ts - Deletion endpoint"
+privacy_page = "pages/privacy.tsx - Privacy policy page"
+consent_manager = "lib/compliance/consent-manager.ts - Consent logic"
+layout_component = "components/Layout.tsx - Add consent banner"
+
+[deployment_blockers]
+# Sam cannot proceed until these tests pass
+no_cookie_consent = true
+missing_gdpr_endpoint = true
+privacy_policy_404 = true
+consent_not_functional = true
+functional_tests_failing = true
+
+[success_metrics]
+consent_display_rate = "100% of new visitors see banner"
+consent_completion_rate = ">90% of users make a choice"
+gdpr_compliance_score = "100% compliant with regulations"
+user_experience_score = "Minimal disruption to user journey"
+
+[compliance_requirements]
+gdpr_article_7 = "Freely given, specific, informed consent"
+ccpa_compliance = "California Consumer Privacy Act requirements"
+cookie_law = "EU ePrivacy Directive compliance"
+data_retention = "Proper consent record keeping (3 years minimum)"
+
+[legal_documentation]
+privacy_policy_sections = [
+    "Data collection and usage",
+    "Cookie policies and types",
+    "User rights and deletion",
+    "Data sharing and third parties",
+    "Contact information for requests"
+]

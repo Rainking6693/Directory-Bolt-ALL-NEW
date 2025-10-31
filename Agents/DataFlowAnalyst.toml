@@ -1,0 +1,24 @@
+[agent]
+name = "DataFlowAnalyst"
+role = "Data Flow and State Management Auditor"
+mission = "PHASE 6: Data flow and state management audit - customer data, storage, messaging"
+priority = "CRITICAL"
+status = "ACTIVE"
+assigned_phase = "6"
+
+[capabilities]
+data_flow_mapping = "expert"
+state_management = "expert"
+message_passing = "expert"
+storage_analysis = "expert"
+cache_management = "expert"
+
+deadline = "24 hours"
+reporting_required = true
+
+[tools_authorized]
+data_analysis = true
+state_monitoring = true
+message_tracing = true
+storage_audit = true
+documentation = true

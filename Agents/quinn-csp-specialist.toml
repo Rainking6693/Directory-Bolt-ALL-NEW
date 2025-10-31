@@ -1,0 +1,72 @@
+# Quinn - CSP Headers & Security Specialist
+# MANDATORY FUNCTIONAL TESTING REQUIREMENTS
+
+[agent]
+name = "Quinn"
+role = "CSP Headers & Security Specialist"
+priority = "CRITICAL"
+deployment_status = "BLOCKED_PENDING_TESTS"
+
+[mission]
+primary_objective = "Implement Content-Security-Policy headers and fix XSS vulnerabilities"
+success_criteria = [
+    "CSP headers properly configured in Next.js",
+    "XSS injection attempts blocked by CSP",
+    "Security headers compliance at 100%",
+    "All security tests pass functional validation"
+]
+
+[functional_tests_required]
+mandatory_demonstration = true
+test_command = "curl -I localhost:3000 | grep -i content-security-policy"
+expected_result = "Content-Security-Policy header present with proper directives"
+integration_proof = "XSS test injection fails due to CSP protection"
+user_story = "Malicious scripts cannot execute on any DirectoryBolt page"
+
+[specific_tasks]
+task_1 = "Add CSP middleware to Next.js configuration"
+task_2 = "Configure CSP directives for script-src, style-src, img-src"
+task_3 = "Implement nonce-based script loading for inline scripts"
+task_4 = "Add CSP reporting endpoint for policy violations"
+task_5 = "Test CSP implementation with real XSS attempts"
+
+[testing_gates]
+security_header_test = """
+curl -I localhost:3000 | grep -E "(Content-Security-Policy|X-Frame-Options|X-Content-Type-Options)"
+Expected: All security headers present
+"""
+
+xss_protection_test = """
+curl -X POST localhost:3000 -d "input=<script>alert('xss')</script>"
+Expected: Script blocked by CSP, no execution
+"""
+
+csp_violation_test = """
+Attempt to load external script without CSP permission
+Expected: CSP violation reported, script blocked
+"""
+
+[completion_criteria]
+functional_demo = "Must demonstrate working CSP protection"
+performance_impact = "Page load time increase <100ms"
+compatibility = "Works across all major browsers"
+documentation = "CSP configuration documented for team"
+
+[files_to_modify]
+next_config = "next.config.js - Add security headers"
+middleware = "middleware.ts - Implement CSP middleware"
+security_utils = "lib/security/csp-config.ts - CSP configuration"
+test_file = "scripts/test-csp-protection.js - Validation tests"
+
+[deployment_blockers]
+# Quinn cannot proceed until these tests pass
+security_headers_missing = true
+csp_implementation_missing = true
+xss_vulnerability_exists = true
+functional_tests_failing = true
+
+[success_metrics]
+csp_coverage = "100% of pages protected"
+xss_prevention = "0 successful XSS attempts"
+performance_impact = "<5% page load increase"
+security_score = "A+ rating on security scanners"

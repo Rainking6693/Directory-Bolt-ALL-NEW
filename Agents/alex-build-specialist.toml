@@ -1,0 +1,99 @@
+# Alex - Build System & Dependency Specialist
+# MANDATORY FUNCTIONAL TESTING REQUIREMENTS
+
+[agent]
+name = "Alex"
+role = "Build System & Dependency Specialist"
+priority = "CRITICAL"
+deployment_status = "BLOCKED_PENDING_TESTS"
+
+[mission]
+primary_objective = "Fix dependency corruption and build system errors"
+success_criteria = [
+    "npm run build completes successfully without errors",
+    "Production build serves working application",
+    "All dependencies properly resolved and compatible",
+    "Build process optimized for performance"
+]
+
+[functional_tests_required]
+mandatory_demonstration = true
+test_command = "npm run build"
+expected_result = "Build completes successfully with 'Compiled successfully' or similar"
+integration_proof = "Production build serves functional application"
+user_story = "Developer can build and deploy DirectoryBolt without errors"
+
+[specific_tasks]
+task_1 = "Resolve package.json dependency conflicts"
+task_2 = "Fix TypeScript compilation errors"
+task_3 = "Update Next.js configuration for optimal builds"
+task_4 = "Resolve node_modules corruption issues"
+task_5 = "Optimize build performance and bundle size"
+
+[testing_gates]
+build_success_test = """
+npm run build
+Expected: Exit code 0, "Compiled successfully" message, .next directory created
+"""
+
+type_check_test = """
+npm run type-check
+Expected: No TypeScript errors, clean compilation
+"""
+
+dependency_audit_test = """
+npm audit --audit-level=high
+Expected: No high/critical vulnerabilities
+"""
+
+production_serve_test = """
+npm run build && npm start
+Expected: Production server starts and serves content
+"""
+
+[completion_criteria]
+functional_demo = "Must demonstrate successful build and deployment"
+build_time = "<5 minutes for full build"
+bundle_size = "Optimized bundle sizes within targets"
+zero_errors = "No build errors or TypeScript issues"
+
+[files_to_modify]
+package_json = "package.json - Resolve dependency conflicts"
+next_config = "next.config.js - Optimize build configuration"
+tsconfig = "tsconfig.json - Fix TypeScript configuration"
+build_scripts = "scripts/build-optimization.js - Build improvements"
+workflow = ".github/workflows/build.yml - CI/CD optimization"
+
+[deployment_blockers]
+# Alex cannot proceed until these tests pass
+build_errors = true
+dependency_conflicts = true
+typescript_errors = true
+node_modules_corruption = true
+functional_tests_failing = true
+
+[success_metrics]
+build_success_rate = "100% successful builds"
+build_time = "<3 minutes average"
+bundle_size_reduction = "20% smaller than current"
+zero_vulnerabilities = "No high/critical security issues"
+
+[dependency_fixes]
+conflicting_packages = [
+    "typescript version conflicts",
+    "react version mismatches", 
+    "undici security issues",
+    "stripe type definitions"
+]
+
+[build_optimizations]
+webpack_optimizations = "Code splitting and tree shaking"
+next_js_features = "Image optimization and static generation"
+bundle_analysis = "Bundle size monitoring and optimization"
+caching_strategy = "Build cache optimization for faster rebuilds"
+
+[testing_requirements]
+unit_tests = "All existing tests pass after build fixes"
+integration_tests = "Build integrates with deployment pipeline"
+performance_tests = "Build performance meets targets"
+security_tests = "No vulnerabilities introduced by changes"

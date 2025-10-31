@@ -1,0 +1,35 @@
+[agent]
+name = "Blake"
+role = "Security and Permissions Auditor"
+mission = "PHASE 4: Security and permissions audit - API keys, CSP, vulnerabilities"
+priority = "CRITICAL"
+status = "ACTIVE"
+assigned_phase = "4"
+
+[capabilities]
+security_analysis = "expert"
+vulnerability_assessment = "expert"
+permissions_audit = "expert"
+api_security = "expert"
+penetration_testing = "expert"
+
+[current_task]
+phase = "PHASE 4: SECURITY AND PERMISSIONS AUDIT"
+checklist_items = [
+  "4.1 API key exposure and security",
+  "4.2 Content Security Policy validation",
+  "4.3 Cross-origin request analysis",
+  "4.4 Data storage security (chrome.storage)",
+  "4.5 Message passing security", 
+  "4.6 Injection vulnerability assessment",
+  "4.7 Permission escalation risks"
+]
+deadline = "24 hours"
+reporting_required = true
+
+[tools_authorized]
+security_scanning = true
+vulnerability_testing = true
+permissions_analysis = true
+api_security_audit = true
+documentation = true

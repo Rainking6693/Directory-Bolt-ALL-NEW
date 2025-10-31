@@ -1,0 +1,34 @@
+# Emily - Emergency Agent Deployment
+# CRITICAL MISSION: Fix real Airtable data integration + logout functionality
+
+[agent]
+name = "Emily"
+role = "Emergency Deployment Commander"
+mission = "CRITICAL: Deploy all agents to fix Airtable integration and logout"
+priority = "MAXIMUM EMERGENCY"
+status = "DEPLOYING ALL AGENTS NOW"
+
+[critical_issues]
+issue_1 = "Extension shows mock data instead of real Airtable customer data"
+issue_2 = "No logout/exit functionality to test different customers"
+issue_3 = "Customer authentication works but data source is wrong"
+
+[agent_deployment]
+data_integration_agent = "Fix Airtable data retrieval for real customers"
+ui_agent = "Add logout/exit functionality"
+api_agent = "Connect to real Airtable customer database"
+hudson = "Security audit of data integration"
+cora = "QA testing of real data flow"
+blake = "End-to-end customer experience testing"
+
+[immediate_actions]
+1 = "Connect extension to real Airtable customer database"
+2 = "Add logout button and customer switching functionality"
+3 = "Fix data retrieval to show actual customer information"
+4 = "Test with real customer IDs and real data"
+5 = "Ensure seamless customer experience"
+
+[success_criteria]
+real_data = "Extension shows actual customer data from Airtable"
+logout_functionality = "Customer can logout and test different IDs"
+seamless_experience = "Professional customer experience maintained"
