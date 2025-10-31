@@ -50,6 +50,11 @@ export interface AdminUser {
   updated_at: string
 }
 
+// Internal type for queries that include password_hash
+interface AdminUserWithPassword extends AdminUser {
+  password_hash: string
+}
+
 export interface StaffUser {
   id: string
   username: string
@@ -63,6 +68,11 @@ export interface StaffUser {
   last_login?: string
   created_at: string
   updated_at: string
+}
+
+// Internal type for queries that include password_hash
+interface StaffUserWithPassword extends StaffUser {
+  password_hash: string
 }
 
 export interface UserSession {
@@ -108,18 +118,23 @@ export class AdminStaffDatabase {
   async verifyAdminPassword(username: string, password: string): Promise<AdminUser | null> {
     const { data, error } = await supabase
       .from('admin_users')
-      .select('*')
+      .select('id, username, email, first_name, last_name, role, permissions, api_key, is_active, last_login, created_at, updated_at, password_hash')
       .eq('username', username)
       .eq('is_active', true)
       .single()
 
     if (error || !data) return null
 
+    // Type assertion: we know password_hash exists because we selected it
+    const userWithPassword = data as unknown as AdminUserWithPassword
+
     // Verify password using bcrypt
-    const isValid = await bcrypt.compare(password, data.password_hash)
+    const isValid = await bcrypt.compare(password, userWithPassword.password_hash)
     if (!isValid) return null
 
-    return data as AdminUser
+    // Return AdminUser without password_hash
+    const { password_hash: _, ...user } = userWithPassword
+    return user as AdminUser
   }
 
   async updateAdminLastLogin(adminId: string): Promise<void> {
@@ -157,18 +172,23 @@ export class AdminStaffDatabase {
   async verifyStaffPassword(username: string, password: string): Promise<StaffUser | null> {
     const { data, error } = await supabase
       .from('staff_users')
-      .select('*')
+      .select('id, username, email, first_name, last_name, role, permissions, api_key, is_active, last_login, created_at, updated_at, password_hash')
       .eq('username', username)
       .eq('is_active', true)
       .single()
 
     if (error || !data) return null
 
+    // Type assertion: we know password_hash exists because we selected it
+    const userWithPassword = data as unknown as StaffUserWithPassword
+
     // Verify password using bcrypt
-    const isValid = await bcrypt.compare(password, data.password_hash)
+    const isValid = await bcrypt.compare(password, userWithPassword.password_hash)
     if (!isValid) return null
 
-    return data as StaffUser
+    // Return StaffUser without password_hash
+    const { password_hash: _, ...user } = userWithPassword
+    return user as StaffUser
   }
 
   async updateStaffLastLogin(staffId: string): Promise<void> {
