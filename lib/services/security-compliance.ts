@@ -143,7 +143,7 @@ export class SecurityComplianceService {
    */
   async upsertRetentionPolicy(policy: DataRetentionPolicy): Promise<void> {
     try {
-      await this.supabase
+      await (this.supabase as any)
         .from('data_retention_policies')
         .upsert({
           data_type: policy.dataType,
@@ -166,7 +166,7 @@ export class SecurityComplianceService {
    */
   async applyRetentionPolicies(): Promise<void> {
     try {
-      const { data: policies, error } = await this.supabase
+      const { data: policies, error } = await (this.supabase as any)
         .from('data_retention_policies')
         .select('*')
         .eq('auto_delete', true)
@@ -241,7 +241,7 @@ export class SecurityComplianceService {
       }
 
       // Store the request
-      await this.supabase
+      await (this.supabase as any)
         .from('gdpr_requests')
         .insert({
           request_id: requestId,
@@ -283,7 +283,7 @@ export class SecurityComplianceService {
     try {
       const userData = await this.collectUserData(request.userId)
       
-      await this.supabase
+      await (this.supabase as any)
         .from('gdpr_requests')
         .update({
           status: 'completed',
@@ -317,7 +317,7 @@ export class SecurityComplianceService {
     try {
       const portableData = await this.generatePortableData(request.userId)
       
-      await this.supabase
+      await (this.supabase as any)
         .from('gdpr_requests')
         .update({
           status: 'completed',
@@ -341,7 +341,7 @@ export class SecurityComplianceService {
     try {
       await this.deleteUserData(request.userId)
       
-      await this.supabase
+      await (this.supabase as any)
         .from('gdpr_requests')
         .update({
           status: 'completed',
@@ -377,7 +377,7 @@ export class SecurityComplianceService {
         await this.updateUserData(request.userId, request.requestData)
       }
       
-      await this.supabase
+      await (this.supabase as any)
         .from('gdpr_requests')
         .update({
           status: 'completed',
@@ -420,7 +420,7 @@ export class SecurityComplianceService {
         consent.revokedAt = new Date()
       }
 
-      await this.supabase
+      await (this.supabase as any)
         .from('user_consents')
         .insert({
           user_id: userId,
@@ -480,7 +480,7 @@ export class SecurityComplianceService {
     try {
       const auditId = `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       
-      await this.supabase
+      await (this.supabase as any)
         .from('data_audit_logs')
         .insert({
           id: auditId,
@@ -507,7 +507,7 @@ export class SecurityComplianceService {
     try {
       const alertId = `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       
-      await this.supabase
+      await (this.supabase as any)
         .from('security_alerts')
         .insert({
           alert_id: alertId,
@@ -538,9 +538,9 @@ export class SecurityComplianceService {
   async monitorSuspiciousActivity(userId: string, ipAddress: string, action: string): Promise<void> {
     try {
       // Check for rapid repeated actions
-      const recentActions = await this.supabase
-        .from('data_audit_logs')
-        .select('timestamp')
+    const recentActions = await (this.supabase as any)
+      .from('data_audit_logs')
+      .select('timestamp')
         .eq('user_id', userId)
         .eq('action', action)
         .gte('timestamp', new Date(Date.now() - 5 * 60 * 1000).toISOString()) // Last 5 minutes
@@ -557,9 +557,9 @@ export class SecurityComplianceService {
       }
 
       // Check for access from multiple IPs
-      const recentIPs = await this.supabase
-        .from('data_audit_logs')
-        .select('ip_address')
+    const recentIPs = await (this.supabase as any)
+      .from('data_audit_logs')
+      .select('ip_address')
         .eq('user_id', userId)
         .gte('timestamp', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Last hour
         .neq('ip_address', ipAddress)
@@ -585,19 +585,19 @@ export class SecurityComplianceService {
   private async cleanupUserSubmissions(cutoffDate: Date, archive: boolean): Promise<void> {
     if (archive) {
       // Move to archive table first
-      await this.supabase.rpc('archive_old_submissions', {
+      await (this.supabase as any).rpc('archive_old_submissions', {
         cutoff_date: cutoffDate.toISOString()
       })
     }
     
-    await this.supabase
+    await (this.supabase as any)
       .from('submissions')
       .delete()
       .lt('created_at', cutoffDate.toISOString())
   }
 
   private async cleanupActivityLogs(cutoffDate: Date): Promise<void> {
-    await this.supabase
+    await (this.supabase as any)
       .from('data_audit_logs')
       .delete()
       .lt('timestamp', cutoffDate.toISOString())
@@ -605,11 +605,11 @@ export class SecurityComplianceService {
 
   private async cleanupMarketingData(cutoffDate: Date): Promise<void> {
     await Promise.all([
-      this.supabase
+      (this.supabase as any)
         .from('email_campaigns')
         .delete()
         .lt('created_at', cutoffDate.toISOString()),
-      this.supabase
+      (this.supabase as any)
         .from('user_analytics')
         .delete()
         .lt('created_at', cutoffDate.toISOString())
@@ -618,19 +618,19 @@ export class SecurityComplianceService {
 
   private async cleanupSupportTickets(cutoffDate: Date, archive: boolean): Promise<void> {
     if (archive) {
-      await this.supabase.rpc('archive_old_support_tickets', {
+      await (this.supabase as any).rpc('archive_old_support_tickets', {
         cutoff_date: cutoffDate.toISOString()
       })
     }
     
-    await this.supabase
+    await (this.supabase as any)
       .from('support_tickets')
       .delete()
       .lt('created_at', cutoffDate.toISOString())
   }
 
   private async cleanupErrorLogs(cutoffDate: Date): Promise<void> {
-    await this.supabase
+    await (this.supabase as any)
       .from('error_logs')
       .delete()
       .lt('created_at', cutoffDate.toISOString())
@@ -639,10 +639,10 @@ export class SecurityComplianceService {
   private async collectUserData(userId: string): Promise<any> {
     // Collect all user data for GDPR access request
     const [profile, submissions, payments, consents] = await Promise.all([
-      this.supabase.from('profiles').select('*').eq('id', userId),
-      this.supabase.from('submissions').select('*').eq('user_id', userId),
-      this.supabase.from('payments').select('*').eq('user_id', userId),
-      this.supabase.from('user_consents').select('*').eq('user_id', userId)
+      (this.supabase as any).from('profiles').select('*').eq('id', userId),
+      (this.supabase as any).from('submissions').select('*').eq('user_id', userId),
+      (this.supabase as any).from('payments').select('*').eq('user_id', userId),
+      (this.supabase as any).from('user_consents').select('*').eq('user_id', userId)
     ])
 
     return {
@@ -669,16 +669,16 @@ export class SecurityComplianceService {
   private async deleteUserData(userId: string): Promise<void> {
     // Delete all user data (irreversible)
     await Promise.all([
-      this.supabase.from('submissions').delete().eq('user_id', userId),
-      this.supabase.from('user_consents').delete().eq('user_id', userId),
-      this.supabase.from('api_usage').delete().eq('user_id', userId),
-      this.supabase.from('profiles').delete().eq('id', userId)
+      (this.supabase as any).from('submissions').delete().eq('user_id', userId),
+      (this.supabase as any).from('user_consents').delete().eq('user_id', userId),
+      (this.supabase as any).from('api_usage').delete().eq('user_id', userId),
+      (this.supabase as any).from('profiles').delete().eq('id', userId)
     ])
   }
 
   private async updateUserData(userId: string, updates: any): Promise<void> {
     // Update user data for rectification requests
-    await this.supabase
+    await (this.supabase as any)
       .from('profiles')
       .update(updates)
       .eq('id', userId)

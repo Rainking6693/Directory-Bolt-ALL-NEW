@@ -535,10 +535,10 @@ export class SupabaseQueueManager {
   async getQueueStats(): Promise<QueueStats> {
     try {
       const supabase = this.getSupabaseService();
-      const pendingCount = (await supabase.from('queue').select('id').eq('submission_status', 'pending')).data?.length ?? 0;
-      const inProgressCount = (await supabase.from('queue').select('id').eq('submission_status', 'in-progress')).data?.length ?? 0;
-      const completedCount = (await supabase.from('queue').select('id').eq('submission_status', 'completed')).data?.length ?? 0;
-      const failedCount = (await supabase.from('queue').select('id').eq('submission_status', 'failed')).data?.length ?? 0;
+      const pendingCount = (await (supabase as any).from('queue').select('id').eq('submission_status', 'pending')).data?.length ?? 0;
+      const inProgressCount = (await (supabase as any).from('queue').select('id').eq('submission_status', 'in-progress')).data?.length ?? 0;
+      const completedCount = (await (supabase as any).from('queue').select('id').eq('submission_status', 'completed')).data?.length ?? 0;
+      const failedCount = (await (supabase as any).from('queue').select('id').eq('submission_status', 'failed')).data?.length ?? 0;
 
       return {
         totalPending: pendingCount,
