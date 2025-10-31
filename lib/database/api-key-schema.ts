@@ -190,7 +190,7 @@ export class ApiKeyDatabase {
               id: `ip_${apiKey.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
               api_key_id: apiKey.id,
               ip_address: ip,
-              created_at: new Date()
+              created_at: new Date().toISOString()
             }))
           )
 
@@ -208,7 +208,7 @@ export class ApiKeyDatabase {
               id: `ref_${apiKey.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
               api_key_id: apiKey.id,
               referrer_domain: referrer,
-              created_at: new Date()
+              created_at: new Date().toISOString()
             }))
           )
 
@@ -337,7 +337,7 @@ export class ApiKeyDatabase {
         .from('api_keys')
         .update({ 
           key_hash: newKeyHash,
-          updated_at: new Date()
+          updated_at: new Date().toISOString()
         })
         .eq('id', keyId)
 
@@ -369,8 +369,8 @@ export class ApiKeyDatabase {
       const { error } = await this.supabase
         .from('api_keys')
         .update({ 
-          last_used_at: new Date(),
-          updated_at: new Date()
+          last_used_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         })
         .eq('id', keyId)
 
@@ -396,7 +396,7 @@ export class ApiKeyDatabase {
         .from('api_keys')
         .update({ 
           is_active: false,
-          updated_at: new Date()
+          updated_at: new Date().toISOString()
         })
         .eq('id', keyId)
 
@@ -539,7 +539,7 @@ export class ApiKeyDatabase {
         .from('api_keys')
         .update({ 
           requests_made_today: (data.requests_made_today || 0) + 1,
-          updated_at: new Date()
+          updated_at: new Date().toISOString()
         })
         .eq('id', keyId)
 
@@ -679,7 +679,7 @@ export class ApiKeyDatabase {
         .from('api_keys')
         .update({ 
           requests_made_today: 0,
-          updated_at: new Date()
+          updated_at: new Date().toISOString()
         })
         .neq('id', '') // Update all records
 

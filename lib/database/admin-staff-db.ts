@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs'
 // Lazy initialization to avoid build-time errors
 let supabaseInstance: ReturnType<typeof createClient> | null = null
 
-function getSupabaseClient() {
+function getSupabaseClient(): ReturnType<typeof createClient> {
   if (supabaseInstance) {
     return supabaseInstance
   }
@@ -29,9 +29,14 @@ function getSupabaseClient() {
   return supabaseInstance
 }
 
+// Direct access to supabase client with lazy initialization
+// This preserves all Supabase types while avoiding build-time initialization
 const supabase = new Proxy({} as ReturnType<typeof createClient>, {
   get(_target, prop) {
-    return getSupabaseClient()[prop as keyof ReturnType<typeof createClient>]
+    const client = getSupabaseClient()
+    const value = client[prop as keyof typeof client]
+    // Return function bindings to preserve 'this' context
+    return typeof value === 'function' ? value.bind(client) : value
   }
 })
 
