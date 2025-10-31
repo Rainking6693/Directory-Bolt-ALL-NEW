@@ -78,29 +78,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: 'Upload failed', details: uploadError.message })
     }
 
-    const { data: submission, error: insertError } = await supabaseServer
-      .from('directory_submissions')
-      .insert({
-        user_id: userId,
-        file_path: key,
-        file_name: selectedFile.originalFilename,
-        mime_type: contentType,
-        size_bytes: selectedFile.size ?? null,
-        storage_bucket: BUCKET,
-        notes
-      })
-      .select('*')
-      .single()
-
-    if (insertError) {
-      await supabaseServer.storage.from(BUCKET).remove([key]).catch(() => {})
-      return res.status(500).json({ error: 'DB insert failed', details: insertError.message })
-    }
-
+    // Clean up temp file
     await fs.promises.unlink(filePath).catch(() => {})
     tempFilePath = null
 
-    return res.status(201).json({ submission })
+    // Return upload success with file metadata
+    return res.status(201).json({
+      success: true,
+      file: {
+        path: key,
+        name: selectedFile.originalFilename,
+        size: selectedFile.size,
+        type: contentType,
+        bucket: BUCKET,
+        notes
+      }
+    })
   } catch (error: unknown) {
     if (tempFilePath) {
       await fs.promises.unlink(tempFilePath).catch(() => {})
