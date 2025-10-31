@@ -67,6 +67,7 @@
     "tests",
     "lib/testing",
     "workers/**/*",
+    "scripts/**/*",
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/*.spec.ts",

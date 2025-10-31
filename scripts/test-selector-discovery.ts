@@ -107,9 +107,10 @@ async function testSelectorDiscovery(): Promise<SelectorDiscoveryResult> {
     const updatedDirectory = updatedDir as DirectoriesRow
 
     // Check if test selector was merged in
-    const fieldSelectors = (updatedDirectory.field_selectors as any) || {}
-    const hasTestSelectors = Object.keys(testSelectors).every(
-      key => fieldSelectors[key] === testSelectors[key]
+    const fieldSelectors = (updatedDirectory.field_selectors ?? {}) as Record<string, string | undefined>
+    const expectedSelectors = (testSelectors ?? {}) as Record<string, string | undefined>
+    const hasTestSelectors = Object.keys(expectedSelectors).every(
+      key => fieldSelectors[key] === expectedSelectors[key]
     )
 
     const discoveryLog = (updatedDirectory.selector_discovery_log as any) || {}

@@ -60,7 +60,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       if (!allowed.includes(detail)) {
         return res.status(400).json({ error: 'Invalid detail parameter', message: `Use one of: ${allowed.join(', ')}` })
       }
-      return res.status(200).json({ success: true, data: (lists as any)[detail], retrieved_at: new Date().toISOString() })
+      const listsTyped = lists as Record<string, unknown>
+      return res.status(200).json({ success: true, data: listsTyped[detail], retrieved_at: new Date().toISOString() })
     }
 
     // Calculate analytics from customers data
