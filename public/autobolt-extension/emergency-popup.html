@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoBolt Emergency Monitoring</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 400px;
+            min-height: 600px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            text-align: center;
+            border-bottom: 3px solid #ff4757;
+        }
+
+        .header h1 {
+            color: #ff4757;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .container {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            margin: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .status-card.active {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .status-card.error {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .status-card .label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .status-card .value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .control-section {
+            margin-bottom: 20px;
+        }
+
+        .control-section h3 {
+            font-size: 14px;
+            color: #495057;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 5px;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn.active {
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
+        }
+
+        .emergency-stop {
+            width: 100%;
+            padding: 15px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .emergency-stop:hover {
+            background: #c82333;
+            transform: scale(1.02);
+        }
+
+        .activity-log {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            background: #f8f9fa;
+            font-size: 11px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 3px;
+            border-left: 3px solid #007bff;
+            padding-left: 8px;
+        }
+
+        .log-entry.error {
+            border-left-color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        .log-entry.success {
+            border-left-color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
+        }
+
+        .log-timestamp {
+            color: #6c757d;
+            font-size: 10px;
+        }
+
+        .screenshot-preview {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .screenshot-img {
+            max-width: 100%;
+            max-height: 120px;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .metric-card {
+            text-align: center;
+            padding: 8px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #dee2e6;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚨 AutoBolt Emergency Monitoring</h1>
+        <div class="subtitle">Real-time System Control & Monitoring</div>
+    </div>
+
+    <div class="container">
+        <!-- System Status -->
+        <div class="control-section">
+            <h3>🔍 System Status</h3>
+            <div class="status-grid">
+                <div class="status-card" id="extension-status">
+                    <div class="label">Extension</div>
+                    <div class="value" id="extension-value">Loading...</div>
+                </div>
+                <div class="status-card" id="processing-status">
+                    <div class="label">Processing</div>
+                    <div class="value" id="processing-value">Unknown</div>
+                </div>
+                <div class="status-card" id="debug-status">
+                    <div class="label">Debug Mode</div>
+                    <div class="value" id="debug-value">OFF</div>
+                </div>
+                <div class="status-card" id="watch-status">
+                    <div class="label">Watch Mode</div>
+                    <div class="value" id="watch-value">OFF</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Controls -->
+        <div class="control-section">
+            <h3>🚨 Emergency Controls</h3>
+            <button class="emergency-stop" id="emergency-stop-btn">
+                🛑 EMERGENCY STOP ALL OPERATIONS
+            </button>
+        </div>
+
+        <!-- Monitoring Controls -->
+        <div class="control-section">
+            <h3>⚙️ Monitoring Controls</h3>
+            <div class="button-group">
+                <button class="btn btn-warning" id="debug-toggle">
+                    🐛 Debug Mode
+                </button>
+                <button class="btn btn-primary" id="watch-toggle">
+                    👁️ Watch Mode
+                </button>
+                <button class="btn btn-success" id="capture-screenshot">
+                    📸 Screenshot
+                </button>
+                <button class="btn btn-secondary" id="export-logs">
+                    📥 Export Logs
+                </button>
+            </div>
+        </div>
+
+        <!-- Processing Controls -->
+        <div class="control-section">
+            <h3>🔄 Processing Controls</h3>
+            <div class="button-group">
+                <button class="btn btn-success" id="start-processing">
+                    ▶️ Start
+                </button>
+                <button class="btn btn-danger" id="stop-processing">
+                    ⏹️ Stop
+                </button>
+                <button class="btn btn-secondary" id="refresh-status">
+                    🔄 Refresh
+                </button>
+                <button class="btn btn-primary" id="view-dashboard">
+                    📊 Dashboard
+                </button>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="control-section">
+            <h3>📊 Performance Metrics</h3>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="activities-count">0</div>
+                    <div class="metric-label">Activities</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="errors-count">0</div>
+                    <div class="metric-label">Errors</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="uptime-value">0m</div>
+                    <div class="metric-label">Uptime</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Latest Screenshot -->
+        <div class="control-section" id="screenshot-section" style="display: none;">
+            <h3>📸 Latest Screenshot</h3>
+            <div class="screenshot-preview">
+                <img id="latest-screenshot" class="screenshot-img" alt="Latest screenshot">
+                <div class="log-timestamp" id="screenshot-timestamp"></div>
+            </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="control-section">
+            <h3>📝 Recent Activity</h3>
+            <div class="activity-log" id="activity-log">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading activity data...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        DirectoryBolt Emergency Monitoring v1.0<br>
+        Last Update: <span id="last-update">Never</span>
+    </div>
+
+    <script src="emergency-popup.js"></script>
+</body>
+</html>

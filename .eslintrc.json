@@ -1,0 +1,27 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "ignorePatterns": [
+    "**/*.js",
+    "**/*.jsx",
+    ".next/",
+    ".netlify/",
+    "tests/**",
+    "__tests__/**",
+    "pages-backup/**",
+    "lib/testing/**",
+    "worker/**",
+    "examples/**",
+    "*.config.js"
+  ],
+  "rules": {
+    "react/no-unescaped-entities": "off",
+    "@next/next/no-html-link-for-pages": "warn",
+    "jsx-a11y/alt-text": "warn",
+    "jsx-a11y/anchor-is-valid": "warn",
+    "jsx-a11y/aria-props": "warn",
+    "jsx-a11y/aria-proptypes": "warn",
+    "jsx-a11y/aria-unsupported-elements": "warn",
+    "jsx-a11y/role-has-required-aria-props": "warn",
+    "jsx-a11y/role-supports-aria-props": "warn"
+  }
+}

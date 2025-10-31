@@ -1,0 +1,32 @@
+{
+  "name": "DirectoryBolt - AI Directory Submissions",
+  "short_name": "DirectoryBolt",
+  "description": "Submit your business to 480+ directories with AI optimization. Get more customers through better online visibility.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait-primary",
+  "categories": ["business", "productivity", "utilities"],
+  "lang": "en-US",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png", 
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    }
+  ]
+}

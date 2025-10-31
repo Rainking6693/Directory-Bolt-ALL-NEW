@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extension Popup Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .extension-container {
+            border: 2px solid #0b132b;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px;
+            background: #f0f0f0;
+        }
+        .extension-popup {
+            width: 320px;
+            margin: 0 auto;
+            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0b132b;
+            color: #f8faff;
+            border-radius: 8px;
+        }
+        .extension-popup h1 {
+            font-size: 18px;
+            margin: 0 0 8px 0;
+            color: #ccff0a;
+        }
+        .extension-popup p {
+            margin: 0 0 16px 0;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        .extension-popup input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            color: inherit;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .extension-popup input:focus {
+            outline: none;
+            border-color: #ccff0a;
+            box-shadow: 0 0 0 2px rgba(204, 255, 10, 0.25);
+        }
+        .extension-popup button {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: none;
+            background: linear-gradient(135deg, #ccff0a, #9cff00);
+            color: #151a2f;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .extension-popup button:hover {
+            filter: brightness(1.05);
+        }
+        .extension-popup #result {
+            margin-top: 16px;
+            font-size: 13px;
+            line-height: 1.5;
+            min-height: 20px;
+        }
+        .test-controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .test-controls button {
+            margin: 5px;
+            padding: 10px 20px;
+            background: #007cba;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chrome Extension Popup Test</h1>
+    <p>This simulates the Chrome extension popup interface for testing validation functionality.</p>
+    
+    <div class="test-controls">
+        <button onclick="fillTestCustomer1()">Fill Test Customer 1 (Growth)</button>
+        <button onclick="fillTestCustomer2()">Fill Test Customer 2 (Professional)</button>
+        <button onclick="clearInput()">Clear</button>
+    </div>
+
+    <div class="extension-container">
+        <div class="extension-popup">
+            <h1>DirectoryBolt</h1>
+            <p>Enter your customer ID to check your package and directory limit.</p>
+
+            <input id="customerIdInput" type="text" placeholder="DIR-YYYYMMDD-XXXXXX" autocomplete="off" />
+            <button id="validateBtn" type="button">Validate</button>
+
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Development configuration
+        window.DevConfig = {
+            API_BASE: 'http://localhost:3003',
+            ENDPOINT: '/api/extension/validate',
+            DEBUG: true,
+            TEST_CUSTOMER_IDS: [
+                'DIR-20250917-000001',
+                'DIR-20250917-000002'
+            ]
+        };
+
+        // PackageTierEngine implementation for testing
+        class PackageTierEngine {
+            constructor(customerOrOptions = {}) {
+                let options = customerOrOptions;
+                if (typeof customerOrOptions === 'string') {
+                    this.customerId = customerOrOptions.trim();
+                    options = {};
+                } else {
+                    this.customerId = undefined;
+                    options = customerOrOptions || {};
+                }
+
+                this.apiBase = options.apiBase || 'https://directorybolt.com';
+                this.endpoint = options.endpoint || '/api/extension/validate';
+                this.timeout = options.timeout || 10000;
+                this.lastResponse = null;
+                this.packageTier = 'starter';
+                this.directoryLimit = 50;
+            }
+
+            async init(customerId) {
+                if (customerId) {
+                    this.customerId = customerId.trim();
+                }
+
+                if (!this.customerId) {
+                    const failure = { ok: false, code: 'MISSING_ID', message: 'Customer ID is required.' };
+                    this.lastResponse = failure;
+                    return failure;
+                }
+
+                return this.validate(this.customerId);
+            }
+
+            async validate(customerId) {
+                try {
+                    const url = `${this.apiBase}${this.endpoint}?customerId=${customerId}`;
+                    console.log('🔗 Validating with URL:', url);
+                    
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
+                    });
+
+                    const data = await response.json();
+                    this.lastResponse = data;
+
+                    if (data.ok) {
+                        this.packageTier = data.package || 'starter';
+                        this.directoryLimit = data.directoryLimit || 50;
+                    }
+
+                    return data;
+                } catch (error) {
+                    console.error('Validation error:', error);
+                    const failure = { ok: false, code: 'SERVER_ERROR', message: 'Validation service unavailable.' };
+                    this.lastResponse = failure;
+                    return failure;
+                }
+            }
+
+            getPackageTier() {
+                return this.packageTier;
+            }
+
+            getDirectoryLimit() {
+                return this.directoryLimit;
+            }
+        }
+
+        // Extension popup logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('customerIdInput');
+            const button = document.getElementById('validateBtn');
+            const result = document.getElementById('result');
+
+            if (!input || !button || !result) {
+                console.warn('Customer popup: required elements not found');
+                return;
+            }
+
+            button.addEventListener('click', async () => {
+                const rawValue = (input.value || '').trim();
+
+                if (!/^DIR-\d{8}-\d{6}$/i.test(rawValue)) {
+                    result.textContent = 'Customer ID must look like: DIR-YYYYMMDD-XXXXXX';
+                    return;
+                }
+
+                result.textContent = 'Validating...';
+
+                // Use development config if available
+                const options = {};
+                if (window.DevConfig) {
+                    options.apiBase = window.DevConfig.API_BASE;
+                    options.endpoint = window.DevConfig.ENDPOINT;
+                    if (window.DevConfig.DEBUG) {
+                        console.log('🔧 Using dev config:', options);
+                    }
+                }
+
+                const engine = new PackageTierEngine(rawValue, options);
+                await engine.init();
+
+                const tier = engine.getPackageTier();
+                const limit = engine.getDirectoryLimit();
+                const data = engine.lastResponse || {};
+
+                if (!data.ok) {
+                    result.textContent = data.message || 'Validation failed. Please try again later.';
+                    return;
+                }
+
+                const name = [data.firstName, data.lastName].filter(Boolean).join(' ').trim();
+
+                result.textContent = `Name: ${name || '(unknown)'} | Business: ${data.businessName || '(none)'} | Package: ${tier} | Limit: ${limit}`;
+            });
+        });
+
+        // Test helper functions
+        function fillTestCustomer1() {
+            document.getElementById('customerIdInput').value = 'DIR-20250917-000001';
+        }
+
+        function fillTestCustomer2() {
+            document.getElementById('customerIdInput').value = 'DIR-20250917-000002';
+        }
+
+        function clearInput() {
+            document.getElementById('customerIdInput').value = '';
+            document.getElementById('result').textContent = '';
+        }
+    </script>
+</body>
+</html>

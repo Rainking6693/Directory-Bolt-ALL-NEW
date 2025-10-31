@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DirectoryBolt API Connectivity Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1e293b;
+            margin: 0 0 20px 0;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-healthy { background-color: #10b981; }
+        .status-degraded { background-color: #f59e0b; }
+        .status-unhealthy { background-color: #ef4444; }
+        .status-unknown { background-color: #6b7280; }
+        .test-section {
+            margin: 24px 0;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .test-result {
+            background: #f3f4f6;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+        .success { background-color: #ecfdf5; color: #047857; }
+        .error { background-color: #fef2f2; color: #dc2626; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .api-url {
+            font-family: 'Courier New', monospace;
+            background: #f3f4f6;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .timestamp {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 DirectoryBolt API Connectivity Test</h1>
+        <p>This page tests the communication between Chrome Extension and DirectoryBolt backend APIs.</p>
+        
+        <div class="test-section">
+            <h3><span id="health-indicator" class="status-indicator status-unknown"></span>Health Check</h3>
+            <p>Testing: <span class="api-url">GET /api/autobolt/health</span></p>
+            <button onclick="testHealthCheck()" id="health-btn">Test Health Check</button>
+            <div id="health-result" class="test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3><span id="extension-indicator" class="status-indicator status-unknown"></span>Extension Validation</h3>
+            <p>Testing: <span class="api-url">GET /api/extension/validate</span></p>
+            <button onclick="testExtensionValidation()" id="extension-btn">Test Extension API</button>
+            <div id="extension-result" class="test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3><span id="autobolt-indicator" class="status-indicator status-unknown"></span>AutoBolt API</h3>
+            <p>Testing: <span class="api-url">GET /api/autobolt/test-submissions</span></p>
+            <button onclick="testAutoBoltAPI()" id="autobolt-btn">Test AutoBolt API</button>
+            <div id="autobolt-result" class="test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Network Information</h3>
+            <div id="network-info" class="test-result">
+Server URL: <span id="server-url">http://localhost:3001</span>
+User Agent: <span id="user-agent"></span>
+Connection: <span id="connection-type"></span>
+            </div>
+        </div>
+
+        <button onclick="runAllTests()" id="run-all-btn">🔄 Run All Tests</button>
+        <button onclick="clearResults()">🧹 Clear Results</button>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001';
+        const AUTOBOLT_API_KEY = '8bcca50677940010e7be19a5922d074cd2217e048f46956f57a5612f39cb2076';
+
+        // Update network info
+        document.getElementById('user-agent').textContent = navigator.userAgent;
+        document.getElementById('connection-type').textContent = navigator.connection ? 
+            navigator.connection.effectiveType : 'Unknown';
+
+        function updateIndicator(elementId, status) {
+            const indicator = document.getElementById(elementId);
+            indicator.className = `status-indicator status-${status}`;
+        }
+
+        function formatResult(data, success = true) {
+            const timestamp = new Date().toLocaleTimeString();
+            const statusClass = success ? 'success' : 'error';
+            return `<div class="${statusClass}">
+${JSON.stringify(data, null, 2)}
+<div class="timestamp">Tested at: ${timestamp}</div>
+</div>`;
+        }
+
+        async function testHealthCheck() {
+            const btn = document.getElementById('health-btn');
+            const result = document.getElementById('health-result');
+            
+            btn.disabled = true;
+            btn.textContent = 'Testing...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/autobolt/health`);
+                const data = await response.json();
+                
+                result.innerHTML = formatResult({
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: {
+                        'content-type': response.headers.get('content-type'),
+                        'access-control-allow-origin': response.headers.get('access-control-allow-origin')
+                    },
+                    data: data
+                }, response.ok);
+
+                updateIndicator('health-indicator', data.status || 'unknown');
+                
+            } catch (error) {
+                result.innerHTML = formatResult({
+                    error: error.message,
+                    type: 'Network Error'
+                }, false);
+                updateIndicator('health-indicator', 'unhealthy');
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Test Health Check';
+        }
+
+        async function testExtensionValidation() {
+            const btn = document.getElementById('extension-btn');
+            const result = document.getElementById('extension-result');
+            
+            btn.disabled = true;
+            btn.textContent = 'Testing...';
+            
+            try {
+                const testCustomerId = 'DIR-20250923-123456';
+                const response = await fetch(`${API_BASE}/api/extension/validate?customerId=${testCustomerId}`);
+                const data = await response.json();
+                
+                result.innerHTML = formatResult({
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: {
+                        'content-type': response.headers.get('content-type'),
+                        'access-control-allow-origin': response.headers.get('access-control-allow-origin')
+                    },
+                    data: data
+                }, response.status === 404); // 404 is expected for non-existent customer
+
+                updateIndicator('extension-indicator', response.status === 404 ? 'healthy' : 'degraded');
+                
+            } catch (error) {
+                result.innerHTML = formatResult({
+                    error: error.message,
+                    type: 'Network Error'
+                }, false);
+                updateIndicator('extension-indicator', 'unhealthy');
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Test Extension API';
+        }
+
+        async function testAutoBoltAPI() {
+            const btn = document.getElementById('autobolt-btn');
+            const result = document.getElementById('autobolt-result');
+            
+            btn.disabled = true;
+            btn.textContent = 'Testing...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/autobolt/test-submissions`, {
+                    headers: {
+                        'x-api-key': AUTOBOLT_API_KEY
+                    }
+                });
+                const data = await response.json();
+                
+                result.innerHTML = formatResult({
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: {
+                        'content-type': response.headers.get('content-type'),
+                        'x-ratelimit-remaining': response.headers.get('x-ratelimit-remaining')
+                    },
+                    data: data
+                }, response.ok);
+
+                updateIndicator('autobolt-indicator', response.ok ? 'healthy' : 'degraded');
+                
+            } catch (error) {
+                result.innerHTML = formatResult({
+                    error: error.message,
+                    type: 'Network Error'
+                }, false);
+                updateIndicator('autobolt-indicator', 'unhealthy');
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Test AutoBolt API';
+        }
+
+        async function runAllTests() {
+            const btn = document.getElementById('run-all-btn');
+            btn.disabled = true;
+            btn.textContent = '🔄 Running Tests...';
+            
+            await testHealthCheck();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testExtensionValidation();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testAutoBoltAPI();
+            
+            btn.disabled = false;
+            btn.textContent = '🔄 Run All Tests';
+        }
+
+        function clearResults() {
+            document.querySelectorAll('.test-result').forEach(el => {
+                if (!el.id.includes('network-info')) {
+                    el.innerHTML = '';
+                }
+            });
+            document.querySelectorAll('.status-indicator').forEach(el => {
+                if (!el.id.includes('network-info')) {
+                    el.className = 'status-indicator status-unknown';
+                }
+            });
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+# WWW to non-WWW redirect (301 permanent redirect for SEO)
+https://www.directorybolt.com/* https://directorybolt.com/:splat 301!
+
+# HTTP to HTTPS redirect (301 permanent redirect for SEO)
+http://directorybolt.com/* https://directorybolt.com/:splat 301!
+
+# Catch-all for any other WWW variants
+http://www.directorybolt.com/* https://directorybolt.com/:splat 301!

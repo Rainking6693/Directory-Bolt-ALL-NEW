@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 350px;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .logo {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2563eb;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 4px;
+      text-align: center;
+    }
+    .status.success {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .status.error {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+    .status.loading {
+      background: #eff6ff;
+      color: #2563eb;
+    }
+    .package-info {
+      margin-top: 10px;
+      padding: 10px;
+      background: #f9fafb;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .security-section {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #fefefe;
+    }
+    .security-header {
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #374151;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .api-key-input {
+      font-family: monospace;
+      font-size: 11px;
+      background: #f9fafb;
+    }
+    .api-status {
+      font-size: 12px;
+      margin-top: 8px;
+      padding: 6px;
+      border-radius: 3px;
+    }
+    .api-status.configured {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .api-status.not-configured {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .tab {
+      flex: 1;
+      padding: 8px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 13px;
+      border-bottom: 2px solid transparent;
+    }
+    .tab.active {
+      border-bottom-color: #2563eb;
+      color: #2563eb;
+      font-weight: 500;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">🚀 AutoBolt</div>
+    <div>DirectoryBolt Extension</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="customer">Customer</div>
+    <div class="tab" data-tab="security">🔐 Security</div>
+  </div>
+
+  <div id="customer-tab" class="tab-content active">
+    <div class="form-group">
+      <label for="customerId">Customer ID:</label>
+      <input type="text" id="customerId" placeholder="DIR-20250914-000001" />
+    </div>
+
+    <button id="validateBtn">Validate Customer</button>
+
+    <div id="status" class="status" style="display: none;"></div>
+    <div id="packageInfo" class="package-info" style="display: none;"></div>
+  </div>
+
+  <div id="security-tab" class="tab-content">
+    <div class="security-section">
+      <div class="security-header">
+        🔐 API Key Configuration
+      </div>
+      
+      <div id="apiKeyStatus" class="api-status not-configured">
+        ❌ API Key not configured
+      </div>
+
+      <div class="form-group" style="margin-top: 12px;">
+        <label for="apiKeyInput">Your DirectoryBolt API Key:</label>
+        <input type="password" id="apiKeyInput" class="api-key-input" 
+               placeholder="Enter your 64-character API key..." 
+               maxlength="64" />
+        <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
+          Get your API key from DirectoryBolt dashboard → Settings → API Keys
+        </div>
+      </div>
+
+      <button id="saveApiKeyBtn">Save API Key</button>
+      <button id="clearApiKeyBtn" style="background: #dc2626; margin-top: 8px;">Clear API Key</button>
+    </div>
+  </div>
+
+  <script src="package-tier-engine.js"></script>
+  <script src="setup-api-key.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

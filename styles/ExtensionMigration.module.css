@@ -1,0 +1,402 @@
+/* Extension Migration Styles */
+/* Converts Chrome extension popup CSS to dashboard-compatible styles */
+
+/* Base Variables (converted from extension CSS custom properties) */
+.extensionTheme {
+  --primary-color: #ccff0a;
+  --primary-hover: #9cff00;
+  --secondary-color: #34a853;
+  --danger-color: #ea4335;
+  --warning-color: #fbbc04;
+  --text-primary: #f8faff;
+  --text-secondary: #a1a5b8;
+  --border-color: rgba(255, 255, 255, 0.2);
+  --background: #0b132b;
+  --surface: rgba(255, 255, 255, 0.08);
+  --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  --shadow-hover: 0 3px 6px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.12);
+}
+
+/* Status Indicators from Extension */
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--secondary-color);
+  animation: pulse 2s infinite;
+}
+
+.statusDot.loading {
+  background: var(--warning-color);
+}
+
+.statusDot.error {
+  background: var(--danger-color);
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Button Styles from Extension */
+.primaryButton {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  color: #151a2f;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 10px 16px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.primaryButton:hover:not(:disabled) {
+  filter: brightness(1.05);
+  box-shadow: var(--shadow-hover);
+}
+
+.secondaryButton {
+  background: var(--secondary-color);
+  color: white;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 10px 16px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow);
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background: #2d8a47;
+  box-shadow: var(--shadow-hover);
+}
+
+.dangerButton {
+  background: var(--danger-color);
+  color: white;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 6px 12px;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.dangerButton:hover:not(:disabled) {
+  background: #d33b2c;
+}
+
+.warningButton {
+  background: var(--warning-color);
+  color: var(--text-primary);
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 10px 16px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow);
+}
+
+.warningButton:hover:not(:disabled) {
+  background: #f9ab00;
+  box-shadow: var(--shadow-hover);
+}
+
+/* Input Styles from Extension */
+.extensionInput {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.extensionInput:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(204, 255, 10, 0.25);
+}
+
+.extensionInput::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+/* Progress Bar from Extension */
+.progressBarContainer {
+  margin-bottom: 16px;
+}
+
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background: var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Batch Status Grid from Extension */
+.batchStatus {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--surface);
+  border-radius: 4px;
+}
+
+.statusItem {
+  text-align: center;
+}
+
+.statusLabel {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.statusValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Activity Log from Extension */
+.batchLog {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--background);
+  max-height: 150px;
+  overflow: hidden;
+}
+
+.logHeader {
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.logContent {
+  max-height: 120px;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.logEntry {
+  padding: 4px 12px;
+  font-size: 11px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logEntry:last-child {
+  border-bottom: none;
+}
+
+.logTime {
+  color: var(--text-secondary);
+  font-weight: 500;
+  min-width: 65px;
+  font-family: 'Courier New', monospace;
+}
+
+.logMessage {
+  flex: 1;
+  color: var(--text-primary);
+}
+
+.logEntry.success .logMessage {
+  color: var(--secondary-color);
+}
+
+.logEntry.error .logMessage {
+  color: var(--danger-color);
+}
+
+.logEntry.warning .logMessage {
+  color: #e8710a;
+}
+
+.logEntry.info .logMessage {
+  color: #4285f4;
+}
+
+/* Toast Notifications from Extension */
+.toast {
+  background: var(--text-primary);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-hover);
+  animation: slideIn 0.3s ease;
+  margin-bottom: 8px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.toast.success {
+  background: var(--secondary-color);
+}
+
+.toast.error {
+  background: var(--danger-color);
+}
+
+.toast.warning {
+  background: var(--warning-color);
+  color: var(--text-primary);
+}
+
+.toastMessage {
+  flex: 1;
+  font-size: 13px;
+}
+
+.toastClose {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Loading Overlay from Extension */
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(11, 19, 43, 0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  z-index: 1000;
+  border-radius: inherit;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Scrollbar Styling */
+.customScrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.customScrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.customScrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.customScrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Data Display Grid from Extension */
+.dataItem {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dataItem:last-child {
+  border-bottom: none;
+}
+
+.dataLabel {
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.dataValue {
+  color: var(--text-primary);
+  font-size: 13px;
+  word-break: break-word;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 400px) {
+  .batchStatus {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .dataItem {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}

@@ -1,0 +1,254 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Performance-optimized base styles */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Improve paint performance */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  
+  body {
+    @apply antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Improve rendering performance */
+    will-change: scroll-position;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+
+  /* Critical performance improvements */
+  * {
+    /* Enable hardware acceleration for transforms and opacity */
+    transform-style: preserve-3d;
+  }
+
+  /* Optimize images for better loading */
+  img {
+    content-visibility: auto;
+    contain: layout style paint;
+  }
+
+  /* Focus styles for accessibility */
+  *:focus {
+    @apply outline-none ring-2 ring-volt-500 ring-offset-2;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-secondary-800;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-volt-500 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-volt-400;
+  }
+}
+
+/* Component layer for reusable patterns */
+@layer components {
+  .container {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-bold rounded-xl text-secondary-900 bg-gradient-to-r from-volt-500 to-volt-600 hover:from-volt-400 hover:to-volt-500 focus:ring-volt-500 transform hover:scale-105 transition-all duration-300 shadow-2xl hover:shadow-volt-500/50 min-h-[48px] min-w-[48px] touch-manipulation;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 border-2 border-volt-500 text-base font-bold rounded-xl text-volt-500 bg-transparent hover:bg-volt-500 hover:text-secondary-900 focus:ring-volt-500 transform hover:scale-105 transition-all duration-300 min-h-[48px] min-w-[48px] touch-manipulation;
+  }
+
+  .card {
+    @apply bg-secondary-800 rounded-xl shadow-2xl border border-secondary-700 p-6 backdrop-blur-sm;
+  }
+
+  .input-field {
+    @apply block w-full px-4 py-3 bg-secondary-900 border-2 border-secondary-600 rounded-xl text-white placeholder-secondary-300 focus:ring-volt-500 focus:border-volt-500 transition-all duration-300;
+  }
+}
+
+/* Utilities for performance and UX */
+@layer utilities {
+  .text-gradient {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-volt-400 to-volt-600;
+  }
+
+  .bg-gradient-primary {
+    @apply bg-gradient-to-r from-volt-500 to-volt-600;
+  }
+
+  .bg-gradient-accent {
+    @apply bg-gradient-to-r from-volt-400 to-orange-500;
+  }
+
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.5);
+  }
+
+  .backdrop-blur-safari {
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+
+  /* Loading states */
+  .loading-pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .loading-spin {
+    animation: spin 1s linear infinite;
+  }
+
+  /* Accessibility tap targets - 48px minimum */
+  .tap-target {
+    @apply min-h-[48px] min-w-[48px] touch-manipulation;
+  }
+  
+  .tap-target-sm {
+    @apply min-h-[44px] min-w-[44px] touch-manipulation;
+  }
+
+  /* Enhanced animations for analysis flow */
+  .animate-slide-up-delay {
+    animation: slideUp 0.6s ease-out 0.2s both;
+  }
+
+  .animate-fade-in-delay {
+    animation: fadeIn 0.8s ease-in-out 0.4s both;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.4s ease-out;
+  }
+
+  @keyframes scaleIn {
+    0% {
+      transform: scale(0.9);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* Improved pulse animation for volt elements */
+  .animate-pulse-volt-slow {
+    animation: pulseVoltSlow 3s ease-in-out infinite;
+  }
+
+  @keyframes pulseVoltSlow {
+    0%, 100% {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.02);
+    }
+  }
+
+  /* Shimmer effect for loading states */
+  .shimmer {
+    background: linear-gradient(110deg, transparent 40%, rgba(245, 158, 11, 0.3) 50%, transparent 60%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  /* Animation keyframes for landing page */
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.8s ease-in-out;
+  }
+
+  .animate-zoom-in {
+    animation: zoomIn 0.4s ease-out;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes slideUp {
+    0% {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes zoomIn {
+    0% {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes glow {
+    0% {
+      text-shadow: 0 0 5px rgba(179, 255, 0, 0.5);
+    }
+    100% {
+      text-shadow: 0 0 20px rgba(179, 255, 0, 0.8), 0 0 30px rgba(179, 255, 0, 0.4);
+    }
+  }
+}
+
+/* Print styles for better documentation */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

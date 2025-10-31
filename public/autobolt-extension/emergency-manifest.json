@@ -1,0 +1,136 @@
+{
+  "manifest_version": 3,
+  "name": "AutoBolt Emergency Monitoring Extension",
+  "version": "2.0.0",
+  "description": "Emergency monitoring and control system for AutoBolt directory submission automation with real-time activity tracking, screenshots, and debugging capabilities.",
+  
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage",
+    "scripting",
+    "background",
+    "webNavigation",
+    "captureVisibleTab",
+    "webRequest",
+    "declarativeNetRequest"
+  ],
+  
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*",
+    "https://directorybolt.com/*",
+    "https://*.directorybolt.com/*"
+  ],
+  
+  "background": {
+    "service_worker": "enhanced-background.js",
+    "type": "module"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["enhanced-content-script.js"],
+      "run_at": "document_end",
+      "all_frames": false
+    }
+  ],
+  
+  "action": {
+    "default_popup": "emergency-popup.html",
+    "default_title": "AutoBolt Emergency Monitoring",
+    "default_icon": {
+      "16": "icons/emergency-16.png",
+      "32": "icons/emergency-32.png",
+      "48": "icons/emergency-48.png",
+      "128": "icons/emergency-128.png"
+    }
+  },
+  
+  "icons": {
+    "16": "icons/emergency-16.png",
+    "32": "icons/emergency-32.png",
+    "48": "icons/emergency-48.png",
+    "128": "icons/emergency-128.png"
+  },
+  
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "directory-bolt-api.js",
+        "autobolt-processor.js",
+        "enhanced-background.js",
+        "enhanced-content-script.js",
+        "emergency-popup.html",
+        "emergency-popup.js",
+        "icons/*"
+      ],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ],
+  
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "autobolt_monitoring_rules",
+        "enabled": true,
+        "path": "monitoring-rules.json"
+      }
+    ]
+  },
+  
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline';"
+  },
+  
+  "externally_connectable": {
+    "matches": [
+      "https://directorybolt.com/*",
+      "https://*.directorybolt.com/*"
+    ]
+  },
+  
+  "options_ui": {
+    "page": "emergency-popup.html",
+    "open_in_tab": true
+  },
+  
+  "commands": {
+    "emergency_stop": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+E"
+      },
+      "description": "Emergency stop all AutoBolt operations"
+    },
+    "toggle_debug": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+D"
+      },
+      "description": "Toggle debug mode"
+    },
+    "capture_screenshot": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S"
+      },
+      "description": "Capture screenshot"
+    }
+  },
+  
+  "chrome_settings_overrides": {},
+  
+  "minimum_chrome_version": "88",
+  
+  "author": "DirectoryBolt Emergency Response Team",
+  "homepage_url": "https://directorybolt.com/emergency-monitoring",
+  
+  "short_name": "AutoBolt Emergency",
+  
+  "offline_enabled": false,
+  
+  "incognito": "split",
+  
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA",
+  
+  "update_url": "https://clients2.google.com/service/update2/crx"
+}
