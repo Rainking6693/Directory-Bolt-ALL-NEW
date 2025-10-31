@@ -146,6 +146,14 @@ def get_directories_for_job(job_id: str) -> List[str]:
     return directories
 
 
+def _escape_like_pattern(value: str) -> str:
+    """
+    Escape special characters in LIKE patterns to prevent SQL injection.
+    Escapes: backslash, percent, underscore
+    """
+    return value.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+
+
 def get_directory_info(directory_name: str) -> Optional[Dict[str, Any]]:
     """
     Get directory information by name/domain.
@@ -167,19 +175,21 @@ def get_directory_info(directory_name: str) -> Optional[Dict[str, Any]]:
     
     # Sanitize directory name (remove potentially dangerous characters)
     sanitized_name = directory_name.strip()[:255]  # Limit length
-    
+
     supabase = get_supabase_client()
-    
+
     try:
+        # Escape LIKE wildcards to prevent SQL injection
+        escaped_name = _escape_like_pattern(sanitized_name)
+
         # Try to find directory by name (using parameterized query via ORM)
-        # Supabase ORM handles SQL injection protection
-        result = supabase.table("directories").select("*").ilike("name", f"%{sanitized_name}%").limit(1).execute()
-        
+        result = supabase.table("directories").select("*").ilike("name", f"%{escaped_name}%").limit(1).execute()
+
         if result.data and len(result.data) > 0:
             return result.data[0]
-        
+
         # Try by URL (also parameterized via ORM)
-        result = supabase.table("directories").select("*").ilike("url", f"%{sanitized_name}%").limit(1).execute()
+        result = supabase.table("directories").select("*").ilike("url", f"%{escaped_name}%").limit(1).execute()
         
         if result.data and len(result.data) > 0:
             return result.data[0]

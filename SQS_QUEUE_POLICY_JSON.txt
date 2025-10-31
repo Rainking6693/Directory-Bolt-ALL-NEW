@@ -1,0 +1,33 @@
+{
+  "Version": "2012-10-17",
+  "Id": "__default_policy_ID",
+  "Statement": [
+    {
+      "Sid": "_allow_genesis_user",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::231688741122:user/Genesis"
+      },
+      "Action": [
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:SendMessage",
+        "sqs:GetQueueUrl"
+      ],
+      "Resource": "arn:aws:sqs:us-east-2:231688741122:DirectoryBolt"
+    },
+    {
+      "Sid": "_allow_genesis_user_dlq",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::231688741122:user/Genesis"
+      },
+      "Action": [
+        "sqs:SendMessage"
+      ],
+      "Resource": "arn:aws:sqs:us-east-2:231688741122:DirectoryBolt-dlq"
+    }
+  ]
+}
+

@@ -234,7 +234,7 @@ class SuccessProbabilityCalculator:
             return success_rate
             
         except Exception as error:
-            logger.warn(f"Failed to get historical success rate: {str(error)}")
+            logger.warning(f"Failed to get historical success rate: {str(error)}")
             return 0.5
     
     async def calculate_requirements_compliance(self, business: Dict[str, Any],

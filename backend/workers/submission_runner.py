@@ -1,7 +1,9 @@
 """Playwright submission runner with heartbeats."""
 import os
+import re
 import time
 import asyncio
+import tempfile
 from typing import Dict, Any, Optional, List
 from playwright.async_api import async_playwright, Page, Browser, BrowserContext
 from utils.logging import setup_logger
@@ -287,7 +289,12 @@ async def _run_plan_async(job_id: str, directory: str, plan: Dict[str, Any], bus
             
             # Take screenshot (with error handling)
             try:
-                screenshot_path = f"/tmp/screenshot_{job_id}_{directory}.png"
+                # Sanitize directory name to prevent path traversal
+                safe_directory = re.sub(r'[^a-zA-Z0-9_-]', '_', directory)
+                screenshot_path = os.path.join(
+                    tempfile.gettempdir(),
+                    f"screenshot_{job_id}_{safe_directory}.png"
+                )
                 await page.screenshot(path=screenshot_path, full_page=True, timeout=10000)
                 screenshot_url = screenshot_path  # TODO: Upload to S3/storage
             except Exception as e:
@@ -360,34 +367,46 @@ async def _run_plan_async(job_id: str, directory: str, plan: Dict[str, Any], bus
             "response_log": {"error": error_message, "error_type": type(e).__name__}
         }
     finally:
-        # Cleanup resources in reverse order
-        try:
-            if page:
+        # Cleanup resources in reverse order with comprehensive error handling
+        cleanup_errors = []
+
+        # Close page
+        if page:
+            try:
                 await page.close()
-        except Exception as e:
-            logger.warning(f"Failed to close page: {e}")
-        
-        try:
-            if context:
+            except Exception as e:
+                cleanup_errors.append(f"page: {e}")
+                logger.warning(f"Failed to close page: {e}")
+
+        # Close context
+        if context:
+            try:
                 await context.close()
-        except Exception as e:
-            logger.warning(f"Failed to close context: {e}")
-        
-        try:
-            if browser:
+            except Exception as e:
+                cleanup_errors.append(f"context: {e}")
+                logger.warning(f"Failed to close context: {e}")
+
+        # Close browser
+        if browser:
+            try:
                 await browser.close()
-        except Exception as e:
-            logger.warning(f"Failed to close browser: {e}")
-        
-        # Stop heartbeat
-        if heartbeat_task:
+            except Exception as e:
+                cleanup_errors.append(f"browser: {e}")
+                logger.warning(f"Failed to close browser: {e}")
+
+        # Stop heartbeat task
+        if heartbeat_task and not heartbeat_task.done():
             heartbeat_task.cancel()
             try:
-                await heartbeat_task
-            except asyncio.CancelledError:
+                await asyncio.wait_for(heartbeat_task, timeout=2.0)
+            except (asyncio.CancelledError, asyncio.TimeoutError):
                 pass
             except Exception as e:
+                cleanup_errors.append(f"heartbeat: {e}")
                 logger.warning(f"Error cancelling heartbeat task: {e}")
+
+        if cleanup_errors:
+            logger.error(f"Cleanup completed with errors: {', '.join(cleanup_errors)}")
 
 
 async def _heartbeat_loop(job_id: str, directory: str) -> None:

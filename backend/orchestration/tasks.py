@@ -29,7 +29,7 @@ ai_enabled = False
 
 if enable_ai_features:
     try:
-        from ai.description_customizer import DescriptionCustomizer
+        from AI.description_customizer import DescriptionCustomizer
         description_customizer = DescriptionCustomizer() if enable_content_customization else None
         ai_enabled = True
         logger.info("AI services initialized successfully")
@@ -192,7 +192,7 @@ async def submit_directory(job_id: str, directory: str, priority: str = "starter
         # Get submission plan from CrewAI brain
         logger.info(f"Getting plan from CrewAI for {directory}")
         try:
-            plan = get_plan(directory, business)
+            plan = await get_plan(directory, business)
             if not plan or not isinstance(plan, dict):
                 raise ValueError("Invalid plan response format")
         except ValueError as e:

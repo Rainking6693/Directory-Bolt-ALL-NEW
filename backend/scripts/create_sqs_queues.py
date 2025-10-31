@@ -98,17 +98,21 @@ def create_queue(queue_name, is_dlq=False):
         if error_code == 'QueueAlreadyExists':
             # Queue already exists, get its URL
             try:
-                sts = boto3.client('sts', 
+                sts = boto3.client('sts',
                                  aws_access_key_id=aws_access_key if aws_access_key else None,
                                  aws_secret_access_key=aws_secret_key if aws_secret_key else None)
                 account_id = sts.get_caller_identity()['Account']
-            except:
-                # Fallback to region-based URL
-                account_id = '231688741122'  # From the error message
-            region_name = region
-            queue_url = f"https://sqs.{region_name}.amazonaws.com/{account_id}/{queue_name}"
-            print(f"SUCCESS: Queue '{queue_name}' already exists: {queue_url}")
-            return queue_url
+                region_name = region
+                queue_url = f"https://sqs.{region_name}.amazonaws.com/{account_id}/{queue_name}"
+                print(f"SUCCESS: Queue '{queue_name}' already exists: {queue_url}")
+                return queue_url
+            except Exception as e:
+                print(f"ERROR: Cannot determine AWS account ID: {e}")
+                print("Please ensure AWS credentials have sts:GetCallerIdentity permission")
+                raise ValueError(
+                    f"AWS account ID required but not available. "
+                    f"Ensure AWS credentials are properly configured. Error: {e}"
+                )
         else:
             raise
         

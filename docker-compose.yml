@@ -1,3 +1,6 @@
+# Root-level docker-compose that references backend services
+# Run from project root: docker-compose up --build
+
 services:
   # Prefect server (OSS)
   prefect-server:
@@ -26,8 +29,8 @@ services:
   # CrewAI brain service
   brain:
     build:
-      context: ..
-      dockerfile: infra/Dockerfile.brain
+      context: .
+      dockerfile: backend/infra/Dockerfile.brain
     ports:
       - "8080:8080"
     environment:
@@ -37,10 +40,11 @@ services:
   # SQS subscriber
   subscriber:
     build:
-      context: ..
-      dockerfile: infra/Dockerfile.subscriber
+      context: .
+      dockerfile: backend/infra/Dockerfile.subscriber
     env_file:
-      - ../.env
+      - backend/.env
+      - .env
     environment:
       # Internal service URLs (not in .env)
       - PREFECT_API_URL=http://prefect-server:4200/api
@@ -53,10 +57,11 @@ services:
   # Prefect worker
   worker:
     build:
-      context: ..
-      dockerfile: infra/Dockerfile.worker
+      context: .
+      dockerfile: backend/infra/Dockerfile.worker
     env_file:
-      - ../.env
+      - backend/.env
+      - .env
     environment:
       # Internal service URLs and container-specific settings
       - PREFECT_API_URL=http://prefect-server:4200/api
@@ -69,3 +74,4 @@ services:
 
 volumes:
   prefect-db:
+

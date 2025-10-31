@@ -11,12 +11,13 @@ BRAIN_URL = os.getenv("CREWAI_URL", "http://brain:8080")
 
 # Reusable HTTP client with connection pooling
 _client: Optional[httpx.Client] = None
+_async_client: Optional[httpx.AsyncClient] = None
 
 
 def get_client() -> httpx.Client:
     """
     Get or create reusable HTTP client with connection pooling.
-    
+
     Returns:
         httpx.Client instance
     """
@@ -29,8 +30,24 @@ def get_client() -> httpx.Client:
     return _client
 
 
+def get_async_client() -> httpx.AsyncClient:
+    """
+    Get or create reusable async HTTP client with connection pooling.
+
+    Returns:
+        httpx.AsyncClient instance
+    """
+    global _async_client
+    if _async_client is None:
+        _async_client = httpx.AsyncClient(
+            timeout=30.0,
+            limits=httpx.Limits(max_keepalive_connections=10, max_connections=20)
+        )
+    return _async_client
+
+
 @retry_with_backoff(max_attempts=3, base_delay=1.0)
-def get_plan(directory: str, business: Dict[str, Any]) -> Dict[str, Any]:
+async def get_plan(directory: str, business: Dict[str, Any]) -> Dict[str, Any]:
     """
     Get submission plan from CrewAI brain.
     
@@ -75,8 +92,8 @@ def get_plan(directory: str, business: Dict[str, Any]) -> Dict[str, Any]:
     }
     
     try:
-        client = get_client()
-        response = client.post(f"{BRAIN_URL}/plan", json=request_data)
+        client = get_async_client()
+        response = await client.post(f"{BRAIN_URL}/plan", json=request_data)
         response.raise_for_status()
         plan = response.json()
         

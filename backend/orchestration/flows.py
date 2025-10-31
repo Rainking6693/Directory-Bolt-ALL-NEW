@@ -20,9 +20,9 @@ ai_enabled = False
 
 if enable_ai_features:
     try:
-        from ai.probability_calculator import SuccessProbabilityCalculator
-        from ai.timing_optimizer import SubmissionTimingOptimizer
-        from ai.retry_analyzer import IntelligentRetryAnalyzer
+        from AI.probability_calculator import SuccessProbabilityCalculator
+        from AI.timing_optimizer import SubmissionTimingOptimizer
+        from AI.retry_analyzer import IntelligentRetryAnalyzer
         
         probability_calculator = SuccessProbabilityCalculator()
         timing_optimizer = SubmissionTimingOptimizer()

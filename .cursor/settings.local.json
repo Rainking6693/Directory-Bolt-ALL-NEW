@@ -1,0 +1,6 @@
+{
+  "cursor.terminal.autoApprove": true,
+  "cursor.ai.autoApproveCommands": true,
+  "cursor.terminal.skipConfirmation": true
+}
+
