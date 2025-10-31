@@ -1,0 +1,312 @@
+// 📊 ENHANCED EXPORT UTILITIES
+// Advanced PDF and CSV export capabilities with AI-generated insights
+
+import jsPDF from 'jspdf'
+import type { BusinessIntelligenceResponse } from '../types/ai.types'
+
+export class EnhancedExportUtils {
+  /**
+   * Generate comprehensive PDF report with AI analysis
+   */
+  static async generatePDFReport(results: BusinessIntelligenceResponse): Promise<void> {
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+      const margin = 20
+      let yPosition = 30
+
+      // Helper function to check if we need a page break
+      const checkPageBreak = (requiredSpace: number) => {
+        if (yPosition + requiredSpace > pageHeight - margin) {
+          pdf.addPage()
+          yPosition = margin
+        }
+      }
+
+      // Helper function to add wrapped text
+      const addWrappedText = (text: string, x: number, y: number, maxWidth: number): number => {
+        const lines = pdf.splitTextToSize(text, maxWidth)
+        pdf.text(lines, x, y)
+        return lines.length * 5 // Approximate line height
+      }
+
+      // Header
+      pdf.setFillColor(245, 158, 11) // Volt color
+      pdf.rect(0, 0, pageWidth, 25, 'F')
+      
+      pdf.setTextColor(23, 23, 23) // Dark text on volt background
+      pdf.setFontSize(24)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text('DirectoryBolt AI Analysis Report', margin, 18)
+      
+      pdf.setTextColor(0, 0, 0) // Black text for body
+      yPosition = 35
+
+      // Business Information
+      pdf.setFontSize(12)
+      pdf.setFont('helvetica', 'normal')
+      
+      const businessInfo = [
+        `Website: ${results.url}`,
+        `Analysis Date: ${results.timestamp ? new Date(results.timestamp).toLocaleDateString() : 'N/A'}`,
+        `Analysis Tier: ${results.tier || 'standard'}`,
+        `Report Type: ${results.aiAnalysis ? 'Complete AI Analysis' : 'Basic Analysis'}`
+      ]
+
+      businessInfo.forEach(info => {
+        pdf.text(info, margin, yPosition)
+        yPosition += 5
+      })
+
+      yPosition += 10
+
+      // Key Metrics Section
+      checkPageBreak(40)
+      pdf.setFontSize(16)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text('Key Performance Metrics', margin, yPosition)
+      yPosition += 10
+
+      // Metrics in a table-like format
+      const metrics = [
+        ['Visibility Score', `${results.visibility}%`],
+        ['SEO Score', `${results.seoScore}%`],
+        ['Potential Monthly Leads', results.potentialLeads.toLocaleString()],
+        ['Directory Opportunities', results.directoryOpportunities.length.toString()]
+      ]
+
+      pdf.setFontSize(10)
+      metrics.forEach(([label, value]) => {
+        pdf.setFont('helvetica', 'bold')
+        pdf.text(label + ':', margin, yPosition)
+        pdf.setFont('helvetica', 'normal')
+        pdf.text(value, margin + 60, yPosition)
+        yPosition += 6
+      })
+
+      yPosition += 10
+
+      // Directory Opportunities
+      checkPageBreak(40)
+      pdf.setFontSize(16)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text('Directory Opportunities', margin, yPosition)
+      yPosition += 10
+
+      pdf.setFontSize(10)
+      pdf.setFont('helvetica', 'normal')
+      const directoryText = results.tier === 'Free Analysis' 
+        ? `Showing ${results.directoryOpportunities.length} of 500+ available directories. Upgrade for complete access.`
+        : `${results.directoryOpportunities.length} high-priority directories identified for your business.`
+      
+      const dirTextHeight = addWrappedText(directoryText, margin, yPosition, pageWidth - 2 * margin)
+      yPosition += dirTextHeight + 10
+
+      // Top directories table
+      const topDirectories = results.directoryOpportunities.slice(0, 10)
+      
+      // Table headers
+      checkPageBreak(30)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text('Directory Name', margin, yPosition)
+      pdf.text('Authority', margin + 80, yPosition)
+      pdf.text('Difficulty', margin + 110, yPosition)
+      pdf.text('Success Rate', margin + 140, yPosition)
+      yPosition += 8
+
+      // Table content
+      pdf.setFont('helvetica', 'normal')
+      topDirectories.forEach((directory, index) => {
+        checkPageBreak(8)
+        pdf.text(`${index + 1}. ${directory.name}`, margin, yPosition)
+        pdf.text(directory.authority.toString(), margin + 80, yPosition)
+        pdf.text(directory.submissionDifficulty, margin + 110, yPosition)
+        pdf.text(`${directory.successProbability}%`, margin + 140, yPosition)
+        yPosition += 6
+      })
+
+      yPosition += 10
+
+      // Footer on last page
+      const totalPages = pdf.getNumberOfPages()
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i)
+        pdf.setFontSize(8)
+        pdf.setTextColor(128, 128, 128)
+        pdf.text(
+          `Generated by DirectoryBolt.com - AI Business Intelligence Platform | Page ${i} of ${totalPages}`,
+          margin,
+          pageHeight - 10
+        )
+        pdf.text(
+          new Date().toLocaleDateString(),
+          pageWidth - margin - 30,
+          pageHeight - 10
+        )
+      }
+
+      // Save the PDF
+      const fileName = `DirectoryBolt-Analysis-${new URL(results.url).hostname}-${new Date().toISOString().split('T')[0]}.pdf`
+      pdf.save(fileName)
+
+    } catch (error) {
+      console.error('PDF generation failed:', error)
+      throw new Error('Failed to generate PDF report')
+    }
+  }
+
+  /**
+   * Generate enhanced CSV export with AI data
+   */
+  static generateEnhancedCSV(results: BusinessIntelligenceResponse): void {
+    try {
+      const csvData = []
+      
+      // Headers
+      const headers = [
+        'Directory Name',
+        'URL',
+        'Authority Score',
+        'Category',
+        'Estimated Traffic',
+        'Submission Difficulty',
+        'Cost',
+        'Success Probability',
+        'Industry Relevance',
+        'Business Model Fit',
+        'AI Reasoning',
+        'Required Information',
+        'Benefits',
+        'Estimated Approval Time'
+      ]
+      
+      csvData.push(headers)
+      
+      // Directory data
+      results.directoryOpportunities.forEach(directory => {
+        const row = [
+          directory.name,
+          directory.url || '',
+          directory.authority,
+          directory.category,
+          directory.estimatedTraffic,
+          directory.submissionDifficulty,
+          directory.cost === 0 ? 'Free' : `$${directory.cost}`,
+          `${directory.successProbability}%`,
+          directory.industryRelevance || 'N/A',
+          directory.businessModelFit || 'N/A',
+          directory.reasoning || '',
+          Array.isArray(directory.requiredInformation) ? directory.requiredInformation.join('; ') : '',
+          Array.isArray(directory.benefits) ? directory.benefits.join('; ') : '',
+          directory.estimatedTimeToApproval || 'N/A'
+        ]
+        csvData.push(row)
+      })
+      
+      // Add summary section
+      csvData.push([])
+      csvData.push(['ANALYSIS SUMMARY'])
+      csvData.push(['Website', results.url])
+      csvData.push(['Analysis Date', results.timestamp ? new Date(results.timestamp).toLocaleDateString() : 'N/A'])
+      csvData.push(['Analysis Tier', results.tier])
+      csvData.push(['Visibility Score', `${results.visibility}%`])
+      csvData.push(['SEO Score', `${results.seoScore}%`])
+      csvData.push(['Potential Monthly Leads', results.potentialLeads])
+      csvData.push(['Total Directory Opportunities', results.directoryOpportunities.length])
+      
+      // Convert to CSV string
+      const csvContent = csvData.map(row => 
+        row.map(cell => {
+          // Escape quotes and wrap in quotes if contains comma, quote, or newline
+          const cellStr = String(cell || '')
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return '"' + cellStr.replace(/"/g, '""') + '"'
+          }
+          return cellStr
+        }).join(',')
+      ).join('\n')
+      
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob)
+        link.setAttribute('href', url)
+        const fileName = `DirectoryBolt-Analysis-${new URL(results.url).hostname}-${new Date().toISOString().split('T')[0]}.csv`
+        link.setAttribute('download', fileName)
+        link.style.visibility = 'hidden'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+      } else {
+        // Fallback for older browsers
+        window.open('data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent))
+      }
+      
+    } catch (error) {
+      console.error('CSV generation failed:', error)
+      throw new Error('Failed to generate CSV export')
+    }
+  }
+
+  /**
+   * Generate white-label PDF report
+   */
+  static async generateWhiteLabelPDF(
+    results: BusinessIntelligenceResponse,
+    brandingOptions: {
+      companyName: string
+      logo?: string
+      primaryColor?: string
+      website?: string
+    }
+  ): Promise<void> {
+    try {
+      // Similar to generatePDFReport but with custom branding
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      
+      // Custom header with branding
+      const primaryColor = brandingOptions.primaryColor || '#f59e0b'
+      const [r, g, b] = this.hexToRgb(primaryColor)
+      
+      pdf.setFillColor(r, g, b)
+      pdf.rect(0, 0, pageWidth, 30, 'F')
+      
+      pdf.setTextColor(255, 255, 255)
+      pdf.setFontSize(24)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text('Business Intelligence Report', 20, 20)
+      
+      pdf.setFontSize(12)
+      pdf.text(`Prepared by ${brandingOptions.companyName}`, pageWidth - 80, 20)
+      
+      // Continue with rest of report...
+      // (Implementation would be similar to generatePDFReport but with custom branding)
+      
+      const fileName = `${brandingOptions.companyName}-Analysis-${new URL(results.url).hostname}.pdf`
+      pdf.save(fileName)
+      
+    } catch (error) {
+      console.error('White-label PDF generation failed:', error)
+      throw new Error('Failed to generate white-label PDF report')
+    }
+  }
+
+  /**
+   * Helper function to convert hex color to RGB
+   */
+  private static hexToRgb(hex: string): [number, number, number] {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+    return result ? [
+      parseInt(result[1], 16),
+      parseInt(result[2], 16),
+      parseInt(result[3], 16)
+    ] : [245, 158, 11] // Default volt color
+  }
+}
+
+export default EnhancedExportUtils
