@@ -39,11 +39,11 @@ from botocore.exceptions import ClientError, NoCredentialsError
 def create_queue(queue_name, is_dlq=False):
     """Create an SQS queue and return its URL."""
     # Get region from environment or default to us-east-1
-    region = os.getenv('AWS_REGION') or os.getenv('AWS_DEFAULT_REGION') or 'us-east-1'
+    region = os.getenv('AWS_DEFAULT_REGION') or 'us-east-1'
     
     # Get AWS credentials from environment
-    aws_access_key = os.getenv('AWS_ACCESS_KEY_ID')
-    aws_secret_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+    aws_access_key = os.getenv('AWS_DEFAULT_ACCESS_KEY_ID')
+    aws_secret_key = os.getenv('AWS_DEFAULT_SECRET_ACCESS_KEY')
     
     # Create SQS client with credentials if available
     if aws_access_key and aws_secret_key:
@@ -120,8 +120,8 @@ def create_queue(queue_name, is_dlq=False):
         print("     https://aws.amazon.com/cli/")
         print()
         print("  2. Set environment variables:")
-        print("     $env:AWS_ACCESS_KEY_ID = 'your-access-key'")
-        print("     $env:AWS_SECRET_ACCESS_KEY = 'your-secret-key'")
+        print("     $env:AWS_DEFAULT_ACCESS_KEY_ID = 'your-access-key'")
+        print("     $env:AWS_DEFAULT_SECRET_ACCESS_KEY = 'your-secret-key'")
         print("     $env:AWS_DEFAULT_REGION = 'us-east-1'")
         print()
         print("  3. Create ~/.aws/credentials file with:")
@@ -147,9 +147,9 @@ def main():
         sys.exit(1)
     
     # Get region and credentials from environment
-    region = os.getenv('AWS_REGION') or os.getenv('AWS_DEFAULT_REGION') or 'us-east-1'
-    aws_access_key = os.getenv('AWS_ACCESS_KEY_ID')
-    aws_secret_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+    region = os.getenv('AWS_DEFAULT_REGION') or 'us-east-1'
+    aws_access_key = os.getenv('AWS_DEFAULT_ACCESS_KEY_ID')
+    aws_secret_key = os.getenv('AWS_DEFAULT_SECRET_ACCESS_KEY')
     
     # Create SQS client with same credentials
     if aws_access_key and aws_secret_key:

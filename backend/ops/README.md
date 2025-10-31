@@ -85,9 +85,9 @@ PREFECT_API_KEY=your-api-key  # if using Prefect Cloud
 QUEUE_PROVIDER=sqs
 SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/123456789/directorybolt-jobs
 SQS_DLQ_URL=https://sqs.us-east-1.amazonaws.com/123456789/directorybolt-dlq
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-key
-AWS_SECRET_ACCESS_KEY=your-secret
+AWS_DEFAULT_REGION=us-east-1
+AWS_DEFAULT_ACCESS_KEY_ID=your-key
+AWS_DEFAULT_SECRET_ACCESS_KEY=your-secret
 
 # Brain
 CREWAI_URL=http://brain:8080/plan

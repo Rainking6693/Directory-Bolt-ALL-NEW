@@ -60,9 +60,9 @@ STRIPE_WEBHOOK_SECRET=your-webhook-secret
 # NEW: Queue integration (for dual-write phase)
 ENABLE_NEW_QUEUE=false  # Set to true when ready
 SQS_QUEUE_URL=your-sqs-queue-url
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-aws-key
-AWS_SECRET_ACCESS_KEY=your-aws-secret
+AWS_DEFAULT_REGION=us-east-1
+AWS_DEFAULT_ACCESS_KEY_ID=your-aws-key
+AWS_DEFAULT_SECRET_ACCESS_KEY=your-aws-secret
 ```
 
 ### 3. Update API Endpoints for Dual-Write
@@ -74,9 +74,9 @@ Modify `pages/api/staff/create-test-customer.ts` to send jobs to SQS:
 import { SQS } from 'aws-sdk';
 
 const sqs = new SQS({
-  region: process.env.AWS_REGION,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  region: process.env.AWS_DEFAULT_REGION,
+  accessKeyId: process.env.AWS_DEFAULT_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_DEFAULT_SECRET_ACCESS_KEY
 });
 
 // After creating job in Supabase:
