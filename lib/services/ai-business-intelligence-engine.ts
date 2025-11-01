@@ -115,7 +115,7 @@ export class AIBusinessIntelligenceEngine {
 
     const rawAiAnalysis = (config?.aiAnalysis ?? {}) as Partial<AIAnalysisConfig>
     const hasEnableCache = Object.prototype.hasOwnProperty.call(rawAiAnalysis, 'enableCache')
-    const validModels = ['gpt-4', 'gpt-4-turbo', 'gpt-4o'] as const
+    const validModels = ['claude-3-sonnet-20241022', 'claude-3-opus-20240229', 'gemini-pro'] as const
     const isValidModel = (value: unknown): value is typeof validModels[number] =>
       typeof value === 'string' && (validModels as readonly string[]).includes(value)
 
@@ -959,8 +959,10 @@ export class AIBusinessIntelligenceEngine {
   private estimateAnalysisCost(intelligence: BusinessIntelligenceType): number {
     const tokens = this.estimateTokenUsage(intelligence)
     
-    // Cost per 1k tokens for GPT-4 (approximate)
-    const costPer1kTokens = this.config.aiAnalysis.model === 'gpt-4' ? 0.03 : 0.01
+    // Cost per 1k tokens for AI models (approximate)
+    // Claude Sonnet: ~$0.003/1K input, $0.015/1K output
+    // Gemini Pro: ~$0.0005/1K input, $0.0015/1K output
+    const costPer1kTokens = this.config.aiAnalysis.model?.includes('claude') ? 0.015 : 0.0015
     
     return Math.round(tokens / 1000 * costPer1kTokens * 100) / 100
   }
@@ -987,7 +989,7 @@ export class AIBusinessIntelligenceEngine {
     const components: Record<string, boolean> = {}
 
     try {
-      // Check OpenAI API
+      // Check AI API (Anthropic/Gemini)
       components.aiService = await this.checkAIService()
       
       // Check database connectivity (if available)
@@ -1015,7 +1017,8 @@ export class AIBusinessIntelligenceEngine {
 
   private async checkAIService(): Promise<boolean> {
     try {
-      if (!process.env.OPENAI_API_KEY) return false
+      // Check for Anthropic or Gemini API keys
+      if (!process.env.ANTHROPIC_API_KEY && !process.env.GEMINI_API_KEY) return false
       
       const response = await this.aiAnalyzer.generateBusinessIntelligence(this.getMockWebsiteData())
       
@@ -1183,7 +1186,7 @@ export const DEFAULT_BUSINESS_INTELLIGENCE_CONFIG: BusinessIntelligenceConfig = 
   websiteAnalysis: DEFAULT_ENHANCED_CONFIG,
   aiAnalysis: {
     ...DEFAULT_AI_ANALYSIS_CONFIG,
-    model: 'gpt-4'
+    model: 'claude-3-sonnet-20241022'
   },
   directoryMatching: DEFAULT_DIRECTORY_MATCHING_CONFIG,
   enableProgressTracking: true,

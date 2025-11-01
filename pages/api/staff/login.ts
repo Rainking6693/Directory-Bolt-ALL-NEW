@@ -4,6 +4,9 @@ import {
   STAFF_SESSION_VALUE,
   createSessionCookie,
   resolveStaffCredentials,
+  TEST_MODE_ENABLED,
+  STAFF_FALLBACK_USERNAME,
+  STAFF_FALLBACK_PASSWORD,
 } from '../../../lib/auth/constants';
 
 interface StaffLoginResponse {
@@ -53,12 +56,31 @@ export default async function handler(
       password?: string;
     };
 
-    if (!username || !password || username !== credentials.username || password !== credentials.password) {
+    if (!username || !password) {
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials',
-        message: 'Username or password is incorrect',
+        message: 'Username and password are required',
       });
+    }
+
+    // Check against configured credentials or fallback credentials
+    const usernameMatch = username === credentials.username;
+    const passwordMatch = password === credentials.password;
+    
+    // Also check fallback credentials if TEST_MODE is enabled (for development)
+    const fallbackMatch = TEST_MODE_ENABLED && 
+      username === STAFF_FALLBACK_USERNAME && 
+      password === STAFF_FALLBACK_PASSWORD;
+
+    if (!usernameMatch || !passwordMatch) {
+      if (!fallbackMatch) {
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid credentials',
+          message: 'Username or password is incorrect',
+        });
+      }
     }
 
     const user = {

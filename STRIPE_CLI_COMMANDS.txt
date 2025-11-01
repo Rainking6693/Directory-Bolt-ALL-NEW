@@ -1,0 +1,22 @@
+
+🚀 STRIPE CLI QUICK START
+
+1️⃣  Install Stripe CLI:
+   Windows: scoop install stripe
+   OR download from: https://github.com/stripe/stripe-cli/releases
+
+2️⃣  Login:
+   stripe login
+
+3️⃣  Test your webhook:
+   stripe trigger checkout.session.completed
+
+📡 OR Forward webhooks (for development):
+   stripe listen --forward-to https://directorybolt.com/api/webhooks/stripe
+
+💡 Tip: Keep 'stripe listen' running in one terminal,
+   then use 'stripe trigger' in another terminal
+
+📖 Full guide: docs/STRIPE_CLI_QUICK_START.md
+
+

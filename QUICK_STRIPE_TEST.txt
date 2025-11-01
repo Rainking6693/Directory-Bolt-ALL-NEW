@@ -1,0 +1,15 @@
+
+📋 QUICK REFERENCE
+
+🧪 Test Checkout Flow:
+   node scripts/test-stripe-netlify.js https://your-app.netlify.app
+
+🔧 Webhook Setup:
+   1. Go to: https://dashboard.stripe.com/test/webhooks
+   2. Add endpoint: https://your-app.netlify.app/api/webhooks/stripe-secure
+   3. Select events: checkout.session.completed, payment_intent.succeeded
+   4. Copy webhook secret to Netlify env vars
+
+📖 Full Guide: docs/STRIPE_WEBHOOK_SETUP.md
+
+

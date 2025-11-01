@@ -1,7 +1,7 @@
 // 🔍 CONTENT GAP ANALYZER SERVICE
 // Advanced content gap analysis using AI to identify competitor content opportunities
 
-import OpenAI from 'openai'
+import { callAI, isAnthropicAvailable, isGeminiAvailable } from '../utils/anthropic-client'
 import axios from 'axios'
 import * as cheerio from 'cheerio'
 import { logger } from '../utils/logger'
@@ -23,30 +23,24 @@ interface WebsiteContent {
 }
 
 export class ContentGapAnalyzer {
-  private openai: OpenAI | null = null
   private isInitialized = false
 
   constructor() {
-    this.initializeOpenAI()
+    this.initializeAI()
   }
 
-  private initializeOpenAI(): void {
+  private initializeAI(): void {
     try {
-      const apiKey = process.env.OPENAI_API_KEY
-      if (!apiKey) {
-        logger.warn('OpenAI API key not found - Content Gap Analysis will be limited')
+      // Gemini is sufficient for simple competitor identification
+      if (!isGeminiAvailable() && !isAnthropicAvailable()) {
+        logger.warn('No AI API keys found - Content Gap Analysis will be limited')
         return
       }
-
-      this.openai = new OpenAI({
-        apiKey,
-        timeout: 60000
-      })
 
       this.isInitialized = true
       logger.info('Content Gap Analyzer initialized successfully')
     } catch (error) {
-      logger.error('Failed to initialize OpenAI for Content Gap Analysis', {}, error as Error)
+      logger.error('Failed to initialize AI for Content Gap Analysis', {}, error as Error)
     }
   }
 
@@ -54,7 +48,7 @@ export class ContentGapAnalyzer {
     targetWebsite: string,
     _options: ContentGapAnalysisOptions
   ): Promise<GapAnalysisResult> {
-    if (!this.isInitialized || !this.openai) {
+    if (!this.isInitialized) {
       throw new Error('Content Gap Analyzer not properly initialized')
     }
 
@@ -151,21 +145,22 @@ export class ContentGapAnalyzer {
   }
 
   private async identifyCompetitors(targetContent: WebsiteContent): Promise<CompetitorContent[]> {
-    if (!this.openai) return []
+    if (!this.isInitialized) return []
 
     try {
       const prompt = `List 5 competitor domains for the following business:
 Title: ${targetContent.title}
-Description: ${targetContent.description}`
+Description: ${targetContent.description}
 
-      const completion = await this.openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.4,
-        max_tokens: 200
+Return only domain names, one per line.`
+
+      // Use Gemini for simple competitor identification
+      const response = await callAI(prompt, 'simple', {
+        geminiModel: 'gemini-pro',
+        maxTokens: 300,
+        temperature: 0.4
       })
 
-      const response = completion.choices[0]?.message?.content
       if (!response) return []
 
       return response

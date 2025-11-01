@@ -30,9 +30,19 @@ const AI_PRICING = {
       input: 0.000003, // $0.003 per 1K input tokens
       output: 0.000015 // $0.015 per 1K output tokens
     },
+    'claude-3-sonnet-20241022': {
+      input: 0.000003, // $0.003 per 1K input tokens
+      output: 0.000015 // $0.015 per 1K output tokens
+    },
     'claude-3-haiku-20240307': {
       input: 0.00000025, // $0.00025 per 1K input tokens
       output: 0.00000125 // $0.00125 per 1K output tokens
+    }
+  },
+  gemini: {
+    'gemini-pro': {
+      input: 0.0000005, // $0.0005 per 1K input tokens
+      output: 0.0000015 // $0.0015 per 1K output tokens
     }
   }
 } as const
@@ -51,6 +61,7 @@ export class AnalysisCostTracker {
     breakdown: {
       openai?: { model: string; inputTokens: number; outputTokens: number; cost: number }
       anthropic?: { model: string; inputTokens: number; outputTokens: number; cost: number }
+      gemini?: { model: string; inputTokens: number; outputTokens: number; cost: number }
     }
     recommendations: string[]
   } {
@@ -382,7 +393,7 @@ export class AnalysisCostTracker {
       enterprise: -1 // Unlimited
     }
 
-    return Object.entries(tierPricing).map(([tier, cost]: [string, number]) => {
+    return Object.entries(tierPricing).map(([tier, cost]) => {
       const tierLimit = tierLimits[tier as SubscriptionTier]
       const effectiveAnalyses = tierLimit === -1 ? monthlyAnalyses : Math.min(monthlyAnalyses, tierLimit)
       const monthlyValue = effectiveAnalyses * averageAnalysisValue

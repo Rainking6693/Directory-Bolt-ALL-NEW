@@ -1,8 +1,8 @@
 // 🤖 AI BUSINESS ANALYZER SERVICE
-// Advanced business intelligence and competitive analysis using OpenAI GPT-4
+// Advanced business intelligence and competitive analysis using Anthropic Claude
 
-import OpenAI from 'openai'
 import { logger } from '../utils/logger'
+import { callAI, isAnthropicAvailable } from '../utils/anthropic-client'
 import type { 
   BusinessProfile, 
   CompetitiveAnalysis, 
@@ -52,12 +52,11 @@ interface BusinessIntelligence {
 
 class AIBusinessAnalyzer {
   private static instance: AIBusinessAnalyzer
-  private openai: OpenAI | null = null
   private isInitialized = false
   private analysisCache = new Map<string, BusinessIntelligence>()
 
   private constructor() {
-    this.initializeOpenAI()
+    this.initializeAI()
   }
 
   public static getInstance(): AIBusinessAnalyzer {
@@ -67,23 +66,17 @@ class AIBusinessAnalyzer {
     return AIBusinessAnalyzer.instance
   }
 
-  private initializeOpenAI(): void {
+  private initializeAI(): void {
     try {
-      const apiKey = process.env.OPENAI_API_KEY
-      
-      if (!apiKey) {
-        logger.warn('OpenAI API key not found. AI analysis will use fallback data.')
+      if (!isAnthropicAvailable()) {
+        logger.warn('Anthropic API key not found. AI analysis will use fallback data.')
         return
       }
-
-      this.openai = new OpenAI({
-        apiKey: apiKey
-      })
       
       this.isInitialized = true
-      logger.info('OpenAI client initialized successfully')
+      logger.info('AI Business Analyzer initialized successfully')
     } catch (error) {
-      logger.error('Failed to initialize OpenAI client', {}, error as Error)
+      logger.error('Failed to initialize AI client', {}, error as Error)
     }
   }
 
@@ -116,17 +109,16 @@ Please provide a detailed business profile in JSON format with these fields:
 
 Focus on accuracy and provide actionable insights.`
 
-      const response = await this.openai!.chat.completions.create({
-        model: 'gpt-4',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
-        max_tokens: 1500,
-      })
-
-      const content = response.choices[0]?.message?.content
-      if (!content) {
-        throw new Error('No response from OpenAI')
+      if (!this.isInitialized) {
+        throw new Error('AI service not initialized')
       }
+
+      const content = await callAI(prompt, 'complex', {
+        anthropicModel: 'claude-3-sonnet-20241022',
+        maxTokens: 2000,
+        temperature: 0.3,
+        systemPrompt: 'You are an expert business analyst. Provide accurate, actionable business intelligence in JSON format.'
+      })
 
       // Parse JSON response
       const jsonMatch = content.match(/\{[\s\S]*\}/)
@@ -188,16 +180,19 @@ Provide competitive analysis in JSON format:
 
 Focus on actionable competitive intelligence.`
 
-      const response = await this.openai!.chat.completions.create({
-        model: 'gpt-4',
-        messages: [{ role: 'user', content: prompt }],
+      if (!this.isInitialized) {
+        throw new Error('AI service not initialized')
+      }
+
+      const content = await callAI(prompt, 'complex', {
+        anthropicModel: 'claude-3-sonnet-20241022',
+        maxTokens: 1500,
         temperature: 0.3,
-        max_tokens: 1000,
+        systemPrompt: 'You are an expert competitive analyst. Provide detailed competitive intelligence in JSON format.'
       })
 
-      const content = response.choices[0]?.message?.content
       if (!content) {
-        throw new Error('No response from OpenAI')
+        throw new Error('No response from AI')
       }
 
       const jsonMatch = content.match(/\{[\s\S]*\}/)
@@ -262,16 +257,19 @@ Provide SEO analysis in JSON format:
 
 Focus on actionable SEO improvements.`
 
-      const response = await this.openai!.chat.completions.create({
-        model: 'gpt-4',
-        messages: [{ role: 'user', content: prompt }],
+      if (!this.isInitialized) {
+        throw new Error('AI service not initialized')
+      }
+
+      const content = await callAI(prompt, 'complex', {
+        anthropicModel: 'claude-3-sonnet-20241022',
+        maxTokens: 1500,
         temperature: 0.3,
-        max_tokens: 1000,
+        systemPrompt: 'You are an expert SEO analyst. Provide actionable SEO recommendations in JSON format.'
       })
 
-      const content = response.choices[0]?.message?.content
       if (!content) {
-        throw new Error('No response from OpenAI')
+        throw new Error('No response from AI')
       }
 
       const jsonMatch = content.match(/\{[\s\S]*\}/)
@@ -470,14 +468,17 @@ Provide market insights in JSON format:
   "recommendations": ["recommendation1", "recommendation2"]
 }`
 
-      const response = await this.openai!.chat.completions.create({
-        model: 'gpt-4',
-        messages: [{ role: 'user', content: prompt }],
+      if (!this.isInitialized) {
+        throw new Error('AI service not initialized')
+      }
+
+      const content = await callAI(prompt, 'complex', {
+        anthropicModel: 'claude-3-sonnet-20241022',
+        maxTokens: 1200,
         temperature: 0.3,
-        max_tokens: 800,
+        systemPrompt: 'You are an expert market analyst. Provide strategic market insights in JSON format.'
       })
 
-      const content = response.choices[0]?.message?.content
       const jsonMatch = content?.match(/\{[\s\S]*\}/)
       
       if (jsonMatch) {

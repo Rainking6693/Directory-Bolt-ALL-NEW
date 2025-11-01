@@ -1,0 +1,21 @@
+
+🔧 QUICK INSTALL INSTRUCTIONS
+
+Option 1: User Directory (No Admin Needed)
+`powershell
+# Run this in PowerShell:
+$source = 'C:\Users\Ben\OneDrive\Desktop\6_Installers\stripe_1.32.0_windows_x86_64'
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\Stripe"
+Copy-Item "$source\stripe.exe" -Destination "$env:USERPROFILE\Stripe\stripe.exe"
+[Environment]::SetEnvironmentVariable('Path', $env:Path + ';' + "$env:USERPROFILE\Stripe", [EnvironmentVariableTarget]::User)
+`
+
+Then RESTART PowerShell and test: stripe --version
+
+Option 2: Use the install script
+`powershell
+cd 'C:\Users\Ben\OneDrive\Documents\GitHub\Directory-Bolt-ALL-NEW'
+.\scripts\install-stripe-cli.ps1 -UserOnly
+`
+
+

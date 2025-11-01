@@ -19,6 +19,7 @@ import { createAIAnalysisCacheService } from './ai-analysis-cache'
 import { getSEOAccessControl, requireSEOAccess, trackSEOUsage } from './seo-tier-access-control'
 import { getSEOPerformanceOptimizer, createAnalysisStages } from './seo-performance-optimizer'
 import { logger } from '../utils/logger'
+import { callAI, isAnthropicAvailable, isGeminiAvailable } from '../utils/anthropic-client'
 
 export interface IntegratedAnalysisRequest {
   businessProfile: BusinessProfile

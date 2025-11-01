@@ -1,0 +1,24 @@
+
+🔍 FINDING 'SEND TEST WEBHOOK' IN STRIPE
+
+📍 Where to Look:
+
+1. Click the '...' (three dots) menu next to 'Edit destination'
+   → Look for 'Send test event'
+
+2. Click 'Events' in top navigation bar
+   → Look for 'Send test event' button at top right
+
+3. Click 'Edit destination' button
+   → Scroll down to find test section
+
+4. Click 'Interactive webhook endpoint builder' under Resources
+   → Use this tool to test
+
+⚡ Quickest Way: Use Stripe CLI
+   stripe trigger checkout.session.completed
+
+⚠️  Note: Your endpoint is /api/webhooks/stripe
+   (This matches your stripe.js file - that's correct!)
+
+

@@ -192,18 +192,16 @@ export default function SmartPricingRecommendations({
     }
 
     try {
-      const response = await fetch('/api/create-checkout-session', {
+      const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           plan: tier.id,
-          billing: isAnnual ? 'annual' : 'monthly',
-          user_email: `user@example.com`,
-          user_id: `user_${Date.now()}`,
-          success_url: `${window.location.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${window.location.origin}/pricing?cancelled=true`,
+          customerEmail: `user@example.com`,
+          successUrl: `${window.location.origin}/success?session_id={CHECKOUT_SESSION_ID}&plan=${tier.id}`,
+          cancelUrl: `${window.location.origin}/pricing?cancelled=true&plan=${tier.id}`,
           metadata: {
             source: 'smart_pricing_recommendations',
             recommended_plan: recommendedPlan,

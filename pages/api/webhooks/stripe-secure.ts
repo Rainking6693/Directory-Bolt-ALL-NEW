@@ -16,7 +16,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2023-08-16',
 })
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
+// Get webhook secret with better error handling
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
 // Disable body parsing for webhook
 export const config = {
@@ -43,6 +44,36 @@ interface CustomerData {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  // Check webhook secret is configured
+  if (!webhookSecret) {
+    logger.error('Stripe webhook secret not configured', {
+      metadata: {
+        hint: 'Set STRIPE_WEBHOOK_SECRET in environment variables',
+        netlifyHint: 'Set in Netlify Dashboard > Site settings > Environment variables',
+        stripeHint: 'Get webhook secret from Stripe Dashboard > Webhooks > Endpoint > Signing secret'
+      }
+    })
+    return res.status(500).json({ 
+      error: 'Webhook secret not configured',
+      message: 'STRIPE_WEBHOOK_SECRET environment variable is not set. Please configure it in your deployment environment.'
+    })
+  }
+
+  // Validate webhook secret format
+  if (!webhookSecret.startsWith('whsec_')) {
+    logger.error('Invalid webhook secret format', {
+      metadata: {
+        provided: webhookSecret.substring(0, 10) + '...',
+        expectedFormat: 'whsec_...',
+        hint: 'Webhook secret should start with "whsec_"'
+      }
+    })
+    return res.status(500).json({ 
+      error: 'Invalid webhook secret format',
+      message: 'Webhook secret must start with "whsec_". Please check your STRIPE_WEBHOOK_SECRET value.'
+    })
   }
 
   try {

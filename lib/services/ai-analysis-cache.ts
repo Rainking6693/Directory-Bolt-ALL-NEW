@@ -28,7 +28,7 @@ export interface AIAnalysisCacheOptions {
 
 export class AIAnalysisCacheService {
   async getCachedAnalysisResults(customerId: string): Promise<CachedAnalysisRecord | null> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from(CACHE_TABLE)
       .select(
         `customer_id, analysis_data, directory_opportunities, revenue_projections, business_profile, last_updated`
@@ -71,7 +71,7 @@ export class AIAnalysisCacheService {
       last_updated: formatISO(new Date())
     }
 
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from(CACHE_TABLE)
       .upsert(payload, { onConflict: 'customer_id' })
 

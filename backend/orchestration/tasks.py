@@ -22,24 +22,36 @@ logger = setup_logger(__name__)
 # AI services (optional - only if enabled)
 enable_ai_features = os.getenv('ENABLE_AI_FEATURES', 'true').lower() == 'true'
 enable_content_customization = os.getenv('ENABLE_CONTENT_CUSTOMIZATION', 'true').lower() == 'true'
+enable_ab_testing = os.getenv('ENABLE_AB_TESTING', 'true').lower() == 'true'
 
 # Initialize AI services at module level
 description_customizer: Optional[Any] = None
+submission_orchestrator: Optional[Any] = None
+ab_testing: Optional[Any] = None
 ai_enabled = False
 
 if enable_ai_features:
     try:
-        from AI.description_customizer import DescriptionCustomizer
+        from ai.description_customizer import DescriptionCustomizer
+        from ai.submission_orchestrator import AISubmissionOrchestrator
+        from ai.ab_testing_framework import ABTestingFramework
+        
         description_customizer = DescriptionCustomizer() if enable_content_customization else None
+        submission_orchestrator = AISubmissionOrchestrator() if enable_ai_features else None
+        ab_testing = ABTestingFramework() if enable_ab_testing else None
         ai_enabled = True
         logger.info("AI services initialized successfully")
     except ImportError as e:
         logger.warning(f"AI services not available (import error): {e}")
         description_customizer = None
+        submission_orchestrator = None
+        ab_testing = None
         ai_enabled = False
     except Exception as e:
         logger.warning(f"AI services initialization failed: {e}")
         description_customizer = None
+        submission_orchestrator = None
+        ab_testing = None
         ai_enabled = False
 else:
     logger.info("AI features disabled via environment variable")
@@ -146,6 +158,34 @@ async def submit_directory(job_id: str, directory: str, priority: str = "starter
             except Exception as e:
                 logger.warning(f"Failed to record error_no_profile history: {e}")
             return {"status": "failed", "reason": "no_business_profile", "directory": directory}
+        
+        # AI: A/B Test Assignment (if enabled)
+        ab_test_assignments = {}
+        if ai_enabled and ab_testing:
+            try:
+                directory_info = get_directory_info(directory)
+                submission_data = {
+                    'submission_id': f"{job_id}_{directory}",
+                    'business_id': business.get('id', job_id),
+                    'directory_id': directory_info.get('id', directory) if directory_info else directory,
+                    'business_category': business.get('category', ''),
+                    'business': business,
+                    'directory': directory_info if directory_info else {'id': directory}
+                }
+                
+                ab_test_result = await ab_testing.assign_submission_to_variant(submission_data, [])
+                if ab_test_result and ab_test_result.get('assignments'):
+                    ab_test_assignments = ab_test_result['assignments']
+                    logger.info(f"AI: Assigned to {ab_test_result.get('experiment_count', 0)} A/B test experiments")
+                    try:
+                        record_history(job_id, directory, "ab_test_assigned", {
+                            'experiment_count': ab_test_result.get('experiment_count', 0),
+                            'assignments': list(ab_test_assignments.keys())
+                        })
+                    except Exception as e:
+                        logger.warning(f"Failed to record A/B test assignment history: {e}")
+            except Exception as e:
+                logger.warning(f"AI A/B testing assignment failed for {directory}: {e}")
         
         # AI: Customize description for this directory (if enabled)
         if ai_enabled and description_customizer:
@@ -280,6 +320,25 @@ async def submit_directory(job_id: str, directory: str, priority: str = "starter
         except Exception as e:
             logger.error(f"Failed to update job result: {e}")
             # Continue execution - don't fail the task if DB update fails
+        
+        # AI: Record A/B test results (if enabled)
+        if ai_enabled and ab_testing and ab_test_assignments:
+            try:
+                outcome = {
+                    'status': 'approved' if result.get("status") == "submitted" else 'rejected',
+                    'submission_id': f"{job_id}_{directory}",
+                    'directory_id': directory_info.get('id', directory) if directory_info else directory,
+                    'submission_date': time.time(),
+                    'processing_time': result.get("duration_ms")
+                }
+                metadata = {
+                    'business_category': business.get('category', ''),
+                    'job_id': job_id
+                }
+                await ab_testing.record_experiment_result(f"{job_id}_{directory}", outcome, metadata)
+                logger.info(f"AI: Recorded A/B test results for {directory}")
+            except Exception as e:
+                logger.warning(f"Failed to record A/B test results: {e}")
         
         # Record outcome
         try:

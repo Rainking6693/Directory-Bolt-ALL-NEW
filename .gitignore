@@ -33,6 +33,7 @@ env/
 .env
 .env.local
 .env.*.local
+.env.example.stripe
 
 # IDEs
 .vscode/

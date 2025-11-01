@@ -16,17 +16,26 @@ enable_ai_features = os.getenv('ENABLE_AI_FEATURES', 'true').lower() == 'true'
 probability_calculator: Optional[Any] = None
 timing_optimizer: Optional[Any] = None
 retry_analyzer: Optional[Any] = None
+ab_testing: Optional[Any] = None
+performance_feedback: Optional[Any] = None
+submission_orchestrator: Optional[Any] = None
 ai_enabled = False
 
 if enable_ai_features:
     try:
-        from AI.probability_calculator import SuccessProbabilityCalculator
-        from AI.timing_optimizer import SubmissionTimingOptimizer
-        from AI.retry_analyzer import IntelligentRetryAnalyzer
+        from ai.probability_calculator import SuccessProbabilityCalculator
+        from ai.timing_optimizer import SubmissionTimingOptimizer
+        from ai.retry_analyzer import IntelligentRetryAnalyzer
+        from ai.ab_testing_framework import ABTestingFramework
+        from ai.performance_feedback import PerformanceFeedbackLoop
+        from ai.submission_orchestrator import AISubmissionOrchestrator
         
         probability_calculator = SuccessProbabilityCalculator()
         timing_optimizer = SubmissionTimingOptimizer()
         retry_analyzer = IntelligentRetryAnalyzer()
+        ab_testing = ABTestingFramework()
+        performance_feedback = PerformanceFeedbackLoop()
+        submission_orchestrator = AISubmissionOrchestrator()
         ai_enabled = True
         logger.info("AI services initialized successfully")
     except ImportError as e:

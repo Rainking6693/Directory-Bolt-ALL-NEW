@@ -64,17 +64,16 @@ export default function EnhancedUpgradePrompt({ analysisData, className = '' }: 
     }
 
     try {
-      const response = await fetch('/api/create-checkout-session', {
+      const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           plan: 'growth', // Default to most popular plan
-          user_email: `user@example.com`,
-          user_id: `user_${Date.now()}`,
-          success_url: `${window.location.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${window.location.origin}/results?cancelled=true`,
+          customerEmail: `user@example.com`,
+          successUrl: `${window.location.origin}/success?session_id={CHECKOUT_SESSION_ID}&plan=growth`,
+          cancelUrl: `${window.location.origin}/results?cancelled=true&plan=growth`,
           metadata: {
             source: 'results_page_upgrade',
             opportunities_found: analysisData.directoryOpportunities?.length || 0,

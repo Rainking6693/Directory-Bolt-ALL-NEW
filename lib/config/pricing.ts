@@ -236,11 +236,12 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
 }
 
 // STRIPE PRICE IDs (to be configured in Stripe dashboard)
+// These are one-time payment price IDs (not subscription prices)
 export const STRIPE_PRICE_IDS = {
-  starter: process.env.STRIPE_STARTER_PRICE_ID || 'price_starter_one_time_dev',
-  growth: process.env.STRIPE_GROWTH_PRICE_ID || 'price_growth_one_time_dev',
-  professional: process.env.STRIPE_PROFESSIONAL_PRICE_ID || 'price_professional_one_time_dev',
-  enterprise: process.env.STRIPE_ENTERPRISE_PRICE_ID || 'price_enterprise_one_time_dev'
+  starter: process.env.STRIPE_STARTER_PRICE_ID || process.env.STRIPE_STARTER_ONE_TIME_PRICE_ID || 'price_starter_one_time_dev',
+  growth: process.env.STRIPE_GROWTH_PRICE_ID || process.env.STRIPE_GROWTH_ONE_TIME_PRICE_ID || 'price_growth_one_time_dev',
+  professional: process.env.STRIPE_PROFESSIONAL_PRICE_ID || process.env.STRIPE_PROFESSIONAL_ONE_TIME_PRICE_ID || 'price_professional_one_time_dev',
+  enterprise: process.env.STRIPE_ENTERPRISE_PRICE_ID || process.env.STRIPE_ENTERPRISE_ONE_TIME_PRICE_ID || 'price_enterprise_one_time_dev'
 }
 
 // FEATURE ACCESS VALIDATION

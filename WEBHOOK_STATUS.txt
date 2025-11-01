@@ -1,0 +1,29 @@
+
+✅ WEBHOOK SECRET STATUS
+
+Your webhook secret IS configured and valid!
+
+📋 Important Notes:
+
+1. Local .env file: ✅ Secret is set
+2. Netlify Environment Variables: ⚠️  Make sure it's also set there
+3. Stripe Dashboard: ⚠️  Verify webhook endpoint URL matches your Netlify URL
+4. Test vs Live: ⚠️  Detected LIVE mode - make sure webhook secret matches LIVE webhook
+
+🔧 To ensure it works:
+
+1. Add STRIPE_WEBHOOK_SECRET to Netlify:
+   Site settings > Environment variables > Add variable
+
+2. Verify in Stripe Dashboard:
+   https://dashboard.stripe.com/webhooks
+   - Check endpoint URL matches: https://your-app.netlify.app/api/webhooks/stripe-secure
+   - Copy webhook secret and verify it matches Netlify env var
+
+3. Test webhook:
+   - Send test event from Stripe Dashboard
+   - Should return 200 OK
+
+📖 See docs/WEBHOOK_SECRET_FIX.md for details
+
+

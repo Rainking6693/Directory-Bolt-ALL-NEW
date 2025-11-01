@@ -3,6 +3,7 @@
 
 import { NextApiRequest, NextApiResponse } from 'next'
 import Stripe from 'stripe'
+import { PRICING_TIERS, STRIPE_PRICE_IDS } from '../../../lib/config/pricing'
 
 // Simple logger fallback
 const logger = {
@@ -16,59 +17,39 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2023-08-16',
 })
 
-// Phase 2 Pricing Configuration
+// Phase 2 Pricing Configuration - Uses centralized pricing config
 const PRICING_PLANS = {
   starter: {
-    name: 'Starter Intelligence',
-    priceId: process.env.STRIPE_STARTER_PRICE_ID!,
-    price: 149,
-    description: 'AI Market Analysis + 100 Directory Submissions',
-    features: [
-      'AI Market Analysis (Worth $1,500)',
-      '100 Directory Submissions (Worth $400)', 
-      'Competitor Intelligence (Worth $800)',
-      'Basic optimization reports',
-      'Email support'
-    ]
+    name: PRICING_TIERS.starter.name,
+    priceId: STRIPE_PRICE_IDS.starter,
+    price: PRICING_TIERS.starter.price,
+    description: PRICING_TIERS.starter.description,
+    features: PRICING_TIERS.starter.features,
+    directories: PRICING_TIERS.starter.directories
   },
   growth: {
-    name: 'Growth Intelligence',
-    priceId: process.env.STRIPE_GROWTH_PRICE_ID!,
-    price: 299,
-    description: 'Full AI Business Intelligence + 250 Premium Directories',
-    features: [
-      'Full AI Business Intelligence (Worth $2,000)',
-      '250 Premium Directory Submissions (Worth $1,000)',
-      'Advanced Competitor Analysis (Worth $1,200)',
-      'Growth Strategy Reports (Worth $800)',
-      'Priority support & optimization'
-    ]
+    name: PRICING_TIERS.growth.name,
+    priceId: STRIPE_PRICE_IDS.growth,
+    price: PRICING_TIERS.growth.price,
+    description: PRICING_TIERS.growth.description,
+    features: PRICING_TIERS.growth.features,
+    directories: PRICING_TIERS.growth.directories
   },
   professional: {
-    name: 'Professional Intelligence',
-    priceId: process.env.STRIPE_PROFESSIONAL_PRICE_ID!,
-    price: 499,
-    description: 'Enterprise AI Intelligence + 400 Premium Directories',
-    features: [
-      'Enterprise AI Intelligence Suite (Worth $3,000)',
-      '400 Premium Directory Network (Worth $1,500)',
-      'Deep Market Intelligence (Worth $2,000)',
-      'White-label Reports (Worth $1,000)',
-      'Dedicated account manager'
-    ]
+    name: PRICING_TIERS.professional.name,
+    priceId: STRIPE_PRICE_IDS.professional,
+    price: PRICING_TIERS.professional.price,
+    description: PRICING_TIERS.professional.description,
+    features: PRICING_TIERS.professional.features,
+    directories: PRICING_TIERS.professional.directories
   },
   enterprise: {
-    name: 'Enterprise Intelligence',
-    priceId: process.env.STRIPE_ENTERPRISE_PRICE_ID!,
-    price: 799,
-    description: 'Complete AI Intelligence Platform + 500+ Directories',
-    features: [
-      'Complete AI Intelligence Platform (Worth $4,000)',
-      '500+ Premium Directory Network (Worth $2,000)',
-      'Advanced Market Intelligence (Worth $2,500)',
-      'Custom White-label Reports (Worth $1,200)',
-      'Dedicated success manager + SLA'
-    ]
+    name: PRICING_TIERS.enterprise.name,
+    priceId: STRIPE_PRICE_IDS.enterprise,
+    price: PRICING_TIERS.enterprise.price,
+    description: PRICING_TIERS.enterprise.description,
+    features: PRICING_TIERS.enterprise.features,
+    directories: PRICING_TIERS.enterprise.directories
   }
 }
 
@@ -184,28 +165,39 @@ async function handleStripeCheckout(req: NextApiRequest, res: NextApiResponse) {
       return res.status(500).json({ error: 'Payment system not configured' })
     }
 
-    // For testing purposes, use mock price IDs if not configured
-    if (!selectedPlan.priceId) {
-      logger.warn(`Price ID not configured for plan: ${plan}, using mock implementation`)
-      // Return mock success response for testing
-      return res.status(200).json({
-        success: true,
-        sessionId: `mock_session_${Date.now()}`,
-        checkoutUrl: `/checkout-mock?plan=${plan}&amount=${selectedPlan.price}`,
-        plan: selectedPlan,
-        requestId: `checkout_${Date.now()}`,
-        mock: true,
-        message: 'Mock checkout session created (Stripe not fully configured)'
-      })
+    // Note: We'll use price_data fallback if price IDs not configured, so no need for mock response
+    if (!selectedPlan.priceId || !selectedPlan.priceId.startsWith('price_')) {
+      logger.warn(`Price ID not configured for plan: ${plan}, using price_data fallback`)
     }
 
-    // Build line items
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
-      {
+    // Build line items - Use price_data for one-time payments if priceId not configured
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
+    
+    if (selectedPlan.priceId && selectedPlan.priceId.startsWith('price_')) {
+      // Use existing Stripe price ID
+      lineItems.push({
         price: selectedPlan.priceId,
         quantity: 1,
-      }
-    ]
+      })
+    } else {
+      // Create price_data for one-time payment (fallback if price IDs not configured)
+      lineItems.push({
+        price_data: {
+          currency: 'usd',
+          unit_amount: selectedPlan.price * 100, // Convert to cents
+          product_data: {
+            name: selectedPlan.name,
+            description: selectedPlan.description,
+            metadata: {
+              plan: plan,
+              directories: selectedPlan.directories?.toString() || '0',
+              payment_type: 'one_time'
+            }
+          }
+        },
+        quantity: 1,
+      })
+    }
 
     // Add any selected add-ons
     const ADDON_PRICE_IDS = {

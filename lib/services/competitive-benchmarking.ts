@@ -1,4 +1,4 @@
-import OpenAI from 'openai'
+import { callAI, isAnthropicAvailable, isGeminiAvailable } from '../utils/anthropic-client'
 import { createClient } from '@supabase/supabase-js'
 
 interface CompetitiveBenchmarkRequest {
@@ -88,14 +88,9 @@ interface DetailedRecommendation {
 }
 
 export class CompetitiveBenchmarkingService {
-  private openai: OpenAI
   private supabase: any
 
   constructor() {
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
-    })
-    
     this.supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -157,15 +152,20 @@ export class CompetitiveBenchmarkingService {
       Return as a JSON array of domain names.
     `
 
-    const response = await this.openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3
-    })
-
+    // Use Gemini for simple competitor discovery
     try {
-      const competitors = JSON.parse(response.choices[0]?.message?.content || '[]')
-      return Array.isArray(competitors) ? competitors : []
+      const response = await callAI(prompt, 'simple', {
+        geminiModel: 'gemini-pro',
+        maxTokens: 500,
+        temperature: 0.3
+      })
+
+      const jsonMatch = response.match(/\[[\s\S]*\]/)
+      if (jsonMatch) {
+        const competitors = JSON.parse(jsonMatch[0])
+        return Array.isArray(competitors) ? competitors : []
+      }
+      return []
     } catch {
       return []
     }
@@ -194,14 +194,18 @@ export class CompetitiveBenchmarkingService {
       Return detailed analysis in JSON format matching the CompetitorBenchmark interface.
     `
 
-    const response = await this.openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.2
-    })
-
+    // Use Anthropic for complex competitor analysis
     try {
-      const analysis = JSON.parse(response.choices[0]?.message?.content || '{}')
+      const response = await callAI(prompt, 'complex', {
+        anthropicModel: 'claude-3-sonnet-20241022',
+        maxTokens: 2000,
+        temperature: 0.2,
+        systemPrompt: 'You are an expert competitive analyst. Provide detailed competitor insights in JSON format.'
+      })
+
+      const jsonMatch = response.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        const analysis = JSON.parse(jsonMatch[0])
       
       return {
         domain,
@@ -342,14 +346,17 @@ export class CompetitiveBenchmarkingService {
       Return as JSON matching the expected structure.
     `
 
-    const response = await this.openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3
-    })
-
+    // Use Anthropic for complex benchmark insights generation
     try {
-      const insights = JSON.parse(response.choices[0]?.message?.content || '{}')
+      const response = await callAI(prompt, 'complex', {
+        anthropicModel: 'claude-3-sonnet-20241022',
+        maxTokens: 3000,
+        temperature: 0.3,
+        systemPrompt: 'You are an expert competitive intelligence analyst. Provide strategic benchmark insights in JSON format.'
+      })
+
+      const jsonMatch = response.match(/\{[\s\S]*\}/)
+      const insights = jsonMatch ? JSON.parse(jsonMatch[0]) : {}
       
       const nextReviewDate = new Date()
       nextReviewDate.setMonth(nextReviewDate.getMonth() + 3)
@@ -435,7 +442,7 @@ export class CompetitiveBenchmarkingService {
 
   async getBenchmarkHistory(website: string, limit: number = 10): Promise<CompetitiveBenchmarkResult[]> {
     try {
-      const { data, error } = await (this.supabase as any)
+      const { data, error } = await this.supabase
         .from('competitive_benchmarks')
         .select('analysis_data')
         .eq('target_website', website)
