@@ -78,6 +78,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
   const buf = await getRawBody(req as any)
+    console.log('📦 Raw body received:', { 
+      bufferLength: buf?.length,
+      hasBuffer: !!buf 
+    })
     
     // Store raw body for signature validation
     ;(req as any).rawBody = buf
@@ -90,12 +94,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       'customer.created',
       'customer.updated',
       'invoice.payment_succeeded',
-      'invoice.payment_failed'
+      'invoice.payment_failed',
+      'product.created',  // Add these for your test events
+      'price.created',
+      'charge.succeeded',
+      'charge.updated',
+      'charge.failed'
     ]
     
+    console.log('🔐 Starting webhook validation...')
     const validation = await secureWebhookHandler(req, webhookSecret, allowedEventTypes)
     
     if (!validation.isValid) {
+      console.log('❌ Webhook validation failed:', {
+        error: validation.error,
+        shouldBlock: validation.shouldBlock
+      })
       securityMonitor.logEvent(
         'invalid_webhook',
         'high',
