@@ -42,43 +42,30 @@ interface CustomerData {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  console.log('🔍 WEBHOOK DEBUG - Request received:', {
+    method: req.method,
+    hasSignature: !!req.headers['stripe-signature'],
+    contentType: req.headers['content-type'],
+    bodyType: typeof req.body,
+    hasWebhookSecret: !!webhookSecret
+  })
+
   if (req.method !== 'POST') {
+    console.log('❌ Method not allowed:', req.method)
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
   // Check webhook secret is configured
   if (!webhookSecret) {
-    logger.error('Stripe webhook secret not configured', {
-      metadata: {
-        hint: 'Set STRIPE_WEBHOOK_SECRET in environment variables',
-        netlifyHint: 'Set in Netlify Dashboard > Site settings > Environment variables',
-        stripeHint: 'Get webhook secret from Stripe Dashboard > Webhooks > Endpoint > Signing secret'
-      }
-    })
+    console.log('❌ Webhook secret missing')
     return res.status(500).json({ 
-      error: 'Webhook secret not configured',
-      message: 'STRIPE_WEBHOOK_SECRET environment variable is not set. Please configure it in your deployment environment.'
-    })
-  }
-
-  // Validate webhook secret format
-  if (!webhookSecret.startsWith('whsec_')) {
-    logger.error('Invalid webhook secret format', {
-      metadata: {
-        provided: webhookSecret.substring(0, 10) + '...',
-        expectedFormat: 'whsec_...',
-        hint: 'Webhook secret should start with "whsec_"'
-      }
-    })
-    return res.status(500).json({ 
-      error: 'Invalid webhook secret format',
-      message: 'Webhook secret must start with "whsec_". Please check your STRIPE_WEBHOOK_SECRET value.'
+      error: 'Webhook secret not configured'
     })
   }
 
   try {
-  const buf = await getRawBody(req as any)
-    console.log('📦 Raw body received:', { 
+    const buf = await getRawBody(req as any)
+    console.log('📦 Raw body status:', { 
       bufferLength: buf?.length,
       hasBuffer: !!buf 
     })
@@ -610,3 +597,4 @@ async function handleInvoiceFailure(invoice: Stripe.Invoice) {
     throw error
   }
 }
+
