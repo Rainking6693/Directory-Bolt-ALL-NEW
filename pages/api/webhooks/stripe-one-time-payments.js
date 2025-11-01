@@ -47,21 +47,19 @@ export default async function handler(req, res) {
   // Initialize Stripe configuration at request time
   stripe = getStripeClientSafe();
   config = getStripeConfigSafe();
-  
+
   if (!stripe || !config) {
-    console.log('Stripe configuration invalid - returning mock webhook response:', {
+    console.log('Stripe configuration invalid - webhook cannot be processed:', {
       request_id: requestId,
       has_stripe_client: !!stripe,
       has_config: !!config
     });
-    
-    // Return mock response for development when Stripe is not configured
-    return res.status(200).json({
-      received: true,
-      event_type: 'mock_event',
+
+    // SECURITY FIX: Return 500 error when Stripe is not configured
+    return res.status(500).json({
+      error: 'Stripe configuration error',
       request_id: requestId,
-      development_mode: true,
-      note: 'Stripe not configured - mock response returned'
+      message: 'Webhook processing unavailable - Stripe not configured'
     });
   }
 

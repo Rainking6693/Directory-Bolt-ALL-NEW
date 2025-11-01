@@ -11,10 +11,17 @@ import { securityMonitor, monitorPaymentAnomaly } from '../../../lib/security/se
 
 import { buffer as getRawBody } from '../../../lib/utils/server-utils'
 
-// Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-08-16',
-})
+// Import validated Stripe client
+import { getStripeClient, verifyWebhookSignature, handleStripeError } from '../../../lib/utils/stripe-client'
+
+// Get Stripe client (validated on initialization)
+const getStripe = () => {
+  try {
+    return getStripeClient()
+  } catch (error) {
+    throw new Error(`Stripe initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
 
 // Get webhook secret with better error handling
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET

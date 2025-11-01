@@ -398,20 +398,25 @@ async function handleTrialWillEnd(subscription: any, requestId: string) {
 
 async function verifyStripeWebhook(body: Buffer, signature: string): Promise<StripeWebhookEvent | null> {
   try {
-    // TODO: Implement actual Stripe signature verification
-    // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
-    // const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET
-    // 
-    // const event = stripe.webhooks.constructEvent(body, signature, endpointSecret)
-    // return event
-
-    // Mock webhook verification for development
-    try {
-      const event = JSON.parse(body.toString()) as StripeWebhookEvent
-      return event
-    } catch {
+    if (!signature) {
+      logger.error('Webhook signature missing')
       return null
     }
+
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+    if (!webhookSecret) {
+      logger.error('Webhook secret not configured')
+      return null
+    }
+
+    // Use Stripe's built-in signature verification
+    const Stripe = require('stripe')
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2023-08-16',
+    })
+
+    const event = stripe.webhooks.constructEvent(body, signature, webhookSecret) as StripeWebhookEvent
+    return event
 
   } catch (error) {
     logger.error('Webhook signature verification failed', {

@@ -1,7 +1,7 @@
 /**
  * DirectoryBolt Stripe Webhook Handler
  * Location: /pages/api/webhooks/stripe.js
- * 
+ *
  * Complete Stripe webhook handler for $149-799 AI Business Intelligence tiers
  * with full database integration and customer lifecycle management
  */
@@ -12,11 +12,24 @@ const { createGoogleSheetsService } = require('../../../lib/services/google-shee
 import { AutoBoltNotificationService } from '../../../lib/services/autobolt-notifications'
 import { getRawBody } from '../../../lib/utils/server-utils'
 
-// Initialize Stripe with configurable API version (fallback to latest supported in types)
-const stripeApiVersion = process.env.STRIPE_API_VERSION || '2023-08-16'
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: stripeApiVersion,
-})
+// Disable body parsing for webhook signature verification
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
+
+// Import validated Stripe client
+const { getStripeClient } = require('../../../lib/utils/stripe-client')
+
+// Get Stripe client (validated on initialization)
+function getStripe() {
+  try {
+    return getStripeClient()
+  } catch (error) {
+    throw new Error(`Stripe initialization failed: ${error.message}`)
+  }
+}
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
@@ -222,15 +235,15 @@ export default async function handler(req, res) {
         'webhook_timeout', startTime, Date.now(), false,
         { requestId, timeoutLimit: WEBHOOK_TIMEOUT }
       )
-      
+
       // Return 200 to Stripe but log the timeout for investigation
-      const response = { 
+      const response = {
         received: true,
         timeout: true,
         processingTime: processingTime,
         requestId: requestId
       }
-      
+
       if (isNetlifyFunction) {
         return {
           statusCode: 200,
@@ -240,8 +253,36 @@ export default async function handler(req, res) {
       return res.status(200).json(response)
     }
 
-    logger.error('Webhook processing failed', { 
-      metadata: { 
+    // SECURITY FIX: Return 400 for signature verification errors
+    if (error.message === 'Missing signature' ||
+        error.message === 'Invalid signature format' ||
+        error.message === 'Invalid signature' ||
+        error.message?.includes('No signatures found') ||
+        error.message?.includes('signature verification failed')) {
+      logger.error('Webhook signature verification failed [v2]', {
+        metadata: {
+          error: error.message,
+          requestId: requestId
+        }
+      }, error)
+
+      const response = {
+        error: 'Webhook signature verification failed',
+        requestId: requestId,
+        code: 'INVALID_SIGNATURE'
+      }
+
+      if (isNetlifyFunction) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify(response)
+        }
+      }
+      return res.status(400).json(response)
+    }
+
+    logger.error('Webhook processing failed', {
+      metadata: {
         processingTime: processingTime,
         error: error.message,
         requestId: requestId
@@ -253,11 +294,11 @@ export default async function handler(req, res) {
       { requestId, error: error.message }
     )
 
-    const response = { 
+    const response = {
       error: 'Webhook processing failed',
       requestId: requestId
     }
-    
+
     if (isNetlifyFunction) {
       return {
         statusCode: 500,
@@ -310,6 +351,7 @@ async function processWebhookEvent(req, requestId) {
   // Verify webhook signature
   let event
   try {
+    const stripe = getStripe()
     event = stripe.webhooks.constructEvent(buf, signature, webhookSecret)
   } catch (error) {
     logger.error('Webhook signature verification failed', { metadata: { requestId } }, error)
@@ -609,6 +651,9 @@ async function handlePaymentFailed(paymentIntent) {
       failedAt: new Date().toISOString()
     })
 
+    // Get Stripe client
+    const stripe = getStripe()
+    
     // Send payment failure notification to customer
     const customer = await stripe.customers.retrieve(paymentIntent.customer)
     if (customer.email) {
@@ -936,6 +981,7 @@ async function prepareCustomerData(session) {
   const dataStartTime = Date.now()
   
   // Parallel data fetching
+  const stripe = getStripe()
   const [lineItems, customer] = await Promise.all([
     stripe.checkout.sessions.listLineItems(session.id, {
       expand: ['data.price.product']

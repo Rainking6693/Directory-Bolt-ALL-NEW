@@ -12,10 +12,17 @@ const logger = {
   warn: (msg: string, meta?: any) => console.warn(`[WARN] ${msg}`, meta || '')
 }
 
-// Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-08-16',
-})
+// Import validated Stripe client
+import { getStripeClient, handleStripeError } from '../../../lib/utils/stripe-client'
+
+// Get Stripe client (validated on initialization)
+const getStripe = () => {
+  try {
+    return getStripeClient()
+  } catch (error) {
+    throw new Error(`Stripe initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
 
 // Phase 2 Pricing Configuration - Uses centralized pricing config
 const PRICING_PLANS = {
@@ -217,16 +224,15 @@ async function handleStripeCheckout(req: NextApiRequest, res: NextApiResponse) {
       }
     }
 
-    // Initialize Stripe with error handling
+    // Get Stripe client (already validated)
     let stripe: Stripe
     try {
-      stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-        apiVersion: '2023-08-16',
-      })
+      stripe = getStripe()
     } catch (error) {
+      const stripeError = handleStripeError(error, 'checkout_session_creation')
       logger.error('Failed to initialize Stripe', {}, error as Error)
-      return res.status(500).json({
-        error: 'Payment system initialization failed',
+      return res.status(stripeError.statusCode).json({
+        error: stripeError.userMessage,
         details: error instanceof Error ? error.message : 'Unknown error'
       })
     }

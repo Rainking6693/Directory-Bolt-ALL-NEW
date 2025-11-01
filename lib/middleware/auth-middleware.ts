@@ -39,7 +39,11 @@ const AUTH_CONFIG = {
     '/api/robots',
     '/api/sitemap',
     '/api/stripe/webhook',
-    '/api/payments/webhook'
+    '/api/payments/webhook',
+    '/api/webhooks/stripe',
+    '/api/webhooks/stripe-secure',
+    '/api/webhooks/stripe-subscription',
+    '/api/webhooks/stripe-one-time-payments'
   ],
   staffOnlyEndpoints: [
     '/api/staff/',
