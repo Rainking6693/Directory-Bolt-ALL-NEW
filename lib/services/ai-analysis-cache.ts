@@ -12,6 +12,16 @@ import { supabase } from './supabase'
 const CACHE_TABLE = 'analysis_cache'
 const STALE_THRESHOLD_DAYS = 30
 
+// Type definition for the cache table row
+interface AnalysisCacheRow {
+  customer_id: string
+  analysis_data: any
+  directory_opportunities: any
+  revenue_projections: any
+  business_profile: any
+  last_updated: string
+}
+
 export interface CachedAnalysisRecord {
   customerId: string
   analysisData: any
@@ -28,7 +38,7 @@ export interface AIAnalysisCacheOptions {
 
 export class AIAnalysisCacheService {
   async getCachedAnalysisResults(customerId: string): Promise<CachedAnalysisRecord | null> {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from(CACHE_TABLE)
       .select(
         `customer_id, analysis_data, directory_opportunities, revenue_projections, business_profile, last_updated`
@@ -45,13 +55,16 @@ export class AIAnalysisCacheService {
       return null
     }
 
+    // Type assertion to fix TypeScript error when table doesn't exist in generated types
+    const cacheRow = data as AnalysisCacheRow
+
     return {
-      customerId: data.customer_id,
-      analysisData: data.analysis_data,
-      directoryOpportunities: data.directory_opportunities,
-      revenueProjections: data.revenue_projections,
-      businessProfile: data.business_profile,
-      lastUpdated: data.last_updated
+      customerId: cacheRow.customer_id,
+      analysisData: cacheRow.analysis_data,
+      directoryOpportunities: cacheRow.directory_opportunities,
+      revenueProjections: cacheRow.revenue_projections,
+      businessProfile: cacheRow.business_profile,
+      lastUpdated: cacheRow.last_updated
     }
   }
 
@@ -71,7 +84,7 @@ export class AIAnalysisCacheService {
       last_updated: formatISO(new Date())
     }
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from(CACHE_TABLE)
       .upsert(payload, { onConflict: 'customer_id' })
 
