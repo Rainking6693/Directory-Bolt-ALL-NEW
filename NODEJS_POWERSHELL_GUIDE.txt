@@ -1,0 +1,30 @@
+
+📘 NODE.JS IN POWERSHELL - QUICK GUIDE
+
+1. Check Node.js version:
+   node --version
+
+2. Run a Node.js file:
+   node script.js
+   node scripts/validate-configs.js
+
+3. Run npm scripts (from package.json):
+   npm run dev
+   npm run build
+   npm run test
+
+4. Run Node.js REPL (interactive):
+   node
+   (Then type: console.log('Hello')
+   Press Ctrl+C twice to exit)
+
+5. Execute Node.js code directly:
+   node -e "console.log('Hello World')"
+
+6. Check npm version:
+   npm --version
+
+✅ Current directory: C:\Users\Ben\OneDrive\Documents\GitHub\Directory-Bolt-ALL-NEW
+✅ Node.js version: v20.18.1
+✅ npm version: 10.8.2
+

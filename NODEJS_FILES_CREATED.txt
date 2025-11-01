@@ -1,0 +1,10 @@
+✅ Node.js Version Files Created
+
+Created:
+- .nvmrc (for nvm users)
+- .node-version (for Netlify/nodeenv)
+
+Both set to: 20.18.1
+
+This ensures Netlify uses the correct Node.js version!
+

@@ -1,0 +1,17 @@
+
+💡 POWERSHELL TIPS FOR RUNNING DEV SERVER
+
+Option 1: Run in background (current terminal stays free)
+   Start-Process powershell -ArgumentList '-NoExit', '-Command', 'cd \
+C:\Users\Ben\OneDrive\Documents\GitHub\Directory-Bolt-ALL-NEW\; npm run dev'
+
+Option 2: Run in new window
+   Start-Process powershell -ArgumentList '-NoExit', '-Command', 'cd \C:\Users\Ben\OneDrive\Documents\GitHub\Directory-Bolt-ALL-NEW\; npm run dev'
+
+Option 3: Keep running in foreground (current setup)
+   - Server runs at http://localhost:3000
+   - Terminal shows logs
+   - Press Ctrl+C to stop
+
+✅ Your server IS working - just open http://localhost:3000
+
