@@ -194,83 +194,75 @@ export class CompetitiveBenchmarkingService {
       Return detailed analysis in JSON format matching the CompetitorBenchmark interface.
     `
 
-    // Use Anthropic for complex competitor analysis
     try {
       const response = await callAI(prompt, 'complex', {
         anthropicModel: 'claude-3-sonnet-20241022',
         maxTokens: 2000,
-        temperature: 0.2,
-        systemPrompt: 'You are an expert competitive analyst. Provide detailed competitor insights in JSON format.'
+        temperature: 0.3
       })
 
       const jsonMatch = response.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
         const analysis = JSON.parse(jsonMatch[0])
-      
-      return {
-        domain,
-        companyName: analysis.companyName || domain,
-        overallScore: analysis.overallScore || Math.floor(Math.random() * 40) + 60,
-        marketPosition: analysis.marketPosition || 'follower',
-        metrics: {
-          trafficScore: analysis.metrics?.trafficScore || Math.floor(Math.random() * 40) + 60,
-          contentScore: analysis.metrics?.contentScore || Math.floor(Math.random() * 40) + 60,
-          technicalScore: analysis.metrics?.technicalScore || Math.floor(Math.random() * 40) + 60,
-          backlinkScore: analysis.metrics?.backlinkScore || Math.floor(Math.random() * 40) + 60,
-          socialScore: analysis.metrics?.socialScore || Math.floor(Math.random() * 40) + 60
-        },
-        keyStrengths: analysis.keyStrengths || [
-          "Strong brand recognition",
-          "Comprehensive content library",
-          "Technical SEO optimization"
-        ],
-        contentStrategy: {
-          publishingFrequency: analysis.contentStrategy?.publishingFrequency || "2-3 posts per week",
-          averageContentLength: analysis.contentStrategy?.averageContentLength || 1200,
-          topContentTypes: analysis.contentStrategy?.topContentTypes || ["Blog posts", "Case studies", "Guides"],
-          keywordStrategy: analysis.contentStrategy?.keywordStrategy || "Long-tail focused with branded terms"
-        },
-        technicalSEO: {
-          pageSpeed: analysis.technicalSEO?.pageSpeed || Math.floor(Math.random() * 30) + 70,
-          mobileOptimization: analysis.technicalSEO?.mobileOptimization || Math.floor(Math.random() * 20) + 80,
-          coreWebVitals: analysis.technicalSEO?.coreWebVitals || Math.floor(Math.random() * 30) + 70,
-          indexability: analysis.technicalSEO?.indexability || Math.floor(Math.random() * 20) + 80
-        },
-        differentiators: analysis.differentiators || [
-          "Unique product features",
-          "Strong customer support",
-          "Industry expertise"
-        ]
+        return {
+          domain,
+          companyName: analysis.companyName || formatCompanyName(domain),
+          overallScore: analysis.overallScore || 75,
+          marketPosition: analysis.marketPosition || 'follower',
+          metrics: analysis.metrics || {
+            trafficScore: 70,
+            contentScore: 65,
+            technicalScore: 75,
+            backlinkScore: 60,
+            socialScore: 55
+          },
+          keyStrengths: analysis.keyStrengths || analysis.strengths || [],
+          contentStrategy: analysis.contentStrategy || {
+            publishingFrequency: 'Weekly',
+            averageContentLength: 1500,
+            topContentTypes: ['Blog posts'],
+            keywordStrategy: 'Broad targeting'
+          },
+          technicalSEO: analysis.technicalSEO || {
+            pageSpeed: 75,
+            mobileOptimization: 80,
+            coreWebVitals: 70,
+            indexability: 85
+          },
+          differentiators: analysis.differentiators || analysis.keyDifferentiators || []
+        }
       }
-    } catch {
-      // Fallback analysis if OpenAI response parsing fails
-      return {
-        domain,
-        companyName: domain,
-        overallScore: Math.floor(Math.random() * 40) + 60,
-        marketPosition: 'follower',
-        metrics: {
-          trafficScore: Math.floor(Math.random() * 40) + 60,
-          contentScore: Math.floor(Math.random() * 40) + 60,
-          technicalScore: Math.floor(Math.random() * 40) + 60,
-          backlinkScore: Math.floor(Math.random() * 40) + 60,
-          socialScore: Math.floor(Math.random() * 40) + 60
-        },
-        keyStrengths: ["Industry experience", "Product quality", "Customer base"],
-        contentStrategy: {
-          publishingFrequency: "Weekly",
-          averageContentLength: 1000,
-          topContentTypes: ["Blog posts", "Product pages"],
-          keywordStrategy: "Broad match keywords"
-        },
-        technicalSEO: {
-          pageSpeed: 75,
-          mobileOptimization: 85,
-          coreWebVitals: 70,
-          indexability: 90
-        },
-        differentiators: ["Competitive pricing", "Fast delivery", "User-friendly interface"]
-      }
+    } catch (error) {
+      console.error(`Failed to analyze competitor ${domain}:`, error)
+    }
+
+    // Fallback return when analysis fails
+    return {
+      domain,
+      companyName: formatCompanyName(domain),
+      overallScore: 50,
+      marketPosition: 'follower',
+      metrics: {
+        trafficScore: 50,
+        contentScore: 50,
+        technicalScore: 50,
+        backlinkScore: 50,
+        socialScore: 50
+      },
+      keyStrengths: [],
+      contentStrategy: {
+        publishingFrequency: 'Unknown',
+        averageContentLength: 1000,
+        topContentTypes: [],
+        keywordStrategy: 'Unknown'
+      },
+      technicalSEO: {
+        pageSpeed: 50,
+        mobileOptimization: 50,
+        coreWebVitals: 50,
+        indexability: 50
+      },
+      differentiators: ['Analysis temporarily unavailable']
     }
   }
 
@@ -456,6 +448,15 @@ export class CompetitiveBenchmarkingService {
       console.error('Failed to fetch benchmark history:', error)
       return []
     }
+  }
+
+  private formatCompanyName(domain: string): string {
+    return domain
+      .replace(/\.(com|org|net|io|co)$/, '')
+      .replace(/[-_]/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
   }
 }
 
