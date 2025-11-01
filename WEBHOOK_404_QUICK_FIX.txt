@@ -1,0 +1,31 @@
+
+🚨 WEBHOOK 404 ERROR - QUICK FIX
+
+🎯 Problem:
+   Stripe shows 404 ERR - endpoint not found
+
+✅ Solution:
+
+1. Check your actual Netlify domain:
+   - Netlify Dashboard > Site settings > Domain
+   - Note your primary domain
+
+2. Test endpoint:
+   curl https://directorybolt.com/api/webhooks/stripe
+   (Should return 405, not 404)
+
+3. Update Stripe webhook URL:
+   - Stripe Dashboard > Webhooks > Edit destination
+   - Update URL to match your actual domain
+   - Make sure no typos, no trailing slash
+
+4. Test again:
+   stripe trigger checkout.session.completed
+   (Should now show 200 OK)
+
+💡 Most likely:
+   Webhook URL in Stripe doesn't match your actual Netlify URL
+
+📖 Full guide: docs/FIX_WEBHOOK_404_NOW.md
+
+

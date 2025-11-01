@@ -1,0 +1,24 @@
+
+🔍 DIAGNOSIS: 404 Webhook Error
+
+✅ File exists: pages/api/webhooks/stripe.js
+
+🔧 To Fix:
+
+1. Test endpoint directly:
+   curl https://directorybolt.com/api/webhooks/stripe
+   (Should return 405, not 404)
+
+2. Check Netlify build logs:
+   - Go to Netlify Dashboard > Deploys
+   - Check if API routes are building
+
+3. Verify file is committed:
+   git ls-files pages/api/webhooks/stripe.js
+
+4. Try alternative URL in Stripe:
+   https://directorybolt.com/api/webhooks/stripe-secure
+
+📖 See docs/WEBHOOK_404_FIX.md for details
+
+

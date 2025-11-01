@@ -1,0 +1,31 @@
+
+🔧 WEBHOOK 404 FIX
+
+✅ File exists: pages/api/webhooks/stripe.js
+
+🎯 Most Likely Issue:
+   Webhook URL in Stripe doesn't match your actual Netlify URL
+
+🔧 Quick Fix:
+
+1. Check your Netlify site URL:
+   - Go to Netlify Dashboard > Site settings > Domain
+   - Note your actual domain
+
+2. Update Stripe webhook URL:
+   - Stripe Dashboard > Webhooks > Edit destination
+   - Use your actual Netlify URL:
+     https://your-site.netlify.app/api/webhooks/stripe
+     OR
+     https://directorybolt.com/api/webhooks/stripe
+
+3. Test endpoint:
+   curl https://your-actual-domain.com/api/webhooks/stripe
+   (Should return 405, not 404)
+
+4. Send test webhook from Stripe
+   (Should now return 200 OK)
+
+📖 See docs/WEBHOOK_URL_FIX.md
+
+
