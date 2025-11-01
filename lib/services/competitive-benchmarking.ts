@@ -206,7 +206,7 @@ export class CompetitiveBenchmarkingService {
         const analysis = JSON.parse(jsonMatch[0])
         return {
           domain,
-          companyName: analysis.companyName || formatCompanyName(domain),
+          companyName: analysis.companyName || this.formatCompanyName(domain),
           overallScore: analysis.overallScore || 75,
           marketPosition: analysis.marketPosition || 'follower',
           metrics: analysis.metrics || {
@@ -239,7 +239,7 @@ export class CompetitiveBenchmarkingService {
     // Fallback return when analysis fails
     return {
       domain,
-      companyName: formatCompanyName(domain),
+      companyName: this.formatCompanyName(domain),
       overallScore: 50,
       marketPosition: 'follower',
       metrics: {

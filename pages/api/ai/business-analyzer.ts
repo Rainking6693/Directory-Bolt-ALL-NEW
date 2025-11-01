@@ -78,7 +78,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<BusinessAnalyze
 
     // Generate comprehensive business intelligence if full analysis
     if (analysisType === 'full') {
-      result.businessIntelligence = await analyzer.performComprehensiveAnalysis(websiteData)
+      result.businessIntelligence = await analyzer.generateBusinessIntelligence(websiteData)
     }
 
     const processingTime = Date.now() - startTime

@@ -1,24 +1,13 @@
 # *
 User-agent: *
 Allow: /
-Disallow: /api/
-Disallow: /admin/
-Disallow: /dashboard/private/
-Disallow: /test-*
-Disallow: /staff-dashboard*
-Disallow: /emergency-diagnostics*
-Disallow: /_next/
-Disallow: /static/
-
-# Googlebot
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 1
-
-# Bingbot
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 1
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /staff
+Disallow: /staff/*
+Disallow: /customer-portal
+Disallow: /customer-login
+Disallow: /api/*
 
 # Host
 Host: https://directorybolt.com

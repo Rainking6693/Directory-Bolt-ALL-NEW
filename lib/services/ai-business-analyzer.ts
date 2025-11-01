@@ -450,7 +450,7 @@ Focus on actionable SEO improvements.`
   /**
    * Generate market insights
    */
-  private async generateMarketInsights(businessProfile: BusinessProfile, competitiveAnalysis: CompetitiveAnalysis) {
+  async generateMarketInsights(businessProfile: BusinessProfile, competitiveAnalysis: CompetitiveAnalysis) {
     try {
       const prompt = `
 Generate market insights for this business:

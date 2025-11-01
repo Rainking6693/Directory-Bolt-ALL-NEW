@@ -62,6 +62,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<CompetitiveBenc
       targetWebsite,
       industry,
       competitors,
+      benchmarkingDepth: 'basic',
       includeTrafficEstimates,
       includeContentStrategy,
       includeTechnicalSEO,

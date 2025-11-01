@@ -58,7 +58,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<BusinessIntelli
     }
 
     // Perform comprehensive analysis
-    const result = await engine.performComprehensiveAnalysis({
+    const result = await engine.analyzeBusinessIntelligence({
       url,
       userInput: userInput || {},
       config: engineConfig
@@ -70,17 +70,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse<BusinessIntelli
       metadata: {
         url,
         processingTime,
-        confidence: result.confidence,
-        qualityScore: result.qualityScore
+        confidence: result.data?.confidence,
+        qualityScore: result.data?.qualityScore
       }
     })
 
-    return res.status(200).json({
-      success: true,
-      data: result,
-      processingTime,
-      progress: progressUpdates.length > 0 ? progressUpdates : undefined
-    })
+    return res.status(200).json(result)
 
   } catch (error) {
     const processingTime = Date.now() - startTime
