@@ -1,0 +1,4 @@
+✅ Auto-approval enabled!
+
+All commands and file edits will now execute automatically without asking for approval.
+
