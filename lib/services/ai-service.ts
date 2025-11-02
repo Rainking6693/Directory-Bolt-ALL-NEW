@@ -106,8 +106,8 @@ export class AIService {
       logger.info(`AI analysis completed for ${url}`, {
         metadata: {
           category: businessProfile.category,
-          recommendationCount: result.recommendations.length,
-          confidence: result.confidence
+          recommendationCount: result.recommendations?.length || 0,
+          confidence: result.confidence || 0
         }
       })
 

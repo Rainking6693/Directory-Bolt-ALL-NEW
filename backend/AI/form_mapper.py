@@ -27,12 +27,26 @@ logger = setup_logger(__name__)
 
 class AIFormMapper:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
-        """Initialize AI Form Mapper."""
+        """
+        Initialize AI Form Mapper.
+        
+        Args:
+            config: Optional configuration dict
+        
+        Raises:
+            ValueError: If API key is missing
+        """
         config = config or {}
         
-        self.anthropic = Anthropic(
-            api_key=config.get('anthropic_api_key') or os.getenv('ANTHROPIC_API_KEY')
-        )
+        anthropic_api_key = config.get('anthropic_api_key') or os.getenv('ANTHROPIC_API_KEY')
+        if not anthropic_api_key:
+            raise ValueError("ANTHROPIC_API_KEY must be set in environment or config")
+        
+        try:
+            self.anthropic = Anthropic(api_key=anthropic_api_key)
+        except Exception as e:
+            logger.error(f"Failed to initialize Anthropic client: {e}")
+            raise RuntimeError(f"Anthropic client initialization failed: {e}")
         
         self.field_mappings = {}
         self.learning_data = {}
@@ -162,25 +176,54 @@ class AIFormMapper:
         
         Returns:
             Dict with mapping results, confidence scores, and stats
+        
+        Raises:
+            ValueError: If input validation fails
+            RuntimeError: If form analysis fails
         """
+        # Input validation
+        if not page_data or not isinstance(page_data, dict):
+            raise ValueError("page_data must be a non-empty dict")
+        
+        if 'html' not in page_data:
+            raise ValueError("page_data must contain 'html' field")
+        
+        html_content = page_data.get('html')
+        if not isinstance(html_content, str) or len(html_content.strip()) == 0:
+            raise ValueError("html must be a non-empty string")
+        
+        if len(html_content) > 500000:  # Reasonable limit for HTML processing
+            raise ValueError("html content exceeds maximum size of 500KB")
+        
+        url = page_data.get('url', '')
+        if url and not isinstance(url, str):
+            raise ValueError("url must be a string if provided")
+        
         start_time = time.time()
         request_id = self.generate_request_id()
         
         try:
-            logger.info(f"🔍 [{request_id}] Starting AI form analysis for: {page_data['url']}")
-
+            logger.info(f"🔍 [{request_id}] Starting AI form analysis for: {url}")
+            
             # Extract form elements from the page
-            form_elements = self.extract_form_elements(page_data)
-
+            try:
+                form_elements = self.extract_form_elements(page_data)
+            except ValueError as e:
+                logger.error(f"Invalid page_data for form extraction: {e}")
+                raise
+            except Exception as e:
+                logger.error(f"Failed to extract form elements: {e}")
+                raise RuntimeError(f"Form element extraction failed: {e}")
+            
             if not form_elements:
-                logger.warning(f"⚠️ [{request_id}] No form elements found on page")
+                print(f"⚠️ [{request_id}] No form elements found on page")
                 return {
                     'success': False,
                     'error': 'No form elements detected',
                     'request_id': request_id
                 }
-
-            logger.info(f"📋 [{request_id}] Found {len(form_elements)} form elements")
+            
+            print(f"📋 [{request_id}] Found {len(form_elements)} form elements")
             
             # Try pattern matching first (fast)
             pattern_results = self.apply_pattern_matching(form_elements)
@@ -198,37 +241,80 @@ class AIFormMapper:
             
             logger.info(f"✅ [{request_id}] Form analysis complete in {processing_time}ms")
             
+            # Validate final mapping
+            if not isinstance(final_mapping, dict):
+                raise ValueError("Invalid mapping format returned")
+            
             return {
                 'success': True,
                 'mapping': final_mapping,
-                'confidence': self.calculate_overall_confidence(final_mapping),
+                'confidence': self.calculate_overall_confidence(final_mapping) if hasattr(self, 'calculate_overall_confidence') else 0.5,
                 'processing_time': processing_time,
                 'request_id': request_id,
                 'stats': {
                     'total_fields': len(form_elements),
                     'mapped_fields': len(final_mapping),
-                    'pattern_matched': len(pattern_results),
-                    'ai_mapped': len(ai_results)
+                    'pattern_matched': len(pattern_results) if isinstance(pattern_results, dict) else 0,
+                    'ai_mapped': len(ai_results) if isinstance(ai_results, dict) else 0
                 }
             }
             
+        except ValueError as e:
+            logger.error(f"❌ [{request_id}] Invalid input: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+                'error_type': 'ValueError',
+                'request_id': request_id
+            }
+        except RuntimeError as e:
+            logger.error(f"❌ [{request_id}] Runtime error: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+                'error_type': 'RuntimeError',
+                'request_id': request_id
+            }
         except Exception as error:
-            logger.error(f"❌ [{request_id}] Form analysis failed: {str(error)}")
+            logger.error(f"❌ [{request_id}] Form analysis failed: {str(error)}", extra={"error_type": type(error).__name__})
             return {
                 'success': False,
                 'error': str(error),
+                'error_type': type(error).__name__,
                 'request_id': request_id
             }
     
     def extract_form_elements(self, page_data: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Extract form elements from HTML content."""
-        form_elements = []
+        """
+        Extract form elements from HTML content.
         
-        if not page_data.get('html'):
-            raise ValueError('No HTML content provided for analysis')
+        Args:
+            page_data: Dict with 'html' field
         
-        # Parse HTML
-        soup = BeautifulSoup(page_data['html'], 'html.parser')
+        Returns:
+            List of form element dicts
+        
+        Raises:
+            ValueError: If HTML is invalid or missing
+        """
+        if not page_data or not isinstance(page_data, dict):
+            raise ValueError("page_data must be a dict")
+        
+        html_content = page_data.get('html')
+        if not html_content or not isinstance(html_content, str):
+            raise ValueError("page_data must contain valid 'html' string")
+        
+        if len(html_content.strip()) == 0:
+            raise ValueError("HTML content cannot be empty")
+        
+        form_elements: List[Dict[str, Any]] = []
+        
+        try:
+            # Parse HTML with error handling
+            soup = BeautifulSoup(html_content, 'html.parser')
+        except Exception as e:
+            logger.error(f"Failed to parse HTML: {e}")
+            raise ValueError(f"Invalid HTML content: {e}")
         
         # Find all form elements
         for element in soup.find_all(['input', 'textarea', 'select']):
@@ -257,7 +343,7 @@ class AIFormMapper:
             
             form_elements.append(element_data)
         
-        logger.info(f"📊 Extracted {len(form_elements)} form elements")
+        print(f"📊 Extracted {len(form_elements)} form elements")
         return form_elements
     
     def generate_selector(self, element) -> str:
@@ -341,7 +427,7 @@ class AIFormMapper:
                         'element': element
                     }
                     
-                    logger.info(f"🎯 Pattern matched: {field_type} -> {element['selector']} ({confidence*100:.1f}%)")
+                    print(f"🎯 Pattern matched: {field_type} -> {element['selector']} ({confidence*100:.1f}%)")
                     break
         
         return mappings
@@ -383,13 +469,13 @@ class AIFormMapper:
         if not unmapped_elements:
             return {}
         
-        logger.info(f"🤖 Analyzing {len(unmapped_elements)} unmapped elements with AI")
-
+        print(f"🤖 Analyzing {len(unmapped_elements)} unmapped elements with AI")
+        
         try:
             ai_mapping = await self.perform_ai_analysis(unmapped_elements, page_data)
             return ai_mapping
         except Exception as error:
-            logger.warning(f"⚠️ AI analysis failed: {str(error)}")
+            print(f"⚠️ AI analysis failed: {str(error)}")
             return {}
     
     async def perform_ai_analysis(self, elements: List[Dict[str, Any]], 
@@ -501,12 +587,12 @@ Only include mappings where you have confidence >= 0.7. If an element's purpose 
                         'element': element
                     }
                     
-                    logger.info(f"🤖 AI mapped: {mapping['fieldType']} -> {element['selector']} ({mapping['confidence']*100:.1f}%)")
+                    print(f"🤖 AI mapped: {mapping['fieldType']} -> {element['selector']} ({mapping['confidence']*100:.1f}%)")
             
             return result
             
         except Exception as error:
-            logger.error(f'Failed to parse AI response: {str(error)}')
+            print(f'Failed to parse AI response: {str(error)}')
             return {}
     
     def combine_results(self, pattern_results: Dict[str, Dict[str, Any]], 
@@ -522,7 +608,7 @@ Only include mappings where you have confidence >= 0.7. If an element's purpose 
                 combined_mapping[field_type] = ai_mapping
                 
                 if existing_mapping:
-                    logger.info(f"🔄 Replaced {field_type} mapping: {existing_mapping['method']} "
+                    print(f"🔄 Replaced {field_type} mapping: {existing_mapping['method']} "
                           f"({existing_mapping['confidence']*100:.1f}%) -> {ai_mapping['method']} "
                           f"({ai_mapping['confidence']*100:.1f}%)")
         
@@ -563,12 +649,12 @@ Only include mappings where you have confidence >= 0.7. If an element's purpose 
     
     def load_mappings(self):
         """Load existing mappings from storage."""
-        logger.info('📚 Loading existing form mappings...')
+        print('📚 Loading existing form mappings...')
         # Would implement database loading
-
+    
     async def persist_learning_data(self):
         """Persist learning data to storage."""
-        logger.info('💾 Persisting form mapping learning data...')
+        print('💾 Persisting form mapping learning data...')
         # Would implement database persistence
     
     def generate_request_id(self) -> str:

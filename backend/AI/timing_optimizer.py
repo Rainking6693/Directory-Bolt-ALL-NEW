@@ -25,15 +25,28 @@ logger = setup_logger(__name__)
 
 class SubmissionTimingOptimizer:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
-        """Initialize Submission Timing Optimizer (uses Gemini for simpler tasks)."""
+        """
+        Initialize Submission Timing Optimizer (uses Gemini for simpler tasks).
+        
+        Args:
+            config: Optional configuration dict
+        
+        Note:
+            Will fall back to heuristics if Gemini API key is not provided
+        """
         config = config or {}
         
         # Use Gemini API for easier AI tasks (timing optimization)
         gemini_api_key = config.get('gemini_api_key') or os.getenv('GEMINI_API_KEY')
         if gemini_api_key:
-            genai.configure(api_key=gemini_api_key)
-            self.gemini_model = genai.GenerativeModel('gemini-pro')
-            self.use_gemini = True
+            try:
+                genai.configure(api_key=gemini_api_key)
+                self.gemini_model = genai.GenerativeModel('gemini-pro')
+                self.use_gemini = True
+            except Exception as e:
+                logger.warning(f"Failed to initialize Gemini client: {e}, falling back to heuristics")
+                self.gemini_model = None
+                self.use_gemini = False
         else:
             self.gemini_model = None
             self.use_gemini = False
@@ -76,12 +89,24 @@ class SubmissionTimingOptimizer:
         Get optimal submission timing for a specific directory.
         
         Args:
-            directory_id: UUID of directory
+            directory_id: UUID of directory (must be non-empty string)
             priority: Priority level ('high', 'normal', 'low')
         
         Returns:
             Dict with optimal time windows and recommendations
+        
+        Raises:
+            ValueError: If input validation fails
         """
+        # Input validation
+        if not directory_id or not isinstance(directory_id, str) or len(directory_id.strip()) == 0:
+            raise ValueError("directory_id must be a non-empty string")
+        
+        valid_priorities = ['high', 'normal', 'low']
+        if priority not in valid_priorities:
+            logger.warning(f"Invalid priority '{priority}', defaulting to 'normal'")
+            priority = 'normal'
+        
         request_id = self.generate_request_id()
         
         try:

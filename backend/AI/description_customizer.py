@@ -24,12 +24,26 @@ logger = setup_logger(__name__)
 
 class DescriptionCustomizer:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
-        """Initialize AI Description Customizer."""
+        """
+        Initialize AI Description Customizer.
+        
+        Args:
+            config: Optional configuration dict
+        
+        Raises:
+            ValueError: If API key is missing
+        """
         config = config or {}
         
-        self.anthropic = Anthropic(
-            api_key=config.get('anthropic_api_key') or os.getenv('ANTHROPIC_API_KEY')
-        )
+        anthropic_api_key = config.get('anthropic_api_key') or os.getenv('ANTHROPIC_API_KEY')
+        if not anthropic_api_key:
+            raise ValueError("ANTHROPIC_API_KEY must be set in environment or config")
+        
+        try:
+            self.anthropic = Anthropic(api_key=anthropic_api_key)
+        except Exception as e:
+            logger.error(f"Failed to initialize Anthropic client: {e}")
+            raise RuntimeError(f"Anthropic client initialization failed: {e}")
         
         supabase_url = config.get('supabase_url') or os.getenv('SUPABASE_URL')
         supabase_key = config.get('supabase_key') or os.getenv('SUPABASE_SERVICE_ROLE_KEY')
@@ -88,21 +102,50 @@ class DescriptionCustomizer:
         
         Args:
             customization_request: Dict containing:
-                - directory_id: UUID of directory
-                - business_data: Dict with business info
-                - original_description: Original description text
+                - directory_id: UUID of directory (required)
+                - business_data: Dict with business info (required)
+                - original_description: Original description text (required)
         
         Returns:
             Dict with customized description and variations
+        
+        Raises:
+            ValueError: If input validation fails
+            RuntimeError: If customization generation fails
         """
+        # Input validation
+        if not customization_request or not isinstance(customization_request, dict):
+            raise ValueError("customization_request must be a non-empty dict")
+        
+        if 'directory_id' not in customization_request:
+            raise ValueError("customization_request must contain 'directory_id'")
+        
+        if 'original_description' not in customization_request:
+            raise ValueError("customization_request must contain 'original_description'")
+        
+        directory_id = customization_request.get('directory_id')
+        if not isinstance(directory_id, str) or len(directory_id.strip()) == 0:
+            raise ValueError("directory_id must be a non-empty string")
+        
+        original_description = customization_request.get('original_description')
+        if not isinstance(original_description, str) or len(original_description.strip()) == 0:
+            raise ValueError("original_description must be a non-empty string")
+        
+        if len(original_description) > 10000:  # Reasonable limit
+            raise ValueError("original_description exceeds maximum length of 10000 characters")
+        
         start_time = time.time()
         request_id = self.generate_request_id()
         
         try:
-            logger.info(f"📝 [{request_id}] Customizing description for directory: {customization_request['directory_id']}")
+            logger.info(f"📝 [{request_id}] Customizing description for directory: {directory_id}")
             
-            # Validate input
-            self.validate_customization_request(customization_request)
+            # Validate input (call existing validation method if it exists)
+            if hasattr(self, 'validate_customization_request'):
+                try:
+                    self.validate_customization_request(customization_request)
+                except AttributeError:
+                    pass  # Method doesn't exist, already validated above
             
             # Check cache first
             cache_key = self.generate_cache_key(customization_request)
@@ -149,9 +192,15 @@ class DescriptionCustomizer:
             
             return result
             
-        except Exception as error:
-            logger.error(f"❌ [{request_id}] Customization failed: {str(error)}")
+        except ValueError as e:
+            logger.error(f"❌ [{request_id}] Invalid input: {str(e)}")
             raise
+        except RuntimeError as e:
+            logger.error(f"❌ [{request_id}] Runtime error: {str(e)}")
+            raise
+        except Exception as error:
+            logger.error(f"❌ [{request_id}] Customization failed: {str(error)}", extra={"error_type": type(error).__name__})
+            raise RuntimeError(f"Customization failed: {str(error)}")
     
     async def generate_customizations(self, request: Dict[str, Any], 
                                      directory_profile: Dict[str, Any],

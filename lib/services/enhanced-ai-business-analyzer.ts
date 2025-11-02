@@ -256,7 +256,7 @@ export class EnhancedAIBusinessAnalyzer {
   /**
    * Generate market insights with AI
    */
-  private async generateMarketInsights(websiteData: WebsiteData): Promise<MarketInsights> {
+  async generateMarketInsights(websiteData: WebsiteData): Promise<MarketInsights> {
     try {
       if (this.isInitialized && this.openai) {
         const prompt = this.createMarketInsightsPrompt(websiteData)

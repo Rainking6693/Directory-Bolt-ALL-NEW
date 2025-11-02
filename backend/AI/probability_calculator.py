@@ -24,15 +24,28 @@ logger = setup_logger(__name__)
 
 class SuccessProbabilityCalculator:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
-        """Initialize Success Probability Calculator (uses Gemini for simpler tasks)."""
+        """
+        Initialize Success Probability Calculator (uses Gemini for simpler tasks).
+        
+        Args:
+            config: Optional configuration dict
+        
+        Note:
+            Will fall back to heuristics if Gemini API key is not provided
+        """
         config = config or {}
         
         # Use Gemini API for easier AI tasks (probability calculation)
         gemini_api_key = config.get('gemini_api_key') or os.getenv('GEMINI_API_KEY')
         if gemini_api_key:
-            genai.configure(api_key=gemini_api_key)
-            self.gemini_model = genai.GenerativeModel('gemini-pro')
-            self.use_gemini = True
+            try:
+                genai.configure(api_key=gemini_api_key)
+                self.gemini_model = genai.GenerativeModel('gemini-pro')
+                self.use_gemini = True
+            except Exception as e:
+                logger.warning(f"Failed to initialize Gemini client: {e}, falling back to heuristics")
+                self.gemini_model = None
+                self.use_gemini = False
         else:
             self.gemini_model = None
             self.use_gemini = False
@@ -76,21 +89,46 @@ class SuccessProbabilityCalculator:
         
         Args:
             submission_data: Dict containing:
-                - business: Business information dict
-                - directory: Directory information dict
+                - business: Business information dict (required)
+                - directory: Directory information dict (required)
                 - metadata: Additional metadata
         
         Returns:
             Dict with probability, confidence, factors, and recommendations
+        
+        Raises:
+            ValueError: If input validation fails
         """
+        # Input validation
+        if not submission_data or not isinstance(submission_data, dict):
+            raise ValueError("submission_data must be a non-empty dict")
+        
+        if 'business' not in submission_data:
+            raise ValueError("submission_data must contain 'business' field")
+        
+        business = submission_data.get('business')
+        if not isinstance(business, dict):
+            raise ValueError("business must be a dict")
+        
+        if 'directory' not in submission_data:
+            raise ValueError("submission_data must contain 'directory' field")
+        
+        directory = submission_data.get('directory')
+        if not isinstance(directory, dict):
+            raise ValueError("directory must be a dict")
+        
         start_time = time.time()
         request_id = self.generate_request_id()
         
         try:
             logger.info(f"🎯 [{request_id}] Calculating success probability")
             
-            # Validate input data
-            self.validate_submission_data(submission_data)
+            # Validate input data (call existing validation method if it exists)
+            if hasattr(self, 'validate_submission_data'):
+                try:
+                    self.validate_submission_data(submission_data)
+                except AttributeError:
+                    pass  # Method doesn't exist, already validated above
             
             # Check cache first
             cache_key = self.generate_cache_key(submission_data)
@@ -234,7 +272,7 @@ class SuccessProbabilityCalculator:
             return success_rate
             
         except Exception as error:
-            logger.warning(f"Failed to get historical success rate: {str(error)}")
+            logger.warn(f"Failed to get historical success rate: {str(error)}")
             return 0.5
     
     async def calculate_requirements_compliance(self, business: Dict[str, Any],

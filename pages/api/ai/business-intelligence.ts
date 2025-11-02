@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { createBusinessIntelligenceEngine, DEFAULT_BUSINESS_INTELLIGENCE_CONFIG } from '../../../lib/services/ai-business-intelligence-engine'
+import { createBusinessIntelligenceEngine, AIBusinessIntelligenceEngine, DEFAULT_BUSINESS_INTELLIGENCE_CONFIG } from '../../../lib/services/ai-business-intelligence-engine'
 import { withRateLimit, rateLimiters } from '../../../lib/middleware/production-rate-limit'
 import { logger } from '../../../lib/utils/logger'
 

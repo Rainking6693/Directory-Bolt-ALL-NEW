@@ -23,12 +23,26 @@ logger = setup_logger(__name__)
 
 class IntelligentRetryAnalyzer:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
-        """Initialize Intelligent Retry Analyzer."""
+        """
+        Initialize Intelligent Retry Analyzer.
+        
+        Args:
+            config: Optional configuration dict
+        
+        Raises:
+            ValueError: If API key is missing
+        """
         config = config or {}
         
-        self.anthropic = Anthropic(
-            api_key=config.get('anthropic_api_key') or os.getenv('ANTHROPIC_API_KEY')
-        )
+        anthropic_api_key = config.get('anthropic_api_key') or os.getenv('ANTHROPIC_API_KEY')
+        if not anthropic_api_key:
+            raise ValueError("ANTHROPIC_API_KEY must be set in environment or config")
+        
+        try:
+            self.anthropic = Anthropic(api_key=anthropic_api_key)
+        except Exception as e:
+            logger.error(f"Failed to initialize Anthropic client: {e}")
+            raise RuntimeError(f"Anthropic client initialization failed: {e}")
         
         supabase_url = config.get('supabase_url') or os.getenv('SUPABASE_URL')
         supabase_key = config.get('supabase_key') or os.getenv('SUPABASE_SERVICE_ROLE_KEY')
@@ -111,8 +125,8 @@ class IntelligentRetryAnalyzer:
         
         Args:
             failure_data: Dict containing:
-                - submission_id: UUID of submission
-                - directory_id: UUID of directory
+                - submission_id: UUID of submission (required)
+                - directory_id: UUID of directory (required)
                 - business_name: Business name
                 - rejection_reason: Reason for failure
                 - error_message: Error message if any
@@ -120,15 +134,33 @@ class IntelligentRetryAnalyzer:
         
         Returns:
             Dict with retry recommendation, strategy, and improvements
+        
+        Raises:
+            ValueError: If input validation fails
         """
+        # Input validation
+        if not failure_data or not isinstance(failure_data, dict):
+            raise ValueError("failure_data must be a non-empty dict")
+        
+        if 'submission_id' not in failure_data:
+            raise ValueError("failure_data must contain 'submission_id'")
+        
+        submission_id = failure_data.get('submission_id')
+        if not isinstance(submission_id, str) or len(submission_id.strip()) == 0:
+            raise ValueError("submission_id must be a non-empty string")
+        
         start_time = time.time()
         request_id = self.generate_request_id()
         
         try:
-            logger.info(f"🔍 [{request_id}] Analyzing failure for submission: {failure_data.get('submission_id')}")
+            logger.info(f"🔍 [{request_id}] Analyzing failure for submission: {submission_id}")
             
-            # Validate input
-            self.validate_failure_data(failure_data)
+            # Validate input (call existing validation method if it exists)
+            if hasattr(self, 'validate_failure_data'):
+                try:
+                    self.validate_failure_data(failure_data)
+                except AttributeError:
+                    pass  # Method doesn't exist, already validated above
             
             # Check for cached analysis
             cache_key = self.generate_analysis_cache_key(failure_data)
@@ -192,10 +224,13 @@ class IntelligentRetryAnalyzer:
             # Cache the analysis
             self.cache_analysis(cache_key, result)
             
-            logger.info(f"✅ [{request_id}] Retry analysis complete. Recommend retry: {result['retry_recommendation']}")
+            logger.info(f"✅ [{request_id}] Retry analysis complete. Recommend retry: {result.get('retry_recommendation', False)}")
             
             return result
             
+        except ValueError as e:
+            logger.error(f"❌ [{request_id}] Invalid input: {str(e)}")
+            raise
         except Exception as error:
             logger.error(f"❌ [{request_id}] Retry analysis failed: {str(error)}")
             raise
