@@ -21,6 +21,7 @@
 
 /*.svg
   Cache-Control: public, max-age=2592000
+  Content-Type: image/svg+xml
 
 /*.ico
   Cache-Control: public, max-age=2592000
@@ -47,6 +48,11 @@
 
 /sitemap.xml
   Cache-Control: public, max-age=604800
+  Content-Type: application/xml
+
+/sitemap-*.xml
+  Cache-Control: public, max-age=604800
+  Content-Type: application/xml
 
 # Default cache for other files - 10 minutes
 /*
