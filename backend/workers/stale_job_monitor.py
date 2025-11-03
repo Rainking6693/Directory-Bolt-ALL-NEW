@@ -19,6 +19,14 @@ import logging
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 
+# Monkey patch httpx.Client to accept proxy parameter (for gotrue compatibility)
+import httpx
+_original_init = httpx.Client.__init__
+def _patched_init(self, *args, **kwargs):
+    kwargs.pop('proxy', None)  # Remove proxy if present
+    return _original_init(self, *args, **kwargs)
+httpx.Client.__init__ = _patched_init
+
 import boto3
 from supabase import create_client, Client
 
@@ -38,12 +46,25 @@ SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_SERVICE_KEY = os.getenv('SUPABASE_SERVICE_KEY') or os.getenv('SUPABASE_SERVICE_ROLE_KEY')
 SQS_QUEUE_URL = os.getenv('SQS_QUEUE_URL')
 AWS_REGION = os.getenv('AWS_DEFAULT_REGION', 'us-east-1')
+AWS_ACCESS_KEY_ID = os.getenv('AWS_DEFAULT_ACCESS_KEY_ID') or os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_DEFAULT_SECRET_ACCESS_KEY') or os.getenv('AWS_SECRET_ACCESS_KEY')
 STALE_THRESHOLD_MINUTES = int(os.getenv('STALE_THRESHOLD_MINUTES', '10'))
 CHECK_INTERVAL_SECONDS = int(os.getenv('CHECK_INTERVAL_SECONDS', '120'))
 
 # Initialize clients
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
-sqs = boto3.client('sqs', region_name=AWS_REGION)
+
+# Initialize SQS client with explicit credentials
+if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
+    sqs = boto3.client(
+        'sqs',
+        region_name=AWS_REGION,
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+    )
+else:
+    logger.warning("AWS credentials not found in environment variables, using default credential chain")
+    sqs = boto3.client('sqs', region_name=AWS_REGION)
 
 
 def find_stale_jobs(threshold_minutes: int = 10) -> List[Dict[str, Any]]:
@@ -105,7 +126,7 @@ def requeue_job(job: Dict[str, Any]) -> bool:
             'customer_id': customer_id,
             'package_size': package_size,
             'priority': priority,
-            'retry_attempt': job.get('retry_count', 0) + 1,
+            'retry_attempt': 1,  # Track retries in message metadata
             'requeued_by': 'stale_job_monitor',
             'requeued_at': datetime.utcnow().isoformat()
         }
@@ -135,22 +156,28 @@ def requeue_job(job: Dict[str, Any]) -> bool:
         # Update job status to pending
         supabase.table('jobs').update({
             'status': 'pending',
-            'retry_count': job.get('retry_count', 0) + 1,
             'updated_at': datetime.utcnow().isoformat()
         }).eq('id', job_id).execute()
         
-        # Record in queue_history
-        supabase.table('queue_history').insert({
-            'job_id': job_id,
-            'event': 'requeued_stale',
-            'details': {
-                'reason': 'stale_job_detected',
-                'threshold_minutes': STALE_THRESHOLD_MINUTES,
-                'message_id': message_id,
-                'retry_attempt': message_body['retry_attempt']
-            },
-            'worker_id': 'stale_job_monitor'
-        }).execute()
+        # Record in queue_history (using actual schema)
+        try:
+            supabase.table('queue_history').insert({
+                'customer_id': customer_id,
+                'status_from': 'in_progress',
+                'status_to': 'pending',
+                'metadata': {
+                    'job_id': job_id,
+                    'event': 'requeued_stale',
+                    'reason': 'stale_job_detected',
+                    'threshold_minutes': STALE_THRESHOLD_MINUTES,
+                    'message_id': message_id,
+                    'retry_attempt': message_body['retry_attempt'],
+                    'requeued_by': 'stale_job_monitor'
+                }
+            }).execute()
+        except Exception as history_error:
+            # Log but don't fail if history insert fails
+            logger.warning(f"Failed to record in queue_history: {history_error}")
         
         logger.info(f"Updated job status to pending: job_id={job_id}")
         return True

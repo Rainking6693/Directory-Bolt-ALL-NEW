@@ -26,28 +26,46 @@ Since Supabase Python client doesn't support direct SQL execution, run migration
    -- Check if table exists
    SELECT table_name FROM information_schema.tables 
    WHERE table_name = 'rate_limit_requests';
-   -- Should return 1 row
+   -- Expected result: 1 row with value "rate_limit_requests" in the table_name column
    
    -- Check if function exists
    SELECT routine_name FROM information_schema.routines 
    WHERE routine_name = 'find_stale_jobs';
-   -- Should return 1 row
+   -- Expected result: 1 row with value "find_stale_jobs" in the routine_name column
+   
+   -- Check if view exists
+   SELECT table_name FROM information_schema.views 
+   WHERE table_name = 'stale_jobs_view';
+   -- Expected result: 1 row with value "stale_jobs_view" in the table_name column
    ```
+   
+   ✅ **If all queries return 1 row each, migrations are successful!**
 
-## Step 2: Configure Slack Webhook
+## Step 2: Configure Slack Webhook (OPTIONAL)
 
-Add to `backend/.env`:
+**Note:** Slack alerts are optional. The DLQ monitor works without them, but alerts help you know immediately when failures occur.
 
-```bash
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
-```
+If you don't have Slack or don't want alerts:
+- Skip this step
+- Monitor DLQ manually via AWS console or Docker logs
+- See `backend/scripts/SLACK_GETTING_STARTED.md` for alternatives
 
-To get a Slack webhook:
-1. Go to https://api.slack.com/apps
-2. Create new app or select existing
-3. Enable Incoming Webhooks
-4. Add webhook to workspace
-5. Copy webhook URL
+If you want Slack alerts:
+
+1. **Get Slack** (if you don't have it):
+   - Go to https://slack.com/get-started
+   - Create account and workspace
+   - See `backend/scripts/SLACK_GETTING_STARTED.md` for details
+
+2. **Set up webhook:**
+   - Follow guide: `backend/scripts/SLACK_WEBHOOK_SETUP.md`
+   - Or quick steps:
+     - Go to https://api.slack.com/apps
+     - Create new app → Enable "Incoming Webhooks"
+     - Add webhook to workspace → Select channel
+     - Copy webhook URL
+
+3. **Add to `backend/.env`:**
 
 ## Step 3: Build and Start Monitoring Services
 

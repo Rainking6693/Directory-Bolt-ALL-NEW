@@ -92,6 +92,14 @@ screenshots/
 *.key
 secrets/
 
+# Slack webhooks and sensitive URLs
+# Note: .env files are already ignored above, so SLACK_WEBHOOK_URL in .env is safe
+*.webhook
+*.slack-webhook
+slack-webhook*.txt
+webhook*.txt
+webhook*.env
+
 
 #Ignore cursor AI rules
 .cursor\rules\codacy.mdc
