@@ -39,24 +39,22 @@ export interface PricingTier {
 export const PRICING_TIERS: Record<string, PricingTier> = {
   starter: {
     id: 'starter',
-    name: 'Starter',
+    name: 'Starter Intelligence',
     price: 149,
-    originalValue: 2000,
-    description: 'AI-powered directory analysis for small businesses',
+    originalValue: 2700,
+    description: 'AI Market Analysis for small businesses',
     shortDescription: 'Perfect for small businesses starting their online presence',
-    directories: 25,
+    directories: 100,
     support: 'Email support (48hr response)',
     processing: '5-7 business days',
     highlighted: false,
     popular: false,
     features: [
-      '25 AI-optimized directory submissions',
-      'Basic AI competitive analysis',
-      'AI business insights dashboard', 
-      'Profile optimization recommendations',
-      '30-day completion guarantee',
-      'Email support',
-      'Basic analytics reporting'
+      'AI Market Analysis (Worth $1,500)',
+      '100 Directory Submissions (Worth $400)',
+      'Competitor Intelligence (Worth $800)',
+      'Basic optimization reports',
+      'Email support'
     ],
     aiFeatures: [
       'AI business category detection',
@@ -70,7 +68,7 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
       newCustomers: '2-5 new customers per month',
       roiPercentage: '13x ROI (92% savings)',
       consultantEquivalent: '$2,000+ business consultant package',
-      savings: '92% vs hiring consultant'
+      savings: '93% vs hiring consultant'
     },
     limits: {
       monthlySubmissions: 25,
@@ -85,26 +83,23 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
 
   growth: {
     id: 'growth',
-    name: 'Growth',
+    name: 'Growth Intelligence',
     price: 299,
-    originalValue: 4000,
-    description: 'Comprehensive AI business intelligence for growing companies',
+    originalValue: 4300,
+    description: 'Full AI Business Intelligence for growing companies',
     shortDescription: 'Most popular choice for serious business growth',
-    directories: 75,
+    directories: 250,
     support: 'Priority support (24hr response)',
     processing: '3-5 business days',
     highlighted: true,
     popular: true,
     badge: 'MOST POPULAR',
     features: [
-      '75 AI-optimized directory submissions',
-      'Advanced AI competitive analysis',
-      'AI market research & insights',
-      'Revenue growth projections',
-      'Business strategy recommendations',
-      'Advanced analytics dashboard',
-      'Priority email support',
-      'Automated submission tracking'
+      'Full AI Business Intelligence (Worth $2,000)',
+      '250 Premium Directory Submissions (Worth $1,000)',
+      'Advanced Competitor Analysis (Worth $1,200)',
+      'Growth Strategy Reports (Worth $800)',
+      'Priority support & optimization'
     ],
     aiFeatures: [
       'Advanced competitor intelligence',
@@ -119,7 +114,7 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
       newCustomers: '5-12 new customers per month',
       roiPercentage: '13x ROI (92% savings)',
       consultantEquivalent: '$4,000+ consulting package',
-      savings: '92% vs hiring consultant'
+      savings: '93% vs hiring consultant'
     },
     limits: {
       monthlySubmissions: 75,
@@ -134,26 +129,22 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
 
   professional: {
     id: 'professional',
-    name: 'Professional',
+    name: 'Professional Intelligence',
     price: 499,
-    originalValue: 6000,
-    description: 'Enterprise-grade AI with advanced SEO and competitor tools',
+    originalValue: 7500,
+    description: 'Enterprise AI Intelligence Suite for established companies',
     shortDescription: 'Complete business intelligence for established companies',
-    directories: 150,
+    directories: 400,
     support: 'Phone & priority support (12hr response)',
     processing: '1-2 business days',
     highlighted: false,
     popular: false,
     features: [
-      '150 AI-optimized directory submissions',
-      'SEO Content Gap Analysis tool',
-      'AI-generated blog post ideas',
-      'Custom market research reports',
-      'White-label reporting',
-      'Quarterly strategy consultations',
-      'API access for integrations',
-      'Custom business modeling',
-      'Phone support'
+      'Enterprise AI Intelligence Suite (Worth $3,000)',
+      '400 Premium Directory Network (Worth $1,500)',
+      'Deep Market Intelligence (Worth $2,000)',
+      'White-label Reports (Worth $1,000)',
+      'Dedicated account manager'
     ],
     aiFeatures: [
       'SEO Content Gap Analysis',
@@ -168,7 +159,7 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
       newCustomers: '10-20 new customers per month',
       roiPercentage: '12x ROI (91% savings)',
       consultantEquivalent: '$6,000+ enterprise consulting',
-      savings: '91% vs hiring consultant'
+      savings: '93% vs hiring consultant'
     },
     limits: {
       monthlySubmissions: 150,
@@ -183,10 +174,10 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
 
   enterprise: {
     id: 'enterprise',
-    name: 'Enterprise',
+    name: 'Enterprise Intelligence',
     price: 799,
-    originalValue: 8000,
-    description: 'Complete AI-powered business intelligence suite with dedicated support',
+    originalValue: 9700,
+    description: 'Complete AI Intelligence Platform with dedicated support',
     shortDescription: 'Ultimate solution for large organizations and agencies',
     directories: 500,
     support: 'Dedicated account manager',
@@ -195,17 +186,11 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
     popular: false,
     badge: 'PREMIUM SUITE',
     features: [
-      '500+ AI-optimized directory submissions',
-      'Advanced SEO Content Gap Analysis',
-      'Competitor content intelligence',
-      'AI-powered FAQ suggestions',
-      'Keyword cluster generation',
-      'Dedicated AI business analyst',
-      'Real-time competitive monitoring',
-      'Market expansion planning',
-      'White-label reports & presentations',
-      'Dedicated account manager',
-      'Custom integrations'
+      'Complete AI Intelligence Platform (Worth $4,000)',
+      '500+ Premium Directory Network (Worth $2,000)',
+      'Advanced Market Intelligence (Worth $2,500)',
+      'Custom White-label Reports (Worth $1,200)',
+      'Dedicated success manager + SLA'
     ],
     aiFeatures: [
       'Full AI intelligence suite',
@@ -221,7 +206,7 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
       newCustomers: '20-50 new customers per month',
       roiPercentage: '10x ROI (87% savings)',
       consultantEquivalent: '$8,000+ executive consulting',
-      savings: '90% vs hiring consultant'
+      savings: '92% vs hiring consultant'
     },
     limits: {
       monthlySubmissions: 500,

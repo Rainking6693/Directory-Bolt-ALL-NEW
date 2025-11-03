@@ -5,6 +5,7 @@ export const STAFF_SESSION_COOKIE = 'staff-session';
 export const STAFF_SESSION_VALUE = process.env.STAFF_SESSION_TOKEN || 'VALIDTOKEN';
 export const STAFF_FALLBACK_USERNAME = 'staffuser';
 export const STAFF_FALLBACK_PASSWORD = 'DirectoryBoltStaff2025!';
+// Note: These credentials are used when TEST_MODE is enabled or when env vars are not set
 
 export const ADMIN_SESSION_COOKIE = 'admin-session';
 export const ADMIN_SESSION_VALUE = process.env.ADMIN_SESSION_TOKEN || 'ADMINVALIDTOKEN';

@@ -57,6 +57,8 @@ If you want Slack alerts:
    - Create account and workspace
    - See `backend/scripts/SLACK_GETTING_STARTED.md` for details
 
+https://hooks.slack.com/services/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
+
 2. **Set up webhook:**
    - Follow guide: `backend/scripts/SLACK_WEBHOOK_SETUP.md`
    - Or quick steps:

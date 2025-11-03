@@ -50,7 +50,7 @@ export default function Header({ showBackButton = false }: HeaderProps) {
               size="md"
               className="px-6 py-2"
             >
-              Start Free Trial
+              Get Started
             </StartTrialButton>
           </div>
 

@@ -202,7 +202,7 @@ export default function AnalyzePage() {
                     disabled={isAnalyzing}
                     className="group relative w-full bg-gradient-to-r from-volt-500 to-volt-600 text-secondary-900 font-black py-4 px-8 text-xl rounded-xl hover:from-volt-400 hover:to-volt-500 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:transform-none shadow-2xl hover:shadow-volt-500/50 animate-glow"
                   >
-                    <span className="relative z-10">🚀 Start FREE Analysis</span>
+                    <span className="relative z-10">🚀 Analyze Website</span>
                   </button>
                 </form>
 

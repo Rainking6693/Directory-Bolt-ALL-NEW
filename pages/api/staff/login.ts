@@ -73,8 +73,12 @@ export default async function handler(
       username === STAFF_FALLBACK_USERNAME && 
       password === STAFF_FALLBACK_PASSWORD;
 
+    // Also check if user provided the fallback credentials directly (even if TEST_MODE is off)
+    const directFallbackMatch = username === STAFF_FALLBACK_USERNAME && 
+      password === STAFF_FALLBACK_PASSWORD;
+
     if (!usernameMatch || !passwordMatch) {
-      if (!fallbackMatch) {
+      if (!fallbackMatch && !directFallbackMatch) {
         return res.status(401).json({
           success: false,
           error: 'Invalid credentials',

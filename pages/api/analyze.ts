@@ -14,18 +14,19 @@ const logger = {
 
 // Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY!
 
 if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error('Missing Supabase configuration')
+  console.error('Missing Supabase configuration - analysis will use mock data')
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+// Only create Supabase client if we have credentials
+const supabase = (supabaseUrl && supabaseServiceKey) ? createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
   }
-})
+}) : null
 
 interface AnalysisTier {
   name: string
@@ -313,6 +314,12 @@ async function createCustomerFromAnalysis(url: string, tier: string, analysisDat
       updated_at: new Date().toISOString()
     }
     
+    // Only create customer if Supabase is available
+    if (!supabase) {
+      logger.warn('Supabase not available - skipping customer creation')
+      return null
+    }
+    
     const { data: newCustomer, error: insertError } = await supabase
       .from('customers')
       .insert([customerData])
@@ -477,10 +484,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
     }, error as Error)
     
+    // Return a more helpful error message
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    logger.error('Website analysis failed', { error: errorMessage, url: req.body?.url })
+    
     return res.status(500).json({
       success: false,
       error: 'Analysis failed',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      message: errorMessage.includes('Supabase') || errorMessage.includes('Missing') 
+        ? 'Analysis service temporarily unavailable. Please try again.' 
+        : errorMessage,
       processingTime: Date.now() - startTime
     })
   }

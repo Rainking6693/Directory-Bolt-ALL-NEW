@@ -18,7 +18,7 @@ export default function PricingPage() {
         'Email support',
         'Monthly reports',
       ],
-      cta: 'Start Free Trial',
+      cta: 'Get Started',
       popular: false,
       priceId: process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || 'starter',
     },
@@ -36,7 +36,7 @@ export default function PricingPage() {
         'Custom business profiles',
         'Competitor analysis',
       ],
-      cta: 'Start Free Trial',
+      cta: 'Get Started',
       popular: true,
       priceId: process.env.NEXT_PUBLIC_STRIPE_GROWTH_PRICE_ID || 'growth',
     },
@@ -56,7 +56,7 @@ export default function PricingPage() {
         'White-label reports',
         'API access',
       ],
-      cta: 'Start Free Trial',
+      cta: 'Get Started',
       popular: false,
       priceId: process.env.NEXT_PUBLIC_STRIPE_PROFESSIONAL_PRICE_ID || 'professional',
     },
@@ -87,7 +87,7 @@ export default function PricingPage() {
     <>
       <Head>
         <title>Pricing - DirectoryBolt | AI-Powered Directory Submissions</title>
-        <meta name="description" content="Choose the perfect plan for your business. Get AI-powered directory submissions starting at $49/month. 14-day free trial, no credit card required." />
+        <meta name="description" content="Choose the perfect plan for your business. Get AI-powered directory submissions starting at $149. One-time purchase, no monthly fees." />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://directorybolt.com/pricing" />
       </Head>
@@ -105,7 +105,7 @@ export default function PricingPage() {
               </span>
             </h1>
             <p className="text-xl text-secondary-200 max-w-3xl mx-auto">
-              Choose the perfect plan for your business. All plans include a 14-day free trial.
+              Choose the perfect plan for your business. One-time purchase, lifetime results.
             </p>
           </div>
 
@@ -174,10 +174,10 @@ export default function PricingPage() {
             <div className="space-y-6">
               <div className="bg-secondary-800/50 backdrop-blur-sm rounded-xl border border-secondary-700 p-6">
                 <h3 className="text-xl font-bold text-volt-400 mb-2">
-                  Is there a free trial?
+                  What's included?
                 </h3>
                 <p className="text-secondary-200">
-                  Yes! All plans include a 14-day free trial. No credit card required to start.
+                  All plans include AI-powered directory submissions, competitor analysis, and business intelligence reports. One-time purchase with 30-day money-back guarantee.
                 </p>
               </div>
               <div className="bg-secondary-800/50 backdrop-blur-sm rounded-xl border border-secondary-700 p-6">
@@ -213,10 +213,10 @@ export default function PricingPage() {
               Ready to boost your online visibility?
             </h2>
             <p className="text-xl text-secondary-200 mb-8">
-              Start your free trial today. No credit card required.
+              Get started today with a one-time purchase.
             </p>
             <StartTrialButton plan="growth" size="lg" className="px-8 py-4 text-lg">
-              Start Free Trial
+              Get Started Now
             </StartTrialButton>
           </div>
         </div>
