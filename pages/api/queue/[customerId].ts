@@ -8,8 +8,14 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { queueManager } from '../../../lib/services/queue-manager'
 import { QueueProcessingResult } from '../../../lib/types/queue.types'
+import { rateLimit, rateLimitPresets } from '../../../lib/middleware/rate-limit'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Apply rate limiting
+  const rateLimitResult = await rateLimit(rateLimitPresets.public)(req, res)
+  if (!rateLimitResult || !rateLimitResult.allowed) {
+    return // Response already sent by rate limiter
+  }
   try {
     const { customerId } = req.query
 

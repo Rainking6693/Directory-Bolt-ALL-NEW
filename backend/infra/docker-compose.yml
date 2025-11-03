@@ -67,5 +67,36 @@ services:
       - brain
     restart: unless-stopped
 
+  # Stale job monitor (P0 Fix #1)
+  stale-job-monitor:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.monitor
+    env_file:
+      - ../.env
+    environment:
+      - STALE_THRESHOLD_MINUTES=10
+      - CHECK_INTERVAL_SECONDS=120
+    command: python -m workers.stale_job_monitor
+    volumes:
+      - monitor-logs:/var/log
+    restart: unless-stopped
+
+  # DLQ monitor (P0 Fix #3)
+  dlq-monitor:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.monitor
+    env_file:
+      - ../.env
+    environment:
+      - DLQ_CHECK_INTERVAL_SECONDS=300
+      - DLQ_ALERT_THRESHOLD=1
+    command: python -m workers.dlq_monitor
+    volumes:
+      - monitor-logs:/var/log
+    restart: unless-stopped
+
 volumes:
   prefect-db:
+  monitor-logs:
