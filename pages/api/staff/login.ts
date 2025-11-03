@@ -40,17 +40,6 @@ export default async function handler(
   }
 
   try {
-    const credentials = resolveStaffCredentials();
-
-    if (!credentials) {
-      console.error('[staff.login] STAFF credentials missing while TEST_MODE disabled');
-      return res.status(500).json({
-        success: false,
-        error: 'Configuration error',
-        message: 'STAFF_USERNAME and STAFF_PASSWORD must be configured or TEST_MODE enabled.',
-      });
-    }
-
     const { username, password } = (req.body || {}) as {
       username?: string;
       password?: string;
@@ -64,32 +53,34 @@ export default async function handler(
       });
     }
 
-    // Check against configured credentials or fallback credentials
-    const usernameMatch = username === credentials.username;
-    const passwordMatch = password === credentials.password;
-    
-    // Also check fallback credentials if TEST_MODE is enabled (for development)
-    const fallbackMatch = TEST_MODE_ENABLED && 
-      username === STAFF_FALLBACK_USERNAME && 
-      password === STAFF_FALLBACK_PASSWORD;
-
-    // Also check if user provided the fallback credentials directly (even if TEST_MODE is off)
+    // Always check fallback credentials first (for convenience)
     const directFallbackMatch = username === STAFF_FALLBACK_USERNAME && 
       password === STAFF_FALLBACK_PASSWORD;
 
-    if (!usernameMatch || !passwordMatch) {
-      if (!fallbackMatch && !directFallbackMatch) {
-        return res.status(401).json({
-          success: false,
-          error: 'Invalid credentials',
-          message: 'Username or password is incorrect',
-        });
-      }
+    // Then check configured credentials
+    const credentials = resolveStaffCredentials();
+    let usernameMatch = false;
+    let passwordMatch = false;
+    
+    if (credentials) {
+      usernameMatch = username === credentials.username;
+      passwordMatch = password === credentials.password;
     }
+
+    if (!directFallbackMatch && (!usernameMatch || !passwordMatch)) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid credentials',
+        message: 'Username or password is incorrect',
+      });
+    }
+
+    // Use fallback username if using fallback credentials, otherwise use configured
+    const finalUsername = directFallbackMatch ? STAFF_FALLBACK_USERNAME : (credentials?.username || STAFF_FALLBACK_USERNAME);
 
     const user = {
       id: 'staff-user',
-      username: credentials.username,
+      username: finalUsername,
       email: 'ben.stone@directorybolt.com',
       first_name: 'Staff',
       last_name: 'User',

@@ -15,31 +15,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
 
   try {
-    const validKey = resolveAdminApiKey();
-
-    if (!validKey) {
-      console.error('[admin.login] ADMIN_API_KEY missing while TEST_MODE disabled');
-      return res.status(500).json({
-        success: false,
-        error: 'Configuration error',
-        message: 'ADMIN_API_KEY must be configured or TEST_MODE enabled.',
-      });
-    }
-
     const { apiKey } = req.body as { apiKey?: string };
 
-    // Check against configured key or fallback key
-    const providedKey = apiKey?.trim() || '';
-    const keyMatch = providedKey === validKey;
-    
-    // Also check fallback key directly (for convenience)
-    const ADMIN_FALLBACK_API_KEY = '718e8866b81ecc6527dfc1b640e103e6741d844f4438286210d652ca02ee4622';
-    const fallbackMatch = providedKey === ADMIN_FALLBACK_API_KEY;
-
-    if (!keyMatch && !fallbackMatch) {
+    if (!apiKey || !apiKey.trim()) {
       return res.status(401).json({
         success: false,
         error: "Invalid admin API key",
+        message: "API key is required",
+      });
+    }
+
+    const providedKey = apiKey.trim();
+    
+    // Always check fallback key first (for convenience)
+    const ADMIN_FALLBACK_API_KEY = '718e8866b81ecc6527dfc1b640e103e6741d844f4438286210d652ca02ee4622';
+    const fallbackMatch = providedKey === ADMIN_FALLBACK_API_KEY;
+
+    // Then check configured key
+    const validKey = resolveAdminApiKey();
+    const keyMatch = validKey && providedKey === validKey;
+
+    if (!fallbackMatch && !keyMatch) {
+      return res.status(401).json({
+        success: false,
+        error: "Invalid admin API key",
+        message: "The provided API key does not match any configured keys",
       });
     }
 

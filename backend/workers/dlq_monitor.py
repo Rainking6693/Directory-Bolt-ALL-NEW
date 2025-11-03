@@ -40,8 +40,21 @@ SLACK_WEBHOOK_URL = os.getenv('SLACK_WEBHOOK_URL')
 CHECK_INTERVAL_SECONDS = int(os.getenv('DLQ_CHECK_INTERVAL_SECONDS', '300'))
 ALERT_THRESHOLD = int(os.getenv('DLQ_ALERT_THRESHOLD', '1'))
 
-# Initialize SQS client
-sqs = boto3.client('sqs', region_name=AWS_REGION)
+# AWS credentials (explicit for Docker)
+AWS_ACCESS_KEY_ID = os.getenv('AWS_DEFAULT_ACCESS_KEY_ID') or os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_DEFAULT_SECRET_ACCESS_KEY') or os.getenv('AWS_SECRET_ACCESS_KEY')
+
+# Initialize SQS client with explicit credentials
+if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
+    sqs = boto3.client(
+        'sqs',
+        region_name=AWS_REGION,
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+    )
+else:
+    logger.warning("AWS credentials not found in environment variables, using default credential chain")
+    sqs = boto3.client('sqs', region_name=AWS_REGION)
 
 
 def get_dlq_depth() -> int:

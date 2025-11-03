@@ -197,9 +197,9 @@ export default function PricingPage() {
                 >
                   {/* Popular Badge */}
                   {tier.popular && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                    <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-20">
                       <span className="bg-gradient-to-r from-volt-500 to-volt-600 text-secondary-900 font-black px-4 py-2 rounded-full text-xs shadow-lg whitespace-nowrap">
-                        🔥 {tier.badge}
+                        🔥 {tier.badge || 'MOST POPULAR'}
                       </span>
                     </div>
                   )}

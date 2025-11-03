@@ -65,12 +65,12 @@ export default async function handler(
 
   try {
     if (supabase) {
-      // Support lookup by internal id (UUID) or public customer_id (e.g., DB-YYYY-XXXXXX)
-      // First try customer_id (DB-YYYY-XXXXXX format), then try UUID
+      // Support lookup by internal id (UUID) or public customer_id (e.g., DIR-YYYY-XXXXXX or DB-YYYY-XXXXXX)
+      // First try customer_id (DIR-YYYY-XXXXXX or DB-YYYY-XXXXXX format), then try UUID
       let customer, error;
       
-      if (id.startsWith('DB-')) {
-        // Look up by customer_id for DB-YYYY-XXXXXX format
+      if (id.startsWith('DIR-') || id.startsWith('DB-')) {
+        // Look up by customer_id for DIR-YYYY-XXXXXX or DB-YYYY-XXXXXX format
         const result = await supabase
           .from("customers")
           .select("*")
@@ -79,14 +79,25 @@ export default async function handler(
         customer = result.data;
         error = result.error;
       } else {
-        // Try UUID lookup
-        const result = await supabase
+        // Try UUID lookup first
+        let result = await supabase
           .from("customers")
           .select("*")
           .eq("id", id)
           .single();
         customer = result.data;
         error = result.error;
+        
+        // If UUID lookup fails, try customer_id as fallback
+        if (error || !customer) {
+          result = await supabase
+            .from("customers")
+            .select("*")
+            .eq("customer_id", id)
+            .single();
+          customer = result.data;
+          error = result.error;
+        }
       }
 
       if (error || !customer) {
