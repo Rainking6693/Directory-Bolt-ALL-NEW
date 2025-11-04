@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: directorybolt-backend
+    env: docker
+    dockerfilePath: backend/infra/Dockerfile
+    dockerContext: backend
+    dockerCommand: python orchestration/subscriber.py
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: AWS_DEFAULT_REGION
+        sync: false
+      - key: AWS_DEFAULT_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_DEFAULT_SECRET_ACCESS_KEY
+        sync: false
+      - key: SQS_QUEUE_URL
+        sync: false
+      - key: SQS_DLQ_URL
+        sync: false
+      - key: PREFECT_API_URL
+        sync: false
+      - key: CREWAI_URL
+        sync: false
+

@@ -1,5 +1,6 @@
-# Master Dockerfile for Render
-# This runs the subscriber service which is the main entry point
+# Dockerfile that works with Render's current settings
+# Build context: backend/infra/.
+# This means we're already IN the infra directory
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -9,24 +10,24 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements (from parent directory)
-COPY requirements.txt /app/
+# Copy requirements from parent directory (backend/)
+# Since build context is backend/infra/., we need to go up one level
+COPY ../requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy all application code (from parent backend/ directory)
-COPY orchestration /app/orchestration/
-COPY workers /app/workers/
-COPY brain /app/brain/
-COPY db /app/db/
-COPY utils /app/utils/
-COPY AI /app/AI/
+# Copy application code from parent directory
+COPY ../orchestration /app/orchestration/
+COPY ../workers /app/workers/
+COPY ../brain /app/brain/
+COPY ../db /app/db/
+COPY ../utils /app/utils/
+COPY ../AI /app/AI/
 
 # Set Python path
 ENV PYTHONPATH=/app
 
-# Expose port (for health checks)
+# Expose port for health checks
 EXPOSE 8080
 
-# Start subscriber (this is the main service that triggers Prefect flows)
+# Start subscriber
 CMD ["python", "orchestration/subscriber.py"]
-
