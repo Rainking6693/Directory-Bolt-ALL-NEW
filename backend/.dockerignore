@@ -1,0 +1,101 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+
+# Documentation
+*.md
+docs/
+*.rst
+*.txt
+
+# Logs
+*.log
+logs/
+
+# Environment files (should be set via Render env vars)
+.env
+.env.local
+.env.*.local
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# AI directory (optional, large files)
+# Uncomment if you want to exclude AI models/weights
+# AI/models/
+# AI/weights/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Prefect
+.prefect/
+*.db
+*.sqlite
+
+# Build artifacts
+*.pyc
+*.pyo
+*.pyd

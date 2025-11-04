@@ -2,14 +2,27 @@ services:
   - type: web
     name: directorybolt-backend
     env: docker
-    dockerfilePath: infra/Dockerfile
+    dockerfilePath: Dockerfile
     dockerContext: backend
-    dockerCommand: python orchestration/subscriber.py
+    dockerCommand: ./start.sh
+    plan: starter  # Change to 'standard' or 'pro' for production
+    region: oregon  # us-west-1
+    healthCheckPath: /health
+    autoDeploy: true
     envVars:
+      # Supabase
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+        fromService:
+          type: web
+          name: directorybolt-backend
+          property: SUPABASE_URL
+      
+      # AWS SQS
       - key: AWS_DEFAULT_REGION
         sync: false
       - key: AWS_DEFAULT_ACCESS_KEY_ID
@@ -20,8 +33,58 @@ services:
         sync: false
       - key: SQS_DLQ_URL
         sync: false
+      
+      # Prefect
       - key: PREFECT_API_URL
+        value: https://api.prefect.cloud/api/accounts/YOUR_ACCOUNT_ID/workspaces/YOUR_WORKSPACE_ID
         sync: false
+      - key: PREFECT_API_KEY
+        sync: false
+      
+      # Brain Service (internal)
       - key: CREWAI_URL
+        value: http://localhost:8080
         sync: false
+      
+      # Playwright
+      - key: PLAYWRIGHT_HEADLESS
+        value: "1"
+      
+      # AI Features (optional)
+      - key: ENABLE_AI_FEATURES
+        value: "true"
+      - key: ENABLE_CONTENT_CUSTOMIZATION
+        value: "true"
+      - key: ENABLE_FORM_MAPPING
+        value: "true"
+      
+      # AI API Keys (optional)
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: TWO_CAPTCHA_API_KEY
+        sync: false
+      
+      # Monitoring
+      - key: SLACK_WEBHOOK_URL
+        sync: false
+      
+      # SQS Configuration
+      - key: SQS_VISIBILITY_TIMEOUT
+        value: "600"
+      - key: SQS_MAX_MESSAGES
+        value: "5"
+      - key: SQS_WAIT_TIME_SECONDS
+        value: "20"
+      - key: SQS_MAX_CONSECUTIVE_ERRORS
+        value: "10"
+      - key: SQS_RETRY_THRESHOLD
+        value: "3"
+      
+      # Prefect Worker Configuration
+      - key: PREFECT_WORK_POOL
+        value: "default"
+      - key: ENABLE_PREFECT_WORKER
+        value: "true"
 
