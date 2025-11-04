@@ -20,7 +20,8 @@ COPY workers /app/workers/
 COPY brain /app/brain/
 COPY db /app/db/
 COPY utils /app/utils/
-COPY AI /app/AI/
+# AI directory - only copy if it exists (subscriber doesn't need it)
+# COPY AI /app/AI/
 
 # Set Python path
 ENV PYTHONPATH=/app
