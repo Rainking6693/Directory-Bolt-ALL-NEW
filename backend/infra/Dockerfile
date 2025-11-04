@@ -10,18 +10,17 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements from parent directory (backend/)
-# Since build context is backend/infra/., we need to go up one level
-COPY ../requirements.txt /app/requirements.txt
+# Copy requirements (build context is backend/, so files are directly accessible)
+COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code from parent directory
-COPY ../orchestration /app/orchestration/
-COPY ../workers /app/workers/
-COPY ../brain /app/brain/
-COPY ../db /app/db/
-COPY ../utils /app/utils/
-COPY ../AI /app/AI/
+# Copy application code (build context is backend/, so all dirs are accessible)
+COPY orchestration /app/orchestration/
+COPY workers /app/workers/
+COPY brain /app/brain/
+COPY db /app/db/
+COPY utils /app/utils/
+COPY AI /app/AI/
 
 # Set Python path
 ENV PYTHONPATH=/app

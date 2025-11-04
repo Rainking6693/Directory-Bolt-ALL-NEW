@@ -2,7 +2,7 @@ services:
   - type: web
     name: directorybolt-backend
     env: docker
-    dockerfilePath: backend/infra/Dockerfile
+    dockerfilePath: infra/Dockerfile
     dockerContext: backend
     dockerCommand: python orchestration/subscriber.py
     envVars:
