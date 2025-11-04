@@ -14,6 +14,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import { withRateLimit, rateLimiters } from '../../../../lib/middleware/production-rate-limit'
+import { validateStaffAuth } from '../../../../lib/middleware/staff-auth'
 
 interface PushJobResponse {
   success: boolean
@@ -30,39 +31,13 @@ interface PushJobResponse {
   error?: string
 }
 
-// Staff authentication function (same as progress.ts)
+// Import staff auth middleware
+import { validateStaffAuth } from '../../../../lib/middleware/staff-auth'
+
+// Staff authentication function - uses the same middleware as other staff endpoints
 const authenticateStaff = (req: NextApiRequest) => {
-  // Check for staff API key in headers (highest priority)
-  const staffKey = req.headers['x-staff-key'] || req.headers['authorization']
-  const validStaffKey = process.env.STAFF_API_KEY || 'DirectoryBolt-Staff-2025-SecureKey'
-  
-  if (staffKey === validStaffKey || staffKey === `Bearer ${validStaffKey}`) {
-    return true
-  }
-
-  // Check for staff session/cookie
-  const staffSession = req.headers.cookie?.split('; ').find(row => row.startsWith('staff-session='))?.split('=')[1]
-  const validStaffSession = process.env.STAFF_SESSION_TOKEN || 'DirectoryBolt-Staff-Session-2025'
-  
-  if (staffSession === validStaffSession) {
-    return true
-  }
-
-  // Check for basic auth credentials
-  const authHeader = req.headers.authorization
-  if (authHeader && authHeader.startsWith('Basic ')) {
-    const credentials = Buffer.from(authHeader.slice(6), 'base64').toString()
-    const [username, password] = credentials.split(':')
-    
-    const validUsername = process.env.STAFF_USERNAME || 'staff'
-    const validPassword = process.env.STAFF_PASSWORD || 'DirectoryBoltStaff2025!'
-    
-    if (username === validUsername && password === validPassword) {
-      return true
-    }
-  }
-
-  return false
+  const authResult = validateStaffAuth(req)
+  return authResult.isAuthenticated
 }
 
 async function handler(
