@@ -17,10 +17,6 @@ services:
         sync: false
       - key: NEXT_PUBLIC_SUPABASE_URL
         sync: false
-        fromService:
-          type: web
-          name: directorybolt-backend
-          property: SUPABASE_URL
       
       # AWS SQS
       - key: AWS_DEFAULT_REGION
@@ -37,14 +33,12 @@ services:
       # Prefect
       - key: PREFECT_API_URL
         value: https://api.prefect.cloud/api/accounts/YOUR_ACCOUNT_ID/workspaces/YOUR_WORKSPACE_ID
-        sync: false
       - key: PREFECT_API_KEY
         sync: false
       
       # Brain Service (internal)
       - key: CREWAI_URL
         value: http://localhost:8080
-        sync: false
       
       # Playwright
       - key: PLAYWRIGHT_HEADLESS
