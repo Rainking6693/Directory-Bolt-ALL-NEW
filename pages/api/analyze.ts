@@ -475,29 +475,44 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(200).json({success: true, data: response})
 
   } catch (error) {
-    logger.error('Website analysis failed', {
-      metadata: {
-        url: req.body?.url,
-        tier: req.body?.tier,
-        processingTime: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }
-    }, error as Error)
+    // Log error safely
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorStack = error instanceof Error ? error.stack : undefined
+    
+    console.error('[analyze] Error:', errorMessage, errorStack)
     
     // Return a more helpful error message
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    logger.error('Website analysis failed', { error: errorMessage, url: req.body?.url })
-    
     return res.status(500).json({
       success: false,
       error: 'Analysis failed',
       message: errorMessage.includes('Supabase') || errorMessage.includes('Missing') 
         ? 'Analysis service temporarily unavailable. Please try again.' 
-        : errorMessage,
+        : 'An error occurred during analysis. Please try again.',
       processingTime: Date.now() - startTime
     })
   }
 }
 
-// Export with rate limiting applied
-export default withRateLimit(handler, rateLimiters.analyze)
+// Wrap handler with rate limiting - catch any errors
+export default async (req: NextApiRequest, res: NextApiResponse) => {
+  try {
+    // Try to apply rate limiting, but if it fails, run handler directly
+    const rateLimitedHandler = withRateLimit(handler, rateLimiters.analyze)
+    return await rateLimitedHandler(req, res)
+  } catch (rateLimitError) {
+    // If rate limiter fails, log and run handler without rate limiting
+    console.error('[analyze] Rate limiter error, running without rate limit:', rateLimitError)
+    try {
+      return await handler(req, res)
+    } catch (handlerError) {
+      console.error('[analyze] Handler error:', handlerError)
+      const errorMessage = handlerError instanceof Error ? handlerError.message : 'Unknown error'
+      return res.status(500).json({
+        success: false,
+        error: 'Analysis failed',
+        message: 'An error occurred during analysis. Please try again.',
+        processingTime: 0
+      })
+    }
+  }
+}
