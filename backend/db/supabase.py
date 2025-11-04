@@ -25,12 +25,13 @@ def get_supabase_client() -> Client:
     if _supabase_client is not None:
         return _supabase_client
     
-    supabase_url = os.getenv("SUPABASE_URL")
-    supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    # Check both env var names (SUPABASE_URL for backend, NEXT_PUBLIC_SUPABASE_URL for frontend compatibility)
+    supabase_url = os.getenv("SUPABASE_URL") or os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+    supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_SERVICE_KEY")
     
     if not supabase_url or not supabase_key:
         raise ValueError(
-            "Missing required environment variables: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY"
+            "Missing required environment variables: SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY"
         )
     
     logger.info("Initializing Supabase client", extra={"url": supabase_url})
