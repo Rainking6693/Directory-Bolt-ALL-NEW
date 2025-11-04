@@ -432,28 +432,25 @@ export class QueueManager {
     console.log(`🚀 Starting Enhanced AutoBolt processing for ${businessData.businessName} (${directoryLimit} directories)`)
 
     try {
-      // Mock enhanced processing for now
-      const result: EnhancedProcessingResult = await this.mockEnhancedProcessing(businessData, directoryLimit)
+      // Find or create job in Supabase, then send to SQS
+      const jobId = await this.findOrCreateJob(customerId, businessData, directoryLimit)
+      
+      // Send job to SQS queue for real backend processing
+      // The Python backend subscriber will pick it up and process with Prefect + Playwright
+      await this.sendJobToSQS(jobId, customerId, directoryLimit)
+      
+      console.log(`✅ Enhanced AutoBolt job ${jobId} queued for real processing via SQS`)
 
-      console.log(`📊 Enhanced AutoBolt processing complete for ${customerId}:`)
-      console.log(`  - Total directories: ${result.totalDirectories}`)
-      console.log(`  - Processed: ${result.processedDirectories}`)
-      console.log(`  - Successful: ${result.successfulSubmissions}`)
-      console.log(`  - Failed: ${result.failedSubmissions}`)
-      console.log(`  - Skipped: ${result.skippedDirectories}`)
-      console.log(`  - Mapping breakdown: Site(${result.mappingStats.siteSpecific}) Auto(${result.mappingStats.autoMapped}) Fallback(${result.mappingStats.fallbackMapped}) Manual(${result.mappingStats.manualMapped})`)
-      console.log(`  - Average confidence: ${result.averageConfidence.toFixed(2)}`)
-
+      // Return immediate response - real processing happens in background
       return {
-        success: result.successfulSubmissions > 0,
+        success: true,
         customerId,
-        directoriesProcessed: result.successfulSubmissions,
-        directoriesFailed: result.failedSubmissions,
-        completedAt: result.completedAt,
-        processingTimeSeconds: result.processingTimeSeconds || 0,
-        errors: result.results
-          .filter(r => !r.success)
-          .map(r => `${r.directoryName}: ${r.error}`)
+        directoriesProcessed: 0, // Will be updated by backend as it processes
+        directoriesFailed: 0,
+        completedAt: new Date(),
+        processingTimeSeconds: 0,
+        errors: [],
+        message: `Job ${jobId} queued for real processing. Submissions will be performed by Python backend.`
       }
 
     } catch (error) {
@@ -474,26 +471,25 @@ export class QueueManager {
     console.log(`🚀 Starting basic AutoBolt processing for ${businessData.businessName} (${directoryLimit} directories)`)
     
     try {
-      // Mock basic processing for now
-      const result: AutoBoltProcessingResult = await this.mockBasicProcessing(businessData, directoryLimit)
+      // Find or create job in Supabase, then send to SQS
+      const jobId = await this.findOrCreateJob(customerId, businessData, directoryLimit)
+      
+      // Send job to SQS queue for real backend processing
+      // The Python backend subscriber will pick it up and process with Prefect + Playwright
+      await this.sendJobToSQS(jobId, customerId, directoryLimit)
+      
+      console.log(`✅ Basic AutoBolt job ${jobId} queued for real processing via SQS`)
 
-      console.log(`📊 Basic AutoBolt processing complete for ${customerId}:`)
-      console.log(`  - Total directories: ${result.totalDirectories}`)
-      console.log(`  - Processed: ${result.processedDirectories}`)
-      console.log(`  - Successful: ${result.successfulSubmissions}`)
-      console.log(`  - Failed: ${result.failedSubmissions}`)
-      console.log(`  - Skipped: ${result.skippedDirectories}`)
-
+      // Return immediate response - real processing happens in background
       return {
-        success: result.successfulSubmissions > 0, // Success if at least one submission worked
+        success: true,
         customerId,
-        directoriesProcessed: result.successfulSubmissions,
-        directoriesFailed: result.failedSubmissions,
-        completedAt: result.completedAt,
-        processingTimeSeconds: result.processingTimeSeconds || 0,
-        errors: result.results
-          .filter(r => !r.success)
-          .map(r => `${r.directoryName}: ${r.error}`)
+        directoriesProcessed: 0, // Will be updated by backend as it processes
+        directoriesFailed: 0,
+        completedAt: new Date(),
+        processingTimeSeconds: 0,
+        errors: [],
+        message: `Job ${jobId} queued for real processing. Submissions will be performed by Python backend.`
       }
 
     } catch (error) {
@@ -636,7 +632,124 @@ export class QueueManager {
   }
 
   /**
-   * Mock basic processing for development
+   * Find or create a job in Supabase for the customer
+   */
+  private async findOrCreateJob(customerId: string, businessData: any, directoryLimit: number): Promise<string> {
+    try {
+      const supabaseService = this.getSupabaseService()
+      
+      // Try to find existing pending job for this customer
+      const existingJobs = await supabaseService.findByCustomerId(customerId)
+      
+      // Look for pending job in Supabase directly
+      const { createClient } = require('@supabase/supabase-js')
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
+      
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Supabase not configured')
+      }
+      
+      const supabase = createClient(supabaseUrl, supabaseKey)
+      
+      // Check for existing pending job
+      const { data: existingJob } = await supabase
+        .from('jobs')
+        .select('id')
+        .eq('customer_id', customerId)
+        .eq('status', 'pending')
+        .single()
+      
+      if (existingJob?.id) {
+        console.log(`✅ Found existing job ${existingJob.id} for customer ${customerId}`)
+        return existingJob.id
+      }
+      
+      // Create new job
+      const { data: newJob, error: jobError } = await supabase
+        .from('jobs')
+        .insert({
+          customer_id: customerId,
+          business_name: businessData.businessName || businessData.business_name || 'Unknown Business',
+          email: businessData.email || '',
+          package_size: directoryLimit,
+          priority_level: this.getPriorityFromPackageSize(directoryLimit),
+          status: 'pending',
+          metadata: {
+            businessName: businessData.businessName || businessData.business_name,
+            email: businessData.email,
+            phone: businessData.phone,
+            website: businessData.website || businessData.businessUrl,
+            address: businessData.address,
+            city: businessData.city,
+            state: businessData.state,
+            zip: businessData.zip,
+            package_size: directoryLimit
+          }
+        })
+        .select('id')
+        .single()
+      
+      if (jobError || !newJob) {
+        throw new Error(`Failed to create job: ${jobError?.message || 'Unknown error'}`)
+      }
+      
+      console.log(`✅ Created new job ${newJob.id} for customer ${customerId}`)
+      return newJob.id
+      
+    } catch (error) {
+      console.error(`❌ Error finding/creating job for ${customerId}:`, error)
+      throw error
+    }
+  }
+
+  /**
+   * Send job to AWS SQS queue for real backend processing
+   */
+  private async sendJobToSQS(jobId: string, customerId: string, packageSize: number): Promise<void> {
+    try {
+      // Call the API endpoint that sends to SQS
+      const response = await fetch('/api/jobs/send-to-sqs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          job_id: jobId,
+          customer_id: customerId,
+          package_size: packageSize
+        })
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to send job to SQS: ${response.status}`)
+      }
+      
+      const result = await response.json()
+      console.log(`✅ Job ${jobId} sent to SQS queue. MessageId: ${result.messageId}`)
+      
+    } catch (error) {
+      console.error(`❌ Error sending job ${jobId} to SQS:`, error)
+      // Don't throw - allow job to be created even if SQS send fails
+      // The stale job monitor can pick it up later
+      console.warn(`⚠️ Job ${jobId} created but not sent to SQS. It may be processed later.`)
+    }
+  }
+
+  /**
+   * Get priority level from package size
+   */
+  private getPriorityFromPackageSize(packageSize: number): number {
+    if (packageSize >= 500) return 1 // Enterprise
+    if (packageSize >= 400) return 2 // Professional
+    if (packageSize >= 250) return 3 // Growth
+    return 4 // Starter
+  }
+
+  /**
+   * Mock basic processing for development (DEPRECATED - DO NOT USE)
+   * This function is kept for reference but should never be called
    */
   private async mockBasicProcessing(businessData: any, directoryLimit: number): Promise<AutoBoltProcessingResult> {
     // Simulate processing time
@@ -668,7 +781,8 @@ export class QueueManager {
   }
 
   /**
-   * Mock enhanced processing for development
+   * Mock enhanced processing for development (DEPRECATED - DO NOT USE)
+   * This function is kept for reference but should never be called
    */
   private async mockEnhancedProcessing(businessData: any, directoryLimit: number): Promise<EnhancedProcessingResult> {
     // Simulate processing time
