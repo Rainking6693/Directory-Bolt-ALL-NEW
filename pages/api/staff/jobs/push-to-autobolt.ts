@@ -31,9 +31,6 @@ interface PushJobResponse {
   error?: string
 }
 
-// Import staff auth middleware
-import { validateStaffAuth } from '../../../../lib/middleware/staff-auth'
-
 // Staff authentication function - uses the same middleware as other staff endpoints
 const authenticateStaff = (req: NextApiRequest) => {
   const authResult = validateStaffAuth(req)
