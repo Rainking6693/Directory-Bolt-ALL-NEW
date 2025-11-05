@@ -1,0 +1,8 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "backend/infra/Dockerfile.worker"
+
+[deploy]
+startCommand = "prefect worker start --pool default"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
