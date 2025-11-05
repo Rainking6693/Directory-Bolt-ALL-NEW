@@ -1,0 +1,8 @@
+SUPABASE_URL=https://kolgqfjgncdwddziqloz.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://kolgqfjgncdwddziqloz.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtvbGdxZmpnbmNkd2RkemlxbG96Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyMTU3NTEwNywiZXhwIjoyMDM3MTUxMTA3fQ.mq7wtkh2q5HdpHlAJRxmfZYrUWqkOoVqxaO2EqX1_LE
+AWS_DEFAULT_REGION=us-east-2
+SQS_QUEUE_URL=https://sqs.us-east-2.amazonaws.com/231688741122/DirectoryBolt
+SQS_DLQ_URL=https://sqs.us-east-2.amazonaws.com/231688741122/DirectoryBolt-dlq
+PREFECT_API_URL=http://prefect-server.railway.internal:4200/api
+CREWAI_URL=http://brain.railway.internal:8080
