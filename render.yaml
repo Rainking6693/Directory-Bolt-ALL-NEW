@@ -1,13 +1,25 @@
 services:
+  # Service 1: CrewAI Brain (AI orchestration service)
   - type: web
-    name: directorybolt-backend
+    name: brain
     env: docker
     rootDir: backend
-    dockerfilePath: Dockerfile
-    dockerCommand: ./start.sh
-    plan: starter  # Change to 'standard' or 'pro' for production
-    region: oregon  # us-west-1
-    healthCheckPath: /health
+    dockerfilePath: infra/Dockerfile.brain
+    plan: starter
+    region: oregon
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: "8080"
+
+  # Service 2: SQS Subscriber (message consumer)
+  - type: background_worker
+    name: subscriber
+    env: docker
+    rootDir: backend
+    dockerfilePath: infra/Dockerfile.subscriber
+    plan: starter
+    region: oregon
     autoDeploy: true
     envVars:
       # Supabase
@@ -15,9 +27,7 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
-      - key: NEXT_PUBLIC_SUPABASE_URL
-        sync: false
-      
+
       # AWS SQS
       - key: AWS_DEFAULT_REGION
         sync: false
@@ -29,56 +39,126 @@ services:
         sync: false
       - key: SQS_DLQ_URL
         sync: false
-      
-      # Prefect
+      - key: QUEUE_PROVIDER
+        value: "sqs"
+
+      # Prefect Cloud
       - key: PREFECT_API_URL
-        value: https://api.prefect.cloud/api/accounts/YOUR_ACCOUNT_ID/workspaces/YOUR_WORKSPACE_ID
+        sync: false
       - key: PREFECT_API_KEY
         sync: false
-      
-      # Brain Service (internal)
+
+      # CrewAI Brain (internal Render URL)
       - key: CREWAI_URL
-        value: http://localhost:8080
-      
+        fromService:
+          name: brain
+          type: web
+          property: host
+
+      - key: LOG_LEVEL
+        value: "INFO"
+
+  # Service 3: Prefect Worker (workflow execution with Playwright)
+  - type: background_worker
+    name: worker
+    env: docker
+    rootDir: backend
+    dockerfilePath: infra/Dockerfile.worker
+    plan: starter
+    region: oregon
+    autoDeploy: true
+    envVars:
+      # Supabase
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
+      # AWS SQS
+      - key: AWS_DEFAULT_REGION
+        sync: false
+      - key: AWS_DEFAULT_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_DEFAULT_SECRET_ACCESS_KEY
+        sync: false
+      - key: SQS_QUEUE_URL
+        sync: false
+      - key: SQS_DLQ_URL
+        sync: false
+      - key: QUEUE_PROVIDER
+        value: "sqs"
+
+      # Prefect Cloud
+      - key: PREFECT_API_URL
+        sync: false
+      - key: PREFECT_API_KEY
+        sync: false
+
+      # CrewAI Brain (internal Render URL)
+      - key: CREWAI_URL
+        fromService:
+          name: brain
+          type: web
+          property: host
+
       # Playwright
       - key: PLAYWRIGHT_HEADLESS
         value: "1"
-      
-      # AI Features (optional)
-      - key: ENABLE_AI_FEATURES
-        value: "true"
-      - key: ENABLE_CONTENT_CUSTOMIZATION
-        value: "true"
-      - key: ENABLE_FORM_MAPPING
-        value: "true"
-      
-      # AI API Keys (optional)
+
+      # AI API Keys
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: GEMINI_API_KEY
         sync: false
       - key: TWO_CAPTCHA_API_KEY
         sync: false
-      
+
+      # AI Features
+      - key: ENABLE_AI_FEATURES
+        value: "true"
+      - key: ENABLE_CONTENT_CUSTOMIZATION
+        value: "true"
+      - key: ENABLE_FORM_MAPPING
+        value: "true"
+
+      # Stripe (for payment processing in workflows)
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+
       # Monitoring
       - key: SLACK_WEBHOOK_URL
         sync: false
-      
-      # SQS Configuration
-      - key: SQS_VISIBILITY_TIMEOUT
-        value: "600"
-      - key: SQS_MAX_MESSAGES
-        value: "5"
-      - key: SQS_WAIT_TIME_SECONDS
-        value: "20"
-      - key: SQS_MAX_CONSECUTIVE_ERRORS
+
+      - key: LOG_LEVEL
+        value: "INFO"
+
+  # Service 4: Stale Job Monitor
+  - type: background_worker
+    name: stale-job-monitor
+    env: docker
+    rootDir: backend
+    dockerfilePath: infra/Dockerfile.monitor
+    dockerCommand: python -m workers.stale_job_monitor
+    plan: starter
+    region: oregon
+    autoDeploy: true
+    envVars:
+      # Supabase
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
+      # Monitor Configuration
+      - key: STALE_THRESHOLD_MINUTES
         value: "10"
-      - key: SQS_RETRY_THRESHOLD
-        value: "3"
-      
-      # Prefect Worker Configuration
-      - key: PREFECT_WORK_POOL
-        value: "default"
-      - key: ENABLE_PREFECT_WORKER
-        value: "true"
+      - key: CHECK_INTERVAL_SECONDS
+        value: "120"
+
+      - key: LOG_LEVEL
+        value: "INFO"
 
