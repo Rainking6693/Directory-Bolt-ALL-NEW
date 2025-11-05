@@ -38,8 +38,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Install Playwright browsers (Chromium only for smaller image)
-RUN playwright install chromium && \
-    playwright install-deps chromium
+# Use python -m playwright instead of playwright command
+RUN python -m playwright install --with-deps chromium
 
 # Copy application code
 COPY orchestration /app/orchestration/
