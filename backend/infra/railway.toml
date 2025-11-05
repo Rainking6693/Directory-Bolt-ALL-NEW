@@ -1,9 +1,9 @@
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile.railway"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "docker-compose up -d"
+startCommand = "python orchestration/subscriber.py"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
