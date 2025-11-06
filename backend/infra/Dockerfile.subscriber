@@ -13,5 +13,5 @@ COPY . .
 # Set Python path
 ENV PYTHONPATH=/app
 
-# Run subscriber
-CMD ["python", "orchestration/subscriber.py"]
+# Run startup verification, then start subscriber
+CMD ["sh", "-c", "python verify_startup.py && python orchestration/subscriber.py"]

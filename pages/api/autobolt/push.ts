@@ -100,11 +100,23 @@ export default async function handler(
         .eq("id", customerId);
 
       // Send job to SQS queue for processing
+      let sqsMessageId: string | null = null;
       try {
         const awsRegion = process.env.AWS_DEFAULT_REGION || process.env.AWS_REGION || 'us-east-1';
         const awsAccessKeyId = process.env.AWS_DEFAULT_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
         const awsSecretAccessKey = process.env.AWS_DEFAULT_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
         const sqsQueueUrl = process.env.SQS_QUEUE_URL;
+
+        // Validate AWS configuration
+        if (!awsAccessKeyId) {
+          console.error(`❌ AWS_DEFAULT_ACCESS_KEY_ID not configured for job ${jobData.id}`);
+        }
+        if (!awsSecretAccessKey) {
+          console.error(`❌ AWS_DEFAULT_SECRET_ACCESS_KEY not configured for job ${jobData.id}`);
+        }
+        if (!sqsQueueUrl) {
+          console.error(`❌ SQS_QUEUE_URL not configured for job ${jobData.id}`);
+        }
 
         if (awsAccessKeyId && awsSecretAccessKey && sqsQueueUrl) {
           const sqsClient = new SQSClient({
@@ -144,13 +156,17 @@ export default async function handler(
           });
 
           const sqsResult = await sqsClient.send(command);
-          console.log(`✅ Job ${jobData.id} sent to SQS queue. MessageId: ${sqsResult.MessageId}`);
+          sqsMessageId = sqsResult.MessageId || null;
+          console.log(`✅ Job ${jobData.id} sent to SQS queue. MessageId: ${sqsMessageId}`);
         } else {
-          console.warn(`⚠️ Job ${jobData.id} created but not sent to SQS (AWS credentials not configured)`);
+          console.warn(`⚠️ Job ${jobData.id} created in database but NOT queued for processing`);
+          console.warn(`   Missing AWS configuration - job will remain pending`);
         }
       } catch (sqsError) {
         console.error(`❌ Failed to send job ${jobData.id} to SQS:`, sqsError);
+        console.error(`   Job is in database but won't be processed until message is sent`);
         // Don't fail the request - job is already in database
+        // The system should retry sending the message
       }
 
       return res.status(201).json({
