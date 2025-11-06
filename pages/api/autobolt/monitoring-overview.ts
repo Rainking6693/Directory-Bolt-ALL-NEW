@@ -74,9 +74,9 @@ async function handler(
       })
     }
 
-    // Get current queue status
-    const { data: queueData, error: queueError } = await supabase
-      .from('autobolt_processing_queue')
+    // Get current queue status from jobs table
+    const { data: queueData, error: queueError} = await supabase
+      .from('jobs')
       .select('status, created_at, started_at, completed_at')
       .order('created_at', { ascending: false })
 
@@ -88,68 +88,61 @@ async function handler(
       })
     }
 
-    // Get extension status
-    const { data: extensionData, error: extensionError } = await supabase
-      .from('autobolt_extension_status')
-      .select('status, last_heartbeat')
+    // Get worker health status from worker_heartbeats
+    const { data: workerData, error: workerError } = await supabase
+      .from('worker_heartbeats')
+      .select('worker_id, status, last_heartbeat')
 
-    if (extensionError) {
-      console.error('❌ Failed to fetch extension data:', extensionError)
+    if (workerError) {
+      console.error('❌ Failed to fetch worker data:', workerError)
     }
 
-    // Get system alerts
-    const { data: alertsData, error: alertsError } = await supabase
-      .from('autobolt_system_alerts')
-      .select('severity, resolved')
-      .eq('resolved', false)
-
-    if (alertsError) {
-      console.error('❌ Failed to fetch alerts:', alertsError)
-    }
+    // Note: System alerts table doesn't exist yet, skipping for now
+    const alertsData: any[] = []
 
     // Calculate metrics
     const now = new Date()
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
     
-    // Queue metrics
-    const queuePending = queueData?.filter(q => q.status === 'queued').length || 0
-    const queueProcessing = queueData?.filter(q => q.status === 'processing').length || 0
-    const queueCompletedToday = queueData?.filter(q => 
-      q.status === 'completed' && 
-      q.completed_at && 
+    // Queue metrics (using 'pending', 'in_progress', 'complete', 'failed' status values)
+    const queuePending = queueData?.filter(q => q.status === 'pending').length || 0
+    const queueProcessing = queueData?.filter(q => q.status === 'in_progress' || q.status === 'processing').length || 0
+    const queueCompletedToday = queueData?.filter(q =>
+      (q.status === 'complete' || q.status === 'completed') &&
+      q.completed_at &&
       new Date(q.completed_at) > yesterday
     ).length || 0
-    const queueFailedToday = queueData?.filter(q => 
-      q.status === 'failed' && 
-      q.created_at && 
+    const queueFailedToday = queueData?.filter(q =>
+      q.status === 'failed' &&
+      q.created_at &&
       new Date(q.created_at) > yesterday
     ).length || 0
 
-    // Extension metrics
-    const extensionHealthy = extensionData?.filter(ext => {
-      const lastHeartbeat = new Date(ext.last_heartbeat)
+    // Worker metrics (replacing extension metrics)
+    const workerHealthy = workerData?.filter(worker => {
+      const lastHeartbeat = new Date(worker.last_heartbeat)
       const isActive = (now.getTime() - lastHeartbeat.getTime()) < 5 * 60 * 1000 // Active within 5 minutes
-      return isActive && ext.status === 'processing'
+      return isActive && worker.status === 'active'
     }).length || 0
 
-    const extensionWarning = extensionData?.filter(ext => {
-      const lastHeartbeat = new Date(ext.last_heartbeat)
+    const workerWarning = workerData?.filter(worker => {
+      const lastHeartbeat = new Date(worker.last_heartbeat)
       const isActive = (now.getTime() - lastHeartbeat.getTime()) < 5 * 60 * 1000
-      return isActive && ext.status === 'idle'
+      return isActive && worker.status === 'idle'
     }).length || 0
 
-    const extensionErrorCount = extensionData?.filter(ext => {
-      const lastHeartbeat = new Date(ext.last_heartbeat)
+    const workerErrorCount = workerData?.filter(worker => {
+      const lastHeartbeat = new Date(worker.last_heartbeat)
       const isActive = (now.getTime() - lastHeartbeat.getTime()) < 5 * 60 * 1000
-      return isActive && ext.status === 'error'
+      return isActive && worker.status === 'error'
     }).length || 0
 
-    const extensionOffline = extensionData?.filter(ext => {
-      const lastHeartbeat = new Date(ext.last_heartbeat)
+    const workerOffline = workerData?.filter(worker => {
+      const lastHeartbeat = new Date(worker.last_heartbeat)
       return (now.getTime() - lastHeartbeat.getTime()) >= 5 * 60 * 1000
     }).length || 0
 
-    const totalActiveExtensions = extensionHealthy + extensionWarning + extensionErrorCount
+    const totalActiveWorkers = workerHealthy + workerWarning + workerErrorCount
 
     // Success rate calculation
     const totalProcessedToday = queueCompletedToday + queueFailedToday
@@ -175,28 +168,28 @@ async function handler(
 
     // Determine system status
     let systemStatus: 'operational' | 'degraded' | 'outage' = 'operational'
-    if (criticalAlerts > 0 || totalActiveExtensions === 0) {
+    if (criticalAlerts > 0 || totalActiveWorkers === 0) {
       systemStatus = 'outage'
-    } else if (extensionErrorCount > 0 || successRate24h < 80) {
+    } else if (workerErrorCount > 0 || successRate24h < 80) {
       systemStatus = 'degraded'
     }
 
     // Calculate additional metrics
     const totalDirectoriesProcessed24h = queueCompletedToday + queueFailedToday
     const averageDirectoriesPerHour = Math.round(totalDirectoriesProcessed24h / 24)
-    
+
     // Find peak processing time (simplified - would need more detailed analytics)
-    const peakProcessingTime = completedJobs.length > 0 ? 
-      new Date(Math.max(...completedJobs.map(j => new Date(j.completed_at!).getTime()))).toLocaleTimeString() : 
+    const peakProcessingTime = completedJobs.length > 0 ?
+      new Date(Math.max(...completedJobs.map(j => new Date(j.completed_at!).getTime()))).toLocaleTimeString() :
       'N/A'
 
     // System uptime (simplified calculation)
-    const systemUptimePercent = totalActiveExtensions > 0 ? 
-      Math.min(100, ((24 - (extensionOffline * 2)) / 24) * 100) : 0
+    const systemUptimePercent = totalActiveWorkers > 0 ?
+      Math.min(100, ((24 - (workerOffline * 2)) / 24) * 100) : 0
 
     const overview: MonitoringOverview = {
       system_status: systemStatus,
-      active_extensions: totalActiveExtensions,
+      active_extensions: totalActiveWorkers,
       total_customers_processing: queueProcessing,
       queue_depth: queuePending,
       success_rate_24h: successRate24h,
@@ -205,10 +198,10 @@ async function handler(
       last_updated: now.toISOString(),
       detailed_metrics: {
         extensions: {
-          healthy: extensionHealthy,
-          warning: extensionWarning,
-          error: extensionErrorCount,
-          offline: extensionOffline
+          healthy: workerHealthy,
+          warning: workerWarning,
+          error: workerErrorCount,
+          offline: workerOffline
         },
         queue: {
           pending: queuePending,
@@ -225,7 +218,7 @@ async function handler(
       }
     }
 
-    console.log(`✅ Generated monitoring overview: ${overview.system_status} status, ${overview.active_extensions} extensions`)
+    console.log(`✅ Generated monitoring overview: ${overview.system_status} status, ${overview.active_extensions} workers`)
 
     return res.status(200).json({
       success: true,

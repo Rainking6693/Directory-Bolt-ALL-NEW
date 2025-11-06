@@ -90,25 +90,25 @@ async function handler(
       })
     }
 
-    // Get active jobs with progress information
+    // Get active jobs with progress information from jobs table
     const { data: activeJobs, error: jobsError } = await supabase
-      .from('autobolt_processing_queue')
+      .from('jobs')
       .select(`
         id,
         customer_id,
-        directory_limit,
+        package_size,
         status,
         created_at,
         started_at,
         completed_at,
         updated_at,
+        business_name,
         customers!inner(
           customer_id,
-          business_name,
           package_type
         )
       `)
-      .in('status', ['queued', 'processing'])
+      .in('status', ['pending', 'in_progress', 'processing'])
       .order('created_at', { ascending: true })
 
     if (jobsError) {
@@ -119,14 +119,14 @@ async function handler(
       })
     }
 
-    // Get extension status information
-    const { data: extensionStatuses, error: extensionError } = await supabase
-      .from('autobolt_extension_status')
+    // Get worker status information from worker_heartbeats
+    const { data: workerStatuses, error: workerError } = await supabase
+      .from('worker_heartbeats')
       .select('*')
       .order('last_heartbeat', { ascending: false })
 
-    if (extensionError) {
-      console.error('❌ Failed to fetch extension status:', extensionError)
+    if (workerError) {
+      console.error('❌ Failed to fetch worker status:', workerError)
     }
 
     // Calculate progress for each active job
@@ -139,18 +139,19 @@ async function handler(
         .select('status')
         .eq('job_id', job.id)
 
-      const directoriesCompleted = jobResults?.filter(r => 
+      const directoriesCompleted = jobResults?.filter(r =>
         ['submitted', 'approved'].includes(r.status)
       ).length || 0
-      
-      const directoriesFailed = jobResults?.filter(r => 
+
+      const directoriesFailed = jobResults?.filter(r =>
         ['failed', 'rejected'].includes(r.status)
       ).length || 0
-      
-      const directoriesPending = Math.max(0, job.directory_limit - directoriesCompleted - directoriesFailed)
-      
-      const progressPercentage = job.directory_limit > 0 ? 
-        Math.round(((directoriesCompleted + directoriesFailed) / job.directory_limit) * 100) : 0
+
+      const directoryLimit = job.package_size || 0
+      const directoriesPending = Math.max(0, directoryLimit - directoriesCompleted - directoriesFailed)
+
+      const progressPercentage = directoryLimit > 0 ?
+        Math.round(((directoriesCompleted + directoriesFailed) / directoryLimit) * 100) : 0
 
       // Calculate processing time
       const startTime = job.started_at ? new Date(job.started_at) : new Date(job.created_at)
@@ -158,7 +159,7 @@ async function handler(
 
       // Estimate completion time based on current progress and average processing speed
       let estimatedCompletion = undefined
-      if (job.status === 'processing' && directoriesCompleted > 0 && directoriesPending > 0) {
+      if ((job.status === 'processing' || job.status === 'in_progress') && directoriesCompleted > 0 && directoriesPending > 0) {
         const avgTimePerDirectory = processingTimeMinutes / (directoriesCompleted + directoriesFailed)
         const remainingMinutes = Math.round(avgTimePerDirectory * directoriesPending)
         estimatedCompletion = new Date(Date.now() + remainingMinutes * 60 * 1000).toISOString()
@@ -167,9 +168,9 @@ async function handler(
       jobsWithProgress.push({
         job_id: job.id,
         customer_id: job.customer_id,
-        customer_name: job.customers.business_name || 'Unknown',
-        package_type: job.customers.package_type,
-        directory_limit: job.directory_limit,
+        customer_name: job.business_name || job.customers?.business_name || 'Unknown',
+        package_type: job.customers?.package_type || 'unknown',
+        directory_limit: directoryLimit,
         status: job.status,
         started_at: job.started_at || job.created_at,
         progress_percentage: progressPercentage,
@@ -182,32 +183,32 @@ async function handler(
       })
     }
 
-    // Transform extension status data
-    const transformedExtensionStatuses: ExtensionStatus[] = (extensionStatuses || []).map(ext => {
-      const lastHeartbeat = new Date(ext.last_heartbeat)
+    // Transform worker status data (replacing extension status)
+    const transformedWorkerStatuses: ExtensionStatus[] = (workerStatuses || []).map(worker => {
+      const lastHeartbeat = new Date(worker.last_heartbeat)
       const isActive = (Date.now() - lastHeartbeat.getTime()) < 5 * 60 * 1000 // Active if heartbeat within 5 minutes
 
       return {
-        extension_id: ext.extension_id,
-        status: ext.status,
-        last_heartbeat: ext.last_heartbeat,
-        current_customer_id: ext.current_customer_id,
-        current_queue_id: ext.current_queue_id,
-        directories_processed: ext.directories_processed || 0,
-        directories_failed: ext.directories_failed || 0,
+        extension_id: worker.worker_id,
+        status: worker.status,
+        last_heartbeat: worker.last_heartbeat,
+        current_customer_id: worker.current_customer_id,
+        current_queue_id: worker.current_job_id,
+        directories_processed: worker.jobs_completed || 0,
+        directories_failed: worker.jobs_failed || 0,
         is_active: isActive
       }
     })
 
-    // Calculate queue summary statistics
+    // Calculate queue summary statistics from jobs table
     const { data: completedToday } = await supabase
-      .from('autobolt_processing_queue')
+      .from('jobs')
       .select('id, started_at, completed_at')
-      .eq('status', 'completed')
+      .eq('status', 'complete')
       .gte('completed_at', new Date().toISOString().split('T')[0] + 'T00:00:00.000Z')
 
     const { data: failedToday } = await supabase
-      .from('autobolt_processing_queue')
+      .from('jobs')
       .select('id')
       .eq('status', 'failed')
       .gte('updated_at', new Date().toISOString().split('T')[0] + 'T00:00:00.000Z')
@@ -223,8 +224,8 @@ async function handler(
       }, 0) / completedToday.length) : 0
 
     const queueSummary = {
-      total_queued: jobsWithProgress.filter(j => j.status === 'queued').length,
-      total_processing: jobsWithProgress.filter(j => j.status === 'processing').length,
+      total_queued: jobsWithProgress.filter(j => j.status === 'pending' || j.status === 'queued').length,
+      total_processing: jobsWithProgress.filter(j => j.status === 'processing' || j.status === 'in_progress').length,
       total_completed_today: completedToday?.length || 0,
       total_failed_today: failedToday?.length || 0,
       average_processing_time_minutes: avgProcessingTime
@@ -236,7 +237,7 @@ async function handler(
       success: true,
       data: {
         active_jobs: jobsWithProgress,
-        extension_status: transformedExtensionStatuses,
+        extension_status: transformedWorkerStatuses,
         queue_summary: queueSummary,
         last_updated: new Date().toISOString()
       }

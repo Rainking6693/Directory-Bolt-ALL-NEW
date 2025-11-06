@@ -35,6 +35,13 @@ env/
 .env.*.local
 .env.example.stripe
 backend/.env.example
+upload-env.ps1
+update-prefect-api-key.ps1
+deploy-railway-services.ps1
+create-render-services.ps1
+configure-render-services.ps1
+check-prefect-config.ps1
+set-railway-vars.bat
 
 # IDEs
 .vscode/
