@@ -238,22 +238,42 @@ export const rateLimiters = {
 
 /**
  * Apply rate limiting to an API handler
+ * Fixed: Properly handles async handler execution after rate limit check
  */
 export function withRateLimit(
   handler: (req: NextApiRequest, res: NextApiResponse) => void | Promise<void>,
   limiter: ReturnType<typeof createRateLimit>
 ) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
-    return new Promise<void>((resolve, reject) => {
-      limiter(req, res, async () => {
-        try {
-          await handler(req, res)
-          resolve()
-        } catch (error) {
-          reject(error)
-        }
+    try {
+      // Wrap rate limiter and handler execution
+      await new Promise<void>((resolve, reject) => {
+        // Rate limiter expects a next() callback
+        // Pass callback that executes the handler
+        limiter(req, res, async () => {
+          try {
+            // Execute the actual handler
+            await handler(req, res)
+            resolve()
+          } catch (handlerError) {
+            reject(handlerError)
+          }
+        })
       })
-    })
+    } catch (error) {
+      logger.error('withRateLimit error', {
+        endpoint: req.url,
+        error: error instanceof Error ? error.message : String(error)
+      }, error as Error)
+
+      // Return error response if headers not yet sent
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          error: 'Internal server error'
+        })
+      }
+    }
   }
 }
 
