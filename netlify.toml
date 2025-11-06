@@ -10,20 +10,6 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Redirect rules for Next.js pages router
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  force = false
-  conditions = {Role = ["*"]}
-
-# API routes
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
 # Headers for security and performance
 [[headers]]
   for = "/*"
