@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { authenticateStaffRequest } from "../../../lib/auth/guards";
 import { TEST_MODE_ENABLED } from "../../../lib/auth/constants";
 import { getSupabaseAdminClient } from "../../../lib/server/supabaseAdmin";
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 
 interface PushToAutoBoltRequest {
   customerId: string;
@@ -97,6 +98,60 @@ export default async function handler(
           updatedAt: new Date().toISOString(),
         })
         .eq("id", customerId);
+
+      // Send job to SQS queue for processing
+      try {
+        const awsRegion = process.env.AWS_DEFAULT_REGION || process.env.AWS_REGION || 'us-east-1';
+        const awsAccessKeyId = process.env.AWS_DEFAULT_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
+        const awsSecretAccessKey = process.env.AWS_DEFAULT_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
+        const sqsQueueUrl = process.env.SQS_QUEUE_URL;
+
+        if (awsAccessKeyId && awsSecretAccessKey && sqsQueueUrl) {
+          const sqsClient = new SQSClient({
+            region: awsRegion,
+            credentials: {
+              accessKeyId: awsAccessKeyId,
+              secretAccessKey: awsSecretAccessKey
+            }
+          });
+
+          const messageBody = {
+            job_id: jobData.id,
+            customer_id: customerId,
+            package_size: customerData.package_size || jobData.package_size || 100,
+            priority: priority || 3,
+            created_at: new Date().toISOString(),
+            source: 'autobolt_push_api'
+          };
+
+          const command = new SendMessageCommand({
+            QueueUrl: sqsQueueUrl,
+            MessageBody: JSON.stringify(messageBody),
+            MessageAttributes: {
+              job_id: {
+                DataType: 'String',
+                StringValue: jobData.id
+              },
+              customer_id: {
+                DataType: 'String',
+                StringValue: customerId
+              },
+              priority: {
+                DataType: 'Number',
+                StringValue: (priority || 3).toString()
+              }
+            }
+          });
+
+          const sqsResult = await sqsClient.send(command);
+          console.log(`✅ Job ${jobData.id} sent to SQS queue. MessageId: ${sqsResult.MessageId}`);
+        } else {
+          console.warn(`⚠️ Job ${jobData.id} created but not sent to SQS (AWS credentials not configured)`);
+        }
+      } catch (sqsError) {
+        console.error(`❌ Failed to send job ${jobData.id} to SQS:`, sqsError);
+        // Don't fail the request - job is already in database
+      }
 
       return res.status(201).json({
         success: true,
