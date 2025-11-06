@@ -73,6 +73,7 @@ export interface QueueProcessingResult {
   errors?: string[]
   warnings?: string[]
   skippedDirectories?: string[]
+  message?: string
 }
 
 export interface QueueStats {
