@@ -15,6 +15,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import { withRateLimit, rateLimiters } from '../../../../lib/middleware/production-rate-limit'
+import { JOB_STATUSES } from '../../../../lib/constants/job-status'
 import type {
   DirectoryBoltDatabase,
   JobsRow,
@@ -257,10 +258,10 @@ async function handler(
         acc.completed_directories += job.directories_completed
         acc.failed_directories += job.directories_failed
 
-        if (job.status === 'pending') acc.pending_jobs += 1
-        if (job.status === 'in_progress') acc.in_progress_jobs += 1
-        if (job.status === 'complete') acc.completed_jobs += 1
-        if (job.status === 'failed') acc.failed_jobs += 1
+        if (job.status === JOB_STATUSES.PENDING) acc.pending_jobs += 1
+        if (job.status === JOB_STATUSES.IN_PROGRESS) acc.in_progress_jobs += 1
+        if (job.status === JOB_STATUSES.COMPLETED) acc.completed_jobs += 1
+        if (job.status === JOB_STATUSES.FAILED) acc.failed_jobs += 1
 
         return acc
       },

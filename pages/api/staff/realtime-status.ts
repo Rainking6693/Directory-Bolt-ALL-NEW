@@ -12,7 +12,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    console.log('dY"S Staff requesting real-time status update')
+    console.log('🔄 Staff requesting real-time status update')
 
     // Create Supabase client lazily
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -91,7 +91,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       ? Math.round(((totalDirectoriesSubmitted - totalDirectoriesFailed) / totalDirectoriesSubmitted) * 10000) / 100
       : 100
 
-    console.log('?o. Real-time status data retrieved successfully')
+    console.log('✅ Real-time status data retrieved successfully')
 
     res.status(200).json({
       success: true,
@@ -124,7 +124,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     })
 
   } catch (error) {
-    console.error('??O Real-time status error:', error)
+    console.error('❌ Real-time status error:', error)
     res.status(500).json({
       success: false,
       error: 'Internal Server Error',

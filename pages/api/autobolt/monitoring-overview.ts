@@ -8,6 +8,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import { withRateLimit, rateLimiters } from '../../../lib/middleware/production-rate-limit'
+import { JOB_STATUSES, isProcessing, isCompleted } from '../../../lib/constants/job-status'
 
 // Initialize Supabase client with service role
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -104,16 +105,16 @@ async function handler(
     const now = new Date()
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
     
-    // Queue metrics (using 'pending', 'in_progress', 'complete', 'failed' status values)
-    const queuePending = queueData?.filter(q => q.status === 'pending').length || 0
-    const queueProcessing = queueData?.filter(q => q.status === 'in_progress' || q.status === 'processing').length || 0
+    // Queue metrics (using standardized job status constants)
+    const queuePending = queueData?.filter(q => q.status === JOB_STATUSES.PENDING).length || 0
+    const queueProcessing = queueData?.filter(q => isProcessing(q.status)).length || 0
     const queueCompletedToday = queueData?.filter(q =>
-      (q.status === 'complete' || q.status === 'completed') &&
+      isCompleted(q.status) &&
       q.completed_at &&
       new Date(q.completed_at) > yesterday
     ).length || 0
     const queueFailedToday = queueData?.filter(q =>
-      q.status === 'failed' &&
+      q.status === JOB_STATUSES.FAILED &&
       q.created_at &&
       new Date(q.created_at) > yesterday
     ).length || 0
@@ -149,9 +150,9 @@ async function handler(
     const successRate24h = totalProcessedToday > 0 ? (queueCompletedToday / totalProcessedToday) * 100 : 0
 
     // Average processing time
-    const completedJobs = queueData?.filter(q => 
-      q.status === 'completed' && 
-      q.started_at && 
+    const completedJobs = queueData?.filter(q =>
+      isCompleted(q.status) &&
+      q.started_at &&
       q.completed_at &&
       new Date(q.completed_at) > yesterday
     ) || []

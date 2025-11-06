@@ -14,6 +14,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import { withRateLimit, rateLimiters } from '../../../lib/middleware/production-rate-limit'
+import { JOB_STATUSES, isProcessing } from '../../../lib/constants/job-status'
 
 // Initialize Supabase client with service role
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -108,7 +109,7 @@ async function handler(
           package_type
         )
       `)
-      .in('status', ['pending', 'in_progress', 'processing'])
+      .in('status', [JOB_STATUSES.PENDING, JOB_STATUSES.IN_PROGRESS, JOB_STATUSES.PROCESSING])
       .order('created_at', { ascending: true })
 
     if (jobsError) {
@@ -159,7 +160,7 @@ async function handler(
 
       // Estimate completion time based on current progress and average processing speed
       let estimatedCompletion = undefined
-      if ((job.status === 'processing' || job.status === 'in_progress') && directoriesCompleted > 0 && directoriesPending > 0) {
+      if (isProcessing(job.status) && directoriesCompleted > 0 && directoriesPending > 0) {
         const avgTimePerDirectory = processingTimeMinutes / (directoriesCompleted + directoriesFailed)
         const remainingMinutes = Math.round(avgTimePerDirectory * directoriesPending)
         estimatedCompletion = new Date(Date.now() + remainingMinutes * 60 * 1000).toISOString()
@@ -204,13 +205,13 @@ async function handler(
     const { data: completedToday } = await supabase
       .from('jobs')
       .select('id, started_at, completed_at')
-      .eq('status', 'complete')
+      .eq('status', JOB_STATUSES.COMPLETED)
       .gte('completed_at', new Date().toISOString().split('T')[0] + 'T00:00:00.000Z')
 
     const { data: failedToday } = await supabase
       .from('jobs')
       .select('id')
-      .eq('status', 'failed')
+      .eq('status', JOB_STATUSES.FAILED)
       .gte('updated_at', new Date().toISOString().split('T')[0] + 'T00:00:00.000Z')
 
     // Calculate average processing time from completed jobs today
@@ -224,8 +225,8 @@ async function handler(
       }, 0) / completedToday.length) : 0
 
     const queueSummary = {
-      total_queued: jobsWithProgress.filter(j => j.status === 'pending' || j.status === 'queued').length,
-      total_processing: jobsWithProgress.filter(j => j.status === 'processing' || j.status === 'in_progress').length,
+      total_queued: jobsWithProgress.filter(j => j.status === JOB_STATUSES.PENDING).length,
+      total_processing: jobsWithProgress.filter(j => isProcessing(j.status)).length,
       total_completed_today: completedToday?.length || 0,
       total_failed_today: failedToday?.length || 0,
       average_processing_time_minutes: avgProcessingTime
