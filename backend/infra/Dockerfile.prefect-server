@@ -1,0 +1,18 @@
+FROM prefecthq/prefect:2.14.0-python3.11
+
+# Set working directory
+WORKDIR /app
+
+# Expose Prefect UI and API port
+EXPOSE 4200
+
+# Environment variables
+ENV PREFECT_SERVER_API_HOST=0.0.0.0
+ENV PREFECT_UI_API_URL=https://prefect-server.onrender.com/api
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:4200/api/health || exit 1
+
+# Start Prefect server
+CMD ["prefect", "server", "start", "--host", "0.0.0.0"]
