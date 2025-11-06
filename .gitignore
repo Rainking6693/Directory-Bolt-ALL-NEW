@@ -42,6 +42,8 @@ create-render-services.ps1
 configure-render-services.ps1
 check-prefect-config.ps1
 set-railway-vars.bat
+setup-prefect-complete.ps1
+RAILWAY_QUICK_DEPLOY.md
 
 # IDEs
 .vscode/

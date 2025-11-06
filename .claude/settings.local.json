@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__catalog-search__search_catalog"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
