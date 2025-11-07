@@ -708,33 +708,58 @@ export class QueueManager {
    * Send job to AWS SQS queue for real backend processing
    */
   private async sendJobToSQS(jobId: string, customerId: string, packageSize: number): Promise<void> {
+    const baseUrl =
+      process.env.BACKEND_ENQUEUE_URL ||
+      process.env.BACKEND_API_URL ||
+      process.env.NEXT_PUBLIC_BACKEND_ENQUEUE_URL
+
+    if (!baseUrl) {
+      console.error('🚨 BACKEND_ENQUEUE_URL not configured - cannot send job to backend queue service')
+      throw new Error('Queue backend URL not configured')
+    }
+
+    const enqueueToken =
+      process.env.BACKEND_ENQUEUE_TOKEN ||
+      process.env.STAFF_API_KEY ||
+      process.env.ADMIN_API_KEY ||
+      (process.env.TEST_MODE === 'true' ? 'DirectoryBolt-Staff-2025-SecureKey' : '')
+
+    const endpoint = `${baseUrl.replace(/\/$/, '')}/api/jobs/enqueue`
+
     try {
-      // Call the API endpoint that sends to SQS
-      const response = await fetch('/api/jobs/send-to-sqs', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(enqueueToken ? { Authorization: `Bearer ${enqueueToken}` } : {}),
+          'X-Source-Service': 'netlify-frontend'
         },
         body: JSON.stringify({
           job_id: jobId,
           customer_id: customerId,
-          package_size: packageSize
+          package_size: packageSize,
+          priority: this.getPriorityFromPackageSize(packageSize),
+          metadata: {
+            source: 'netlify_frontend',
+            created_at: new Date().toISOString()
+          }
         })
       })
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `Failed to send job to SQS: ${response.status}`)
+        const message = errorData?.detail || errorData?.error || `Failed to enqueue job: HTTP ${response.status}`
+        throw new Error(message)
       }
-      
+
       const result = await response.json()
-      console.log(`✅ Job ${jobId} sent to SQS queue. MessageId: ${result.messageId}`)
-      
+      const messageId = result.message_id || result.messageId
+      console.log(`✅ Job ${jobId} sent to backend queue service. MessageId: ${messageId}`)
+
     } catch (error) {
-      console.error(`❌ Error sending job ${jobId} to SQS:`, error)
-      // Don't throw - allow job to be created even if SQS send fails
-      // The stale job monitor can pick it up later
-      console.warn(`⚠️ Job ${jobId} created but not sent to SQS. It may be processed later.`)
+      console.error(`❌ Error sending job ${jobId} to backend queue service:`, error)
+      // Don't throw - allow job to be created even if enqueue fails so monitors can retry later
+      console.warn(`⚠️ Job ${jobId} created but not enqueued. It may be processed later by monitors.`)
     }
   }
 

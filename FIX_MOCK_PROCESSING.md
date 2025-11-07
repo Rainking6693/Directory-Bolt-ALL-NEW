@@ -10,16 +10,16 @@ The audit found that Netlify was using **MOCK processing functions** that:
 
 ## ✅ Solution Implemented
 
-### 1. Created SQS Integration API (`/api/jobs/send-to-sqs`)
-- Sends jobs to AWS SQS queue
-- Python backend subscriber picks them up
-- Real Prefect + Playwright processing happens
+### 1. Created Render Queue Enqueue API (`/api/jobs/enqueue`)
+- FastAPI endpoint runs on the Render brain service
+- Uses backend AWS credentials to enqueue jobs
+- Removes the need for Netlify to store AWS secrets
 
 ### 2. Updated Queue Manager (`lib/services/queue-manager.ts`)
 - ❌ **REMOVED**: Mock processing calls
 - ✅ **ADDED**: `findOrCreateJob()` - Creates job in Supabase
-- ✅ **ADDED**: `sendJobToSQS()` - Sends job to real backend
-- ✅ **DEPRECATED**: Mock functions (kept for reference, never called)
+- ✅ **UPDATED**: `sendJobToSQS()` - Calls Render `/api/jobs/enqueue`
+- ⚠️ **DEPRECATED**: Mock functions (kept for reference, never called)
 
 ### 3. Flow Now Works Like This:
 

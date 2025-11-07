@@ -1,7 +1,15 @@
 """CrewAI brain service - FastAPI adapter."""
-from fastapi import FastAPI, HTTPException
+from typing import Any, Dict, List, Optional
+
+from fastapi import FastAPI, HTTPException, Header
 from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
+
+from orchestration.api.enqueue_job import (
+    QueueConfigurationError,
+    QueueSendError,
+    enqueue_job as enqueue_job_to_queue,
+)
+
 import os
 
 app = FastAPI(title="DirectoryBolt Brain Service")
@@ -41,10 +49,110 @@ class PlanResponse(BaseModel):
     idempotency_factors: Dict[str, str]
 
 
+class EnqueueJobRequest(BaseModel):
+    job_id: str
+    customer_id: str
+    package_size: int
+    priority: int
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class EnqueueJobResponse(BaseModel):
+    job_id: str
+    message_id: str
+    queue_provider: str
+    queue_url: str
+    status: str = "queued"
+
+
+def _allowed_tokens() -> List[str]:
+    tokens = [
+        os.getenv("BACKEND_ENQUEUE_TOKEN"),
+        os.getenv("STAFF_API_KEY"),
+        os.getenv("ADMIN_API_KEY"),
+    ]
+
+    if os.getenv("TEST_MODE") == "true":
+        tokens.extend(
+            [
+                "DirectoryBolt-Staff-2025-SecureKey",
+                "718e8866b81ecc6527dfc1b640e103e6741d844f4438286210d652ca02ee4622",
+            ]
+        )
+
+    return [token for token in tokens if token]
+
+
+def _normalize_token(candidate: Optional[str]) -> Optional[str]:
+    if not candidate:
+        return None
+    value = candidate.strip()
+    if not value:
+        return None
+    if value.lower().startswith("bearer "):
+        return value.split(" ", 1)[1].strip()
+    return value
+
+
+def _is_authorized(
+    authorization: Optional[str],
+    staff_key: Optional[str],
+    admin_key: Optional[str],
+) -> bool:
+    allowed = set(_allowed_tokens())
+    if not allowed:
+        return False
+
+    provided = {
+        _normalize_token(authorization),
+        _normalize_token(staff_key),
+        _normalize_token(admin_key),
+    }
+
+    provided.discard(None)
+
+    return any(token in allowed for token in provided)
+
+
 @app.get("/health")
 def health_check():
     """Health check endpoint."""
     return {"status": "healthy", "service": "brain"}
+
+
+@app.post("/api/jobs/enqueue", response_model=EnqueueJobResponse)
+def enqueue_job(
+    request: EnqueueJobRequest,
+    authorization: Optional[str] = Header(default=None),
+    x_staff_key: Optional[str] = Header(default=None),
+    x_admin_key: Optional[str] = Header(default=None),
+):
+    """Enqueue a job for processing via SQS."""
+
+    if not _is_authorized(authorization, x_staff_key, x_admin_key):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    try:
+        result = enqueue_job_to_queue(
+            job_id=request.job_id,
+            customer_id=request.customer_id,
+            package_size=request.package_size,
+            priority=request.priority,
+            metadata=request.metadata,
+        )
+    except QueueConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except QueueSendError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return EnqueueJobResponse(
+        job_id=request.job_id,
+        message_id=result["message_id"],
+        queue_provider=result["queue_provider"],
+        queue_url=result["queue_url"],
+    )
 
 
 @app.post("/plan", response_model=PlanResponse)

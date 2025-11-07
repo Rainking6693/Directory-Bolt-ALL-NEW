@@ -35,10 +35,10 @@ DirectoryBolt is a fully automated, AI-enhanced directory submission platform wi
 │  │  │    ├─> Create customer record (customers table)       │    │  │
 │  │  │    ├─> Create master job (jobs table)                 │    │  │
 │  │  │    ├─> Select directories by tier                     │    │  │
-│  │  │    └─> Send to SQS: POST /api/jobs/send-to-sqs       │    │  │
+│  │  │    └─> Send to SQS: POST (Render) /api/jobs/enqueue  │    │  │
 │  │  └──────────────────────────────────────────────────────┘    │  │
 │  │                                                                │  │
-│  │  pages/api/jobs/send-to-sqs.ts                                │  │
+│  │  Render brain service → /api/jobs/enqueue                     │  │
 │  │  ┌──────────────────────────────────────────────────────┐    │  │
 │  │  │  AWS SQS Message Sender                               │    │  │
 │  │  │  - Validates job_id, customer_id, package_size       │    │  │

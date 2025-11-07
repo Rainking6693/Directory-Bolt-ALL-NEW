@@ -133,6 +133,7 @@ AWS_DEFAULT_ACCESS_KEY_ID=your-aws-access-key
 AWS_DEFAULT_SECRET_ACCESS_KEY=your-aws-secret-key
 SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/123456789/your-queue
 SQS_DLQ_URL=https://sqs.us-east-1.amazonaws.com/123456789/your-dlq
+BACKEND_ENQUEUE_TOKEN=long-shared-secret-used-between-render-and-netlify
 
 # Prefect (choose one)
 # Option A: Prefect Cloud
@@ -143,6 +144,8 @@ PREFECT_API_KEY=your-prefect-api-key
 # PREFECT_API_URL=http://your-prefect-server:4200/api
 # PREFECT_API_KEY=not-needed-for-oss
 ```
+
+> **Netlify reminder:** define `BACKEND_ENQUEUE_URL` (Render brain service base URL) and the matching `BACKEND_ENQUEUE_TOKEN` so the frontend queue manager can call `/api/jobs/enqueue` securely.
 
 ### Optional Variables
 
