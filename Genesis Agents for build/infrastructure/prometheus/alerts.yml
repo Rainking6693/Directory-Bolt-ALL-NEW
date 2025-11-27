@@ -1,0 +1,84 @@
+groups:
+  - name: model_alerts
+    interval: 30s
+    rules:
+      # High Error Rate Alert
+      - alert: HighModelErrorRate
+        expr: rate(model_errors[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Model error rate exceeds 5%"
+          description: "Error rate for {{ $labels.agent }} ({{ $labels.model }}) is {{ $value | humanizePercentage }}"
+      
+      # High Latency Alert
+      - alert: HighModelLatency
+        expr: histogram_quantile(0.95, rate(model_latency_ms_bucket[5m])) > 5000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95 model latency exceeds 5 seconds"
+          description: "P95 latency for {{ $labels.agent }} ({{ $labels.model }}) is {{ $value | humanizeDuration }}"
+      
+      # Very High Latency Alert (Critical)
+      - alert: VeryHighModelLatency
+        expr: histogram_quantile(0.95, rate(model_latency_ms_bucket[5m])) > 10000
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "P95 model latency exceeds 10 seconds"
+          description: "P95 latency for {{ $labels.agent }} ({{ $labels.model }}) is {{ $value | humanizeDuration }}"
+      
+      # High Cost Burn Alert
+      - alert: HighCostBurn
+        expr: increase(model_cost_usd[1h]) > 5
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Model costs exceed $5/hour"
+          description: "Cost for {{ $labels.agent }} ({{ $labels.model }}) is ${{ $value | humanize }}/hour"
+      
+      # Critical Cost Overrun Alert
+      - alert: CriticalCostOverrun
+        expr: increase(model_cost_usd[1h]) > 20
+        for: 30m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Model costs exceed $20/hour (CRITICAL)"
+          description: "Cost for {{ $labels.agent }} ({{ $labels.model }}) is ${{ $value | humanize }}/hour"
+      
+      # High Fallback Rate Alert
+      - alert: HighFallbackRate
+        expr: rate(model_fallbacks[5m]) / rate(model_requests[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Model fallback rate exceeds 10%"
+          description: "{{ $labels.agent }} falling back to baseline {{ $value | humanizePercentage }} of the time"
+      
+      # Model Unavailable Alert
+      - alert: ModelUnavailable
+        expr: rate(model_errors[5m]) == 0 and rate(model_requests[5m]) == 0
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Model appears to be unavailable"
+          description: "No requests or errors for {{ $labels.agent }} ({{ $labels.model }}) in the last 10 minutes"
+      
+      # Success Rate Drop Alert
+      - alert: LowSuccessRate
+        expr: (rate(model_requests[5m]) - rate(model_errors[5m])) / rate(model_requests[5m]) < 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Model success rate below 90%"
+          description: "Success rate for {{ $labels.agent }} ({{ $labels.model }}) is {{ $value | humanizePercentage }}"
+

@@ -1,0 +1,27 @@
+environment: development
+
+models:
+  use_finetuned: false  # Always use baseline in dev
+  fallback_enabled: true
+
+api_keys:
+  mistral: ${MISTRAL_API_KEY}
+
+observability:
+  enabled: true
+  export_endpoint: "http://localhost:4318"
+
+ab_testing:
+  enabled: false  # No A/B testing in dev
+  rollout_percentage: 0
+
+logging:
+  level: DEBUG
+  console: true
+  file: false
+
+features:
+  model_registry: true
+  health_check: true
+  analytics: false  # Disable analytics in dev for performance
+

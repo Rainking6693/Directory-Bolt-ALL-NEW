@@ -2,6 +2,7 @@
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, Header
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from orchestration.api.enqueue_job import (
@@ -13,6 +14,20 @@ from orchestration.api.enqueue_job import (
 import os
 
 app = FastAPI(title="DirectoryBolt Brain Service")
+
+# Configure CORS to allow frontend access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://directorybolt.com",
+        "https://www.directorybolt.com",
+        "http://localhost:3000",
+        "http://localhost:3001",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class BusinessProfile(BaseModel):

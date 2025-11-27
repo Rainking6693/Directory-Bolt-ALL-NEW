@@ -1,0 +1,116 @@
+C:\Users\Ben\Desktop\Github\Directory-Bolt-ALL-NEW\test_integration.py:69: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  "timestamp": datetime.utcnow().isoformat(),
+C:\Users\Ben\Desktop\Github\Directory-Bolt-ALL-NEW\test_integration.py:591: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  print_info(f"Timestamp: {datetime.utcnow().isoformat()}\n")
+C:\Users\Ben\Desktop\Github\Directory-Bolt-ALL-NEW\test_integration.py:80: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  "timestamp": datetime.utcnow().isoformat()
+C:\Users\Ben\Desktop\Github\Directory-Bolt-ALL-NEW\test_integration.py:80: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  "timestamp": datetime.utcnow().isoformat()
+
+[1m[96m================================================================================[0m
+[1m[96m                     Directory-Bolt System Integration Test                     [0m
+[1m[96m================================================================================[0m
+
+[94mi[0m Testing all connections in the system...
+[94mi[0m Timestamp: 2025-11-27T03:21:43.646111
+
+
+[1m[96m================================================================================[0m
+[1m[96m                      Phase 1.1: Backend -> SQS Connection                      [0m
+[1m[96m================================================================================[0m
+
+[94mi[0m Not configured
+[94mi[0m AWS Region: us-east-1
+[94mi[0m Access Key: **********Not configured
+[91mX[0m SQS_QUEUE_URL not configured
+
+[1m[96m================================================================================[0m
+[1m[96m                  Phase 1.2: Subscriber -> Prefect Connection                   [0m
+[1m[96m================================================================================[0m
+
+[94mi[0m Not configured
+[94mi[0m Prefect API Key: ********************Not configured
+[93m![0m PREFECT_API_URL not configured (this is normal in test environment)
+
+[1m[96m================================================================================[0m
+[1m[96m                    Phase 1.3: Worker -> Database Connection                    [0m
+[1m[96m================================================================================[0m
+
+[91mX[0m Failed: cannot import name 'create_client' from 'supabase' (unknown location)
+[91mX[0m Traceback (most recent call last):
+  File "C:\Users\Ben\Desktop\Github\Directory-Bolt-ALL-NEW\test_integration.py", line 198, in test_worker_database_connection
+    from db.supabase import get_supabase_client
+  File "C:\Users\Ben\Desktop\Github\Directory-Bolt-ALL-NEW\backend\db\supabase.py", line 4, in <module>
+    from supabase import create_client, Client
+ImportError: cannot import name 'create_client' from 'supabase' (unknown location)
+
+
+[1m[96m================================================================================[0m
+[1m[96m               Phase 1.4: Staff Dashboard -> Database Connection                [0m
+[1m[96m================================================================================[0m
+
+[91mX[0m Failed: cannot import name 'create_client' from 'supabase' (unknown location)
+[91mX[0m Traceback (most recent call last):
+  File "C:\Users\Ben\Desktop\Github\Directory-Bolt-ALL-NEW\test_integration.py", line 267, in test_staff_dashboard_database_connection
+    from db.supabase import get_supabase_client
+  File "C:\Users\Ben\Desktop\Github\Directory-Bolt-ALL-NEW\backend\db\supabase.py", line 4, in <module>
+    from supabase import create_client, Client
+ImportError: cannot import name 'create_client' from 'supabase' (unknown location)
+
+
+[1m[96m================================================================================[0m
+[1m[96m                      Phase 2: Render Workers Health Check                      [0m
+[1m[96m================================================================================[0m
+
+[94mi[0m Testing Brain at https://brain.onrender.com/health...
+[93m![0m Brain: Status 404
+[94mi[0m 
+Note: Subscriber, Worker, and Monitor are background workers
+[94mi[0m    They don't have HTTP endpoints. Check Render logs to verify they're running.
+
+[1m[96m================================================================================[0m
+[1m[96m                       Phase 3: End-to-End Data Flow Test                       [0m
+[1m[96m================================================================================[0m
+
+[91mX[0m Failed: cannot import name 'create_client' from 'supabase' (unknown location)
+[91mX[0m Traceback (most recent call last):
+  File "C:\Users\Ben\Desktop\Github\Directory-Bolt-ALL-NEW\test_integration.py", line 383, in test_end_to_end_flow
+    from db.supabase import get_supabase_client
+  File "C:\Users\Ben\Desktop\Github\Directory-Bolt-ALL-NEW\backend\db\supabase.py", line 4, in <module>
+    from supabase import create_client, Client
+ImportError: cannot import name 'create_client' from 'supabase' (unknown location)
+
+
+[1m[96m================================================================================[0m
+[1m[96m                              Test Summary Report                               [0m
+[1m[96m================================================================================[0m
+
+[94mi[0m Total Tests: 6
+[92m+[0m Passed: 0
+[91mX[0m Failed: 6
+[94mi[0m Pass Rate: 0.0%
+
+================================================================================
+Detailed Results:
+================================================================================
+
+[91mX Backend -> SQS Connection[0m
+  [91mError: SQS_QUEUE_URL not configured[0m
+
+[91mX Subscriber -> Prefect Connection[0m
+  [91mError: PREFECT_API_URL not configured[0m
+
+[91mX Worker -> Database Connection[0m
+  [91mError: cannot import name 'create_client' from 'supabase' (unknown location)[0m
+
+[91mX Staff Dashboard -> Database Connection[0m
+  [91mError: cannot import name 'create_client' from 'supabase' (unknown location)[0m
+
+[91mX Render Workers Health[0m
+
+[91mX End-to-End Data Flow[0m
+  [91mError: cannot import name 'create_client' from 'supabase' (unknown location)[0m
+
+[92m+[0m 
+Report saved to: SYSTEM_INTEGRATION_TEST.md
+[92m+[0m JSON report saved to: SYSTEM_INTEGRATION_TEST.json

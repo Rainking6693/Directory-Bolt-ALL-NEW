@@ -1,0 +1,98 @@
+{
+  "spec_agent": [
+    "file_read",
+    "file_write",
+    "web_search"
+  ],
+  "architect_agent": [
+    "file_read",
+    "file_write",
+    "web_search"
+  ],
+  "builder_agent": [
+    "file_read",
+    "file_write",
+    "file_edit",
+    "code_execution",
+    "test_execution"
+  ],
+  "frontend_agent": [
+    "file_read",
+    "file_write",
+    "file_edit",
+    "code_execution",
+    "web_access"
+  ],
+  "backend_agent": [
+    "file_read",
+    "file_write",
+    "file_edit",
+    "code_execution",
+    "database_read",
+    "database_write"
+  ],
+  "qa_agent": [
+    "file_read",
+    "test_execution",
+    "code_execution",
+    "web_access"
+  ],
+  "security_agent": [
+    "file_read",
+    "code_execution",
+    "web_access",
+    "database_read"
+  ],
+  "deploy_agent": [
+    "file_read",
+    "code_execution",
+    "deployment",
+    "container_management"
+  ],
+  "monitoring_agent": [
+    "file_read",
+    "database_read",
+    "web_access"
+  ],
+  "marketing_agent": [
+    "file_read",
+    "file_write",
+    "web_search",
+    "llm_inference"
+  ],
+  "sales_agent": [
+    "file_read",
+    "web_search",
+    "llm_inference"
+  ],
+  "support_agent": [
+    "file_read",
+    "web_search",
+    "llm_inference",
+    "database_read"
+  ],
+  "analytics_agent": [
+    "file_read",
+    "database_read",
+    "web_access"
+  ],
+  "research_agent": [
+    "file_read",
+    "web_search",
+    "web_access",
+    "llm_inference"
+  ],
+  "finance_agent": [
+    "file_read",
+    "database_read",
+    "database_write"
+  ],
+  "darwin_agent": [
+    "file_read",
+    "file_write",
+    "file_edit",
+    "code_execution",
+    "test_execution",
+    "llm_inference"
+  ]
+}

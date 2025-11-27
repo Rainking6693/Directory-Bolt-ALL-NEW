@@ -1,0 +1,8 @@
+{
+  "backend_api_url": "https://brain.onrender.com",
+  "database_status": null,
+  "render_connection": "AWS SQS Queue (backend publishes, subscriber consumes)",
+  "staff_dashboard_connection": null,
+  "env_credentials": {},
+  "frontend_status": "Deployed on Netlify (https://directorybolt.com)"
+}

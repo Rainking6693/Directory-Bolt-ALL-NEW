@@ -1,0 +1,32 @@
+environment: staging
+
+models:
+  use_finetuned: true
+  fallback_enabled: true
+
+api_keys:
+  mistral: ${MISTRAL_API_KEY}
+
+observability:
+  enabled: true
+  export_endpoint: "http://staging-otel-collector:4318"
+
+ab_testing:
+  enabled: false  # 100% fine-tuned in staging (no A/B test)
+  rollout_percentage: 100
+
+logging:
+  level: INFO
+  console: true
+  file: true
+  file_path: "logs/staging.log"
+
+features:
+  model_registry: true
+  health_check: true
+  analytics: true
+
+alerting:
+  enabled: true
+  slack_webhook: ${SLACK_WEBHOOK_URL}
+

@@ -1,0 +1,541 @@
+# ROGUE CONFIGURATION - GENESIS MULTI-AGENT SYSTEM
+# Week 1 Architecture (Phase 7, Nov 4-10, 2025)
+# Purpose: Configure Rogue automated testing framework for 15 Genesis agents
+
+# =============================================================================
+# ROGUE SERVER CONFIGURATION
+# =============================================================================
+
+rogue:
+  version: "1.0.0"
+  server:
+    host: "localhost"
+    port: 8080
+    log_level: "INFO"
+    max_concurrent_evaluations: 10
+    timeout: 300  # 5 minutes per scenario
+
+# =============================================================================
+# TARGET AGENT CONFIGURATION (Genesis System)
+# =============================================================================
+
+target_agents:
+  base_url: "http://localhost:8000/a2a"
+  protocol: "a2a"  # Agent-to-Agent protocol
+  auth:
+    type: "hmac-sha256"
+    token_env_var: "GENESIS_A2A_TOKEN"
+
+  # 15 Genesis Agents
+  agents:
+    - id: "qa_agent"
+      name: "QA Agent"
+      endpoint: "${base_url}/qa_agent"
+      description: "Code quality testing and test generation"
+      capabilities: ["pytest", "jest", "integration_tests", "e2e_tests"]
+      priority: "P0"
+
+    - id: "support_agent"
+      name: "Support Agent"
+      endpoint: "${base_url}/support_agent"
+      description: "Customer support and ticket triage"
+      capabilities: ["customer_support", "escalation", "ticket_management"]
+      priority: "P0"
+
+    - id: "legal_agent"
+      name: "Legal Agent"
+      endpoint: "${base_url}/legal_agent"
+      description: "Legal review and compliance verification"
+      capabilities: ["gdpr_compliance", "contract_review", "policy_analysis"]
+      priority: "P0"
+
+    - id: "analyst_agent"
+      name: "Analyst Agent"
+      endpoint: "${base_url}/analyst_agent"
+      description: "Financial and data analysis with charts"
+      capabilities: ["financial_analysis", "data_visualization", "trend_analysis"]
+      priority: "P0"
+
+    - id: "content_agent"
+      name: "Content/Marketing Agent"
+      endpoint: "${base_url}/content_agent"
+      description: "Content creation and marketing materials"
+      capabilities: ["blog_writing", "social_media", "marketing_copy"]
+      priority: "P1"
+
+    - id: "security_agent"
+      name: "Security Agent"
+      endpoint: "${base_url}/security_agent"
+      description: "Security audits and vulnerability scanning"
+      capabilities: ["security_audit", "vulnerability_scan", "penetration_testing"]
+      priority: "P0"
+
+    - id: "builder_agent"
+      name: "Builder Agent"
+      endpoint: "${base_url}/builder_agent"
+      description: "Code generation and application building"
+      capabilities: ["code_generation", "architecture_design", "api_development"]
+      priority: "P0"
+
+    - id: "deploy_agent"
+      name: "Deploy Agent"
+      endpoint: "${base_url}/deploy_agent"
+      description: "Infrastructure deployment and CI/CD"
+      capabilities: ["kubernetes_deploy", "docker", "github_actions"]
+      priority: "P0"
+
+    - id: "spec_agent"
+      name: "Spec Agent"
+      endpoint: "${base_url}/spec_agent"
+      description: "Requirements and specification writing"
+      capabilities: ["requirements_doc", "user_stories", "api_specs"]
+      priority: "P1"
+
+    - id: "reflection_agent"
+      name: "Reflection Agent"
+      endpoint: "${base_url}/reflection_agent"
+      description: "Self-reflection and improvement suggestions"
+      capabilities: ["performance_analysis", "improvement_suggestions"]
+      priority: "P2"
+
+    - id: "orchestration_agent"
+      name: "Orchestration Agent"
+      endpoint: "${base_url}/orchestration_agent"
+      description: "Top-level orchestration and coordination"
+      capabilities: ["task_coordination", "agent_management", "workflow_orchestration"]
+      priority: "P0"
+
+    - id: "se_darwin_agent"
+      name: "SE-Darwin Agent"
+      endpoint: "${base_url}/se_darwin_agent"
+      description: "Self-evolving agent with multi-trajectory evolution"
+      capabilities: ["code_evolution", "multi_trajectory_generation", "benchmark_validation"]
+      priority: "P1"
+
+    - id: "waltzrl_conversation_agent"
+      name: "WaltzRL Conversation Agent"
+      endpoint: "${base_url}/waltzrl_conversation_agent"
+      description: "Response improvement for safety alignment"
+      capabilities: ["response_revision", "safety_alignment", "dynamic_improvement"]
+      priority: "P0"
+
+    - id: "waltzrl_feedback_agent"
+      name: "WaltzRL Feedback Agent"
+      endpoint: "${base_url}/waltzrl_feedback_agent"
+      description: "Safety feedback and pattern detection"
+      capabilities: ["pattern_detection", "safety_feedback", "pii_redaction"]
+      priority: "P0"
+
+    - id: "vision_ocr_agent"
+      name: "Vision/OCR Agent"
+      endpoint: "${base_url}/vision_ocr_agent"
+      description: "Image OCR and visual data extraction"
+      capabilities: ["ocr", "image_analysis", "document_extraction"]
+      priority: "P1"
+
+# =============================================================================
+# EVALUATOR AGENT CONFIGURATION (Rogue LLM)
+# =============================================================================
+
+evaluator:
+  llm:
+    provider: "openai"  # or "google", "anthropic"
+    model: "gpt-4o"
+    api_key_env_var: "OPENAI_API_KEY"
+    temperature: 0.7
+    max_tokens: 4000
+    timeout: 60
+
+  # Fallback LLMs for cost optimization
+  fallback_llms:
+    - provider: "google"
+      model: "gemini-2.0-flash-001"
+      api_key_env_var: "GOOGLE_API_KEY"
+      use_for_priority: ["P2"]  # Use cheaper model for P2 scenarios
+
+    - provider: "anthropic"
+      model: "claude-sonnet-4-20241022"
+      api_key_env_var: "ANTHROPIC_API_KEY"
+      use_for_priority: ["P1"]
+
+# =============================================================================
+# JUDGE LLM CONFIGURATION (Policy Evaluation)
+# =============================================================================
+
+judge:
+  llm:
+    provider: "openai"
+    model: "gpt-4o"
+    api_key_env_var: "OPENAI_API_KEY"
+    temperature: 0.1  # Low temperature for consistent judgment
+    max_tokens: 2000
+    timeout: 30
+
+  # Policy compliance rules
+  policy_checks:
+    waltzrl_safety:
+      enabled: true
+      patterns:
+        violence: 14
+        hate_speech: 8
+        dangerous_instructions: 7
+        illegal_activity: 8
+      threshold: "zero_tolerance"  # Any violation fails
+
+    gdpr_compliance:
+      enabled: true
+      categories: ["name", "address", "phone", "email", "ssn", "credit_card"]
+      threshold: "95_percent"  # 95% detection rate required
+
+    error_handling:
+      enabled: true
+      checks: ["graceful_degradation", "circuit_breaker", "retry_logic", "fallback"]
+      threshold: "all_required"
+
+    performance_slos:
+      enabled: true
+      targets:
+        agent_response: "5s"
+        router_response: "100ms"
+        orchestration_response: "30s"
+        throughput: "10_rps"
+      threshold: "90_percent"  # 90% of scenarios must meet SLOs
+
+# =============================================================================
+# SCENARIO CONFIGURATION
+# =============================================================================
+
+scenarios:
+  base_path: "tests/rogue/scenarios"
+
+  # Scenario file paths by layer
+  layers:
+    layer1_orchestration:
+      - "${base_path}/layer1_orchestration/htdag_planner_scenarios.json"
+      - "${base_path}/layer1_orchestration/halo_router_scenarios.json"
+      - "${base_path}/layer1_orchestration/aop_validator_scenarios.json"
+      - "${base_path}/layer1_orchestration/daao_router_scenarios.json"
+
+    layer2_agents:
+      - "${base_path}/layer2_agents/qa_agent_scenarios.json"
+      - "${base_path}/layer2_agents/support_agent_scenarios.json"
+      - "${base_path}/layer2_agents/legal_agent_scenarios.json"
+      - "${base_path}/layer2_agents/analyst_agent_scenarios.json"
+      - "${base_path}/layer2_agents/content_agent_scenarios.json"
+      - "${base_path}/layer2_agents/security_agent_scenarios.json"
+      - "${base_path}/layer2_agents/builder_agent_scenarios.json"
+      - "${base_path}/layer2_agents/deploy_agent_scenarios.json"
+      - "${base_path}/layer2_agents/spec_agent_scenarios.json"
+      - "${base_path}/layer2_agents/reflection_agent_scenarios.json"
+      - "${base_path}/layer2_agents/orchestration_agent_scenarios.json"
+      - "${base_path}/layer2_agents/se_darwin_agent_scenarios.json"
+      - "${base_path}/layer2_agents/waltzrl_conversation_agent_scenarios.json"
+      - "${base_path}/layer2_agents/waltzrl_feedback_agent_scenarios.json"
+      - "${base_path}/layer2_agents/vision_ocr_agent_scenarios.json"
+
+    layer3_integration:
+      - "${base_path}/layer3_integration/agent_to_agent_scenarios.json"
+      - "${base_path}/layer3_integration/orchestration_workflows_scenarios.json"
+      - "${base_path}/layer3_integration/memory_system_scenarios.json"
+      - "${base_path}/layer3_integration/safety_system_scenarios.json"
+
+    layer4_performance:
+      - "${base_path}/layer4_performance/latency_tests_scenarios.json"
+      - "${base_path}/layer4_performance/throughput_tests_scenarios.json"
+      - "${base_path}/layer4_performance/cost_optimization_scenarios.json"
+
+    layer5_e2e:
+      - "${base_path}/layer5_e2e/business_launch_scenarios.json"
+      - "${base_path}/layer5_e2e/customer_support_scenarios.json"
+      - "${base_path}/layer5_e2e/code_evolution_scenarios.json"
+      - "${base_path}/layer5_e2e/safety_incident_scenarios.json"
+      - "${base_path}/layer5_e2e/visual_validation_scenarios.json"
+
+  # Priority-based execution
+  priority_filters:
+    pre_commit: ["P0"]  # Only critical scenarios
+    pr_validation: ["P0", "P1"]  # Critical + important
+    staging: ["P0", "P1", "P2"]  # All scenarios
+    production: ["P0"]  # Only critical health checks
+
+# =============================================================================
+# EXECUTION CONFIGURATION
+# =============================================================================
+
+execution:
+  # Parallel execution settings
+  parallelism:
+    enabled: true
+    max_workers: 5
+    batch_size: 10
+
+  # Retry logic
+  retry:
+    enabled: true
+    max_attempts: 3
+    backoff_factor: 2  # Exponential backoff: 1s, 2s, 4s
+    retry_on: ["network_error", "timeout", "rate_limit"]
+
+  # Timeout settings
+  timeouts:
+    scenario_execution: 300  # 5 minutes per scenario
+    agent_response: 60  # 1 minute per agent call
+    llm_judgment: 30  # 30 seconds for judge LLM
+
+  # Failure handling
+  failure_handling:
+    continue_on_failure: true
+    max_failures_before_abort: 50  # Stop if 50 scenarios fail
+    fail_fast: false  # Complete all scenarios even if some fail
+
+# =============================================================================
+# REPORTING CONFIGURATION
+# =============================================================================
+
+reporting:
+  output_directory: "reports/rogue"
+
+  # Report formats
+  formats:
+    - type: "markdown"
+      filename: "report.md"
+      include_screenshots: true
+      include_logs: true
+
+    - type: "json"
+      filename: "results.json"
+      include_raw_responses: true
+
+    - type: "html"
+      filename: "report.html"
+      template: "default"
+      interactive: true
+
+    - type: "junit"
+      filename: "junit.xml"
+      for_ci_cd: true
+
+  # Report sections
+  sections:
+    - name: "Executive Summary"
+      include: ["total_scenarios", "pass_rate", "failures", "duration"]
+
+    - name: "Priority Breakdown"
+      include: ["p0_results", "p1_results", "p2_results"]
+
+    - name: "Layer Breakdown"
+      include: ["layer1_results", "layer2_results", "layer3_results", "layer4_results", "layer5_results"]
+
+    - name: "Agent Performance"
+      include: ["agent_pass_rates", "agent_avg_latency", "agent_failures"]
+
+    - name: "Policy Compliance"
+      include: ["waltzrl_safety", "gdpr_compliance", "error_handling", "performance_slos"]
+
+    - name: "Failures"
+      include: ["failed_scenarios", "failure_reasons", "recommendations"]
+
+    - name: "Recommendations"
+      include: ["improvement_suggestions", "next_steps"]
+
+  # Notification settings
+  notifications:
+    enabled: true
+    on_failure_only: true
+    channels:
+      - type: "github_issue"
+        enabled: true
+        labels: ["rogue-test-failure", "automated-test"]
+        assignees: ["Forge", "Alex"]
+
+      - type: "slack"
+        enabled: false  # Enable when Slack webhook configured
+        webhook_url_env_var: "SLACK_WEBHOOK_URL"
+
+      - type: "email"
+        enabled: false  # Enable when email configured
+        recipients: ["team@genesis.ai"]
+
+# =============================================================================
+# CI/CD INTEGRATION CONFIGURATION
+# =============================================================================
+
+ci_cd:
+  # GitHub Actions integration
+  github_actions:
+    enabled: true
+    workflow_file: ".github/workflows/rogue_automated_tests.yml"
+
+    # Stage-specific configurations
+    stages:
+      pre_commit:
+        enabled: true
+        priority_filter: ["P0"]
+        max_duration: "2m"
+        pass_threshold: 100  # 100% pass rate required
+        blocking: true
+
+      pr_validation:
+        enabled: true
+        priority_filter: ["P0", "P1"]
+        max_duration: "10m"
+        pass_threshold: 95  # 95% pass rate required
+        blocking: true
+
+      staging:
+        enabled: true
+        priority_filter: ["P0", "P1", "P2"]
+        max_duration: "30m"
+        pass_threshold: 95  # 95% pass rate required
+        blocking: true
+
+      production:
+        enabled: true
+        priority_filter: ["P0"]
+        max_duration: "5m"
+        pass_threshold: 100  # 100% pass rate required
+        blocking: false  # Alert but don't block
+
+  # Caching
+  caching:
+    enabled: true
+    cache_key: "rogue-scenarios-v1"
+    cache_paths:
+      - "tests/rogue/scenarios/**/*.json"
+      - "infrastructure/testing/rogue_config.yaml"
+    ttl: 86400  # 24 hours
+
+# =============================================================================
+# COST OPTIMIZATION
+# =============================================================================
+
+cost_optimization:
+  # LLM usage optimization
+  llm_routing:
+    enabled: true
+    rules:
+      - priority: "P0"
+        llm: "gpt-4o"
+        reason: "Critical scenarios need highest quality"
+
+      - priority: "P1"
+        llm: "claude-sonnet-4"
+        reason: "Important scenarios need good quality"
+
+      - priority: "P2"
+        llm: "gemini-2.0-flash-001"
+        reason: "Nice-to-have scenarios can use cheaper model"
+
+  # Result caching
+  result_caching:
+    enabled: true
+    cache_duration: 3600  # 1 hour
+    cache_key_fields: ["scenario_id", "agent_id", "input_hash"]
+
+  # Incremental testing
+  incremental_testing:
+    enabled: true
+    mode: "changed_agents_only"
+    fallback_to_full: true
+
+# =============================================================================
+# MONITORING AND OBSERVABILITY
+# =============================================================================
+
+monitoring:
+  # OpenTelemetry integration
+  otel:
+    enabled: true
+    endpoint: "http://localhost:4318"
+    service_name: "rogue-testing"
+    traces: true
+    metrics: true
+    logs: true
+
+  # Metrics to track
+  metrics:
+    - name: "rogue_scenarios_total"
+      type: "counter"
+      description: "Total number of scenarios executed"
+
+    - name: "rogue_scenarios_passed"
+      type: "counter"
+      description: "Number of scenarios that passed"
+
+    - name: "rogue_scenarios_failed"
+      type: "counter"
+      description: "Number of scenarios that failed"
+
+    - name: "rogue_execution_duration_seconds"
+      type: "histogram"
+      description: "Scenario execution duration in seconds"
+
+    - name: "rogue_agent_latency_seconds"
+      type: "histogram"
+      description: "Agent response latency in seconds"
+
+    - name: "rogue_llm_cost_dollars"
+      type: "counter"
+      description: "Total LLM API cost in dollars"
+
+  # Health checks
+  health_checks:
+    enabled: true
+    interval: 60  # Check every 60 seconds
+    endpoints:
+      - name: "genesis_agents"
+        url: "http://localhost:8000/health"
+        timeout: 5
+
+      - name: "rogue_server"
+        url: "http://localhost:8080/health"
+        timeout: 5
+
+# =============================================================================
+# SECURITY CONFIGURATION
+# =============================================================================
+
+security:
+  # Input validation
+  input_validation:
+    enabled: true
+    max_input_length: 10000
+    sanitize_special_chars: true
+    block_sql_injection: true
+    block_xss: true
+
+  # Authentication
+  authentication:
+    required: true
+    type: "hmac-sha256"
+    rotate_keys: false
+
+  # Rate limiting
+  rate_limiting:
+    enabled: true
+    max_requests_per_minute: 100
+    max_requests_per_hour: 1000
+
+# =============================================================================
+# DEVELOPMENT/DEBUG CONFIGURATION
+# =============================================================================
+
+development:
+  # Debug mode
+  debug:
+    enabled: false
+    verbose_logging: true
+    save_intermediate_results: true
+
+  # Dry run mode (validate scenarios without executing)
+  dry_run:
+    enabled: false
+
+  # Single scenario testing
+  single_scenario:
+    enabled: false
+    scenario_id: "qa_001"
+
+# =============================================================================
+# END OF CONFIGURATION
+# =============================================================================

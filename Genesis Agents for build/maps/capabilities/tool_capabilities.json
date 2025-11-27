@@ -1,0 +1,18 @@
+{
+  "Read": "file_read",
+  "Write": "file_write",
+  "Edit": "file_edit",
+  "Glob": "file_search",
+  "Bash": "code_execution",
+  "NotebookEdit": "notebook_edit",
+  "pytest": "test_execution",
+  "unittest": "test_execution",
+  "WebFetch": "web_access",
+  "WebSearch": "web_search",
+  "ChatCompletion": "llm_inference",
+  "Embedding": "llm_embedding",
+  "DatabaseQuery": "database_read",
+  "DatabaseWrite": "database_write",
+  "Deploy": "deployment",
+  "DockerBuild": "container_management"
+}

@@ -1,0 +1,63 @@
+{
+  "timestamp": "2025-11-27T03:21:43.646111",
+  "tests": [
+    {
+      "name": "Backend -> SQS Connection",
+      "passed": false,
+      "details": {
+        "error": "SQS_QUEUE_URL not configured"
+      },
+      "timestamp": "2025-11-27T03:21:43.659016"
+    },
+    {
+      "name": "Subscriber -> Prefect Connection",
+      "passed": false,
+      "details": {
+        "error": "PREFECT_API_URL not configured",
+        "severity": "warning"
+      },
+      "timestamp": "2025-11-27T03:21:44.661184"
+    },
+    {
+      "name": "Worker -> Database Connection",
+      "passed": false,
+      "details": {
+        "error": "cannot import name 'create_client' from 'supabase' (unknown location)"
+      },
+      "timestamp": "2025-11-27T03:21:45.666794"
+    },
+    {
+      "name": "Staff Dashboard -> Database Connection",
+      "passed": false,
+      "details": {
+        "error": "cannot import name 'create_client' from 'supabase' (unknown location)"
+      },
+      "timestamp": "2025-11-27T03:21:46.668769"
+    },
+    {
+      "name": "Render Workers Health",
+      "passed": false,
+      "details": {
+        "Brain": {
+          "status": "unhealthy",
+          "code": 404
+        }
+      },
+      "timestamp": "2025-11-27T03:21:48.499299"
+    },
+    {
+      "name": "End-to-End Data Flow",
+      "passed": false,
+      "details": {
+        "error": "cannot import name 'create_client' from 'supabase' (unknown location)"
+      },
+      "timestamp": "2025-11-27T03:21:49.512530"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "passed": 0,
+    "failed": 6,
+    "pass_rate": "0.0%"
+  }
+}

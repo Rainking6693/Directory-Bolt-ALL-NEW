@@ -1,0 +1,38 @@
+environment: production
+
+models:
+  use_finetuned: true
+  fallback_enabled: true
+
+api_keys:
+  mistral: ${MISTRAL_API_KEY}
+
+observability:
+  enabled: true
+  export_endpoint: "http://prod-otel-collector:4318"
+
+ab_testing:
+  enabled: true
+  rollout_percentage: 10  # Start at 10%, increase gradually
+
+logging:
+  level: INFO
+  console: false
+  file: true
+  file_path: "logs/production.log"
+
+features:
+  model_registry: true
+  health_check: true
+  analytics: true
+
+alerting:
+  enabled: true
+  slack_webhook: ${SLACK_WEBHOOK_URL}
+  prometheus_alerts: true
+
+cost_limits:
+  hourly_budget_usd: 20.0
+  daily_budget_usd: 200.0
+  alert_threshold_pct: 80  # Alert at 80% of budget
+
