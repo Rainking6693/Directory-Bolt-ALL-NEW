@@ -130,9 +130,82 @@ def _is_authorized(
 
 
 @app.get("/health")
-def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy", "service": "brain"}
+async def health_check():
+    """
+    Health check endpoint with comprehensive dependency checks.
+
+    Returns:
+        - status: Overall health status (healthy/degraded/unhealthy)
+        - service: Service name
+        - version: Service version
+        - timestamp: Current UTC timestamp
+        - checks: Individual dependency health checks
+    """
+    from datetime import datetime
+    import boto3
+    from botocore.exceptions import ClientError
+
+    checks = {}
+    overall_status = "healthy"
+
+    # Check SQS connectivity
+    try:
+        queue_url = os.getenv("SQS_QUEUE_URL")
+        if queue_url:
+            region = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
+            access_key = os.getenv("AWS_DEFAULT_ACCESS_KEY_ID")
+            secret_key = os.getenv("AWS_DEFAULT_SECRET_ACCESS_KEY")
+
+            if access_key and secret_key:
+                sqs = boto3.client(
+                    "sqs",
+                    region_name=region,
+                    aws_access_key_id=access_key,
+                    aws_secret_access_key=secret_key
+                )
+                # Test queue access
+                sqs.get_queue_attributes(
+                    QueueUrl=queue_url,
+                    AttributeNames=["ApproximateNumberOfMessages"]
+                )
+                checks["sqs"] = "connected"
+            else:
+                checks["sqs"] = "credentials_missing"
+                overall_status = "degraded"
+        else:
+            checks["sqs"] = "not_configured"
+            overall_status = "degraded"
+    except ClientError as e:
+        checks["sqs"] = f"error: {str(e)}"
+        overall_status = "unhealthy"
+    except Exception as e:
+        checks["sqs"] = f"error: {str(e)}"
+        overall_status = "degraded"
+
+    # Check environment variables
+    required_env_vars = ["SQS_QUEUE_URL", "AWS_DEFAULT_REGION"]
+    missing_vars = [var for var in required_env_vars if not os.getenv(var)]
+
+    if missing_vars:
+        checks["environment"] = f"missing: {', '.join(missing_vars)}"
+        overall_status = "degraded"
+    else:
+        checks["environment"] = "configured"
+
+    # Check API authentication
+    if os.getenv("BACKEND_ENQUEUE_TOKEN") or os.getenv("STAFF_API_KEY"):
+        checks["authentication"] = "configured"
+    else:
+        checks["authentication"] = "not_configured"
+        overall_status = "degraded"
+
+    return {
+        "status": overall_status,
+        "service": "brain",
+        "version": "2.0.0",
+        "timestamp": datetime.utcnow().isoformat(),
+        "checks": checks
+    }
 
 
 @app.post("/api/jobs/enqueue", response_model=EnqueueJobResponse)

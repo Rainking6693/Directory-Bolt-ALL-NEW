@@ -182,7 +182,12 @@
     "workbox-strategies": "^7.3.0",
     "workbox-webpack-plugin": "^7.3.0",
     "workbox-window": "^7.3.0",
-    "ws": "^8.18.3"
+    "ws": "^8.18.3",
+    "@motiadev/core": "0.13.1-beta.162",
+    "@motiadev/plugin-logs": "0.13.1-beta.162",
+    "@motiadev/plugin-states": "0.13.1-beta.162",
+    "@motiadev/plugin-endpoint": "0.13.1-beta.162",
+    "@motiadev/plugin-observability": "0.13.1-beta.162"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.4",

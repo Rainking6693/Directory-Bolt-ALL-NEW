@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  directory-bolt:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      # Load environment variables from .env file
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
