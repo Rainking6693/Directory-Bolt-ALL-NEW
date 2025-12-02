@@ -13,7 +13,13 @@ export const config: ApiRouteConfig = {
 };
 
 export const handler: Handlers['StaffDashboardAPI'] = async (req, { logger }) => {
-  const requestPath = (req as any).path ?? (req as any).url ?? ''
+  const pathParams = (req as any).pathParams ?? (req as any).params ?? []
+  const pathSegments = Array.isArray(pathParams)
+    ? pathParams
+    : typeof pathParams === 'string'
+      ? [pathParams]
+      : Object.values(pathParams ?? {}).flat().filter(Boolean)
+  const requestPath = `/api/staff${pathSegments.length ? '/' + pathSegments.join('/') : ''}`
   const queryParams = ((req as any).query ?? {}) as any
 
   logger.info('Staff dashboard API accessed', { path: requestPath });

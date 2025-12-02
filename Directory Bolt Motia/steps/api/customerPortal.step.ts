@@ -8,7 +8,7 @@ export const config: ApiRouteConfig = {
   name: 'CustomerPortalAPI',
   type: 'api',
   path: '/api/customer/*',
-  method: ['GET', 'POST'] as any,
+  method: 'GET', // Motia expects a single method string; handler supports multiple verbs internally
   flows: ['directory-bolt'],
   emits: [],
   bodySchema: z.object({
@@ -18,11 +18,25 @@ export const config: ApiRouteConfig = {
 };
 
 export const handler: Handlers['CustomerPortalAPI'] = async (req, { logger }) => {
-  const requestPath = (req as any).path ?? (req as any).url ?? ''
+  const pathParams = (req as any).pathParams ?? (req as any).params ?? []
+  const pathSegments = Array.isArray(pathParams)
+    ? pathParams
+    : typeof pathParams === 'string'
+      ? [pathParams]
+      : Object.values(pathParams ?? {}).flat().filter(Boolean)
+  const requestPath = `/api/customer${pathSegments.length ? '/' + pathSegments.join('/') : ''}`
   const requestMethod = (req as any).method ?? (req as any).httpMethod ?? ''
   const queryParams = ((req as any).query ?? {}) as any
 
-  logger.info('Customer portal API accessed', { path: requestPath });
+  logger.info('Customer portal API accessed', {
+    path: requestPath,
+    method: requestMethod,
+    url: (req as any).url,
+    rawUrl: (req as any).raw?.url,
+    keys: Object.keys(req || {}),
+    rawKeys: Object.keys((req as any).raw || {}),
+    pathParams,
+  });
 
   try {
     // Initialize services

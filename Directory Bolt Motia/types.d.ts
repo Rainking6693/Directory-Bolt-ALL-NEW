@@ -38,7 +38,10 @@ declare module 'motia' {
     'ApiTrigger': ApiRouteHandler<{ pet: { name: string; photoUrl: string }; foodOrder?: { quantity: number } }, ApiResponse<200, { id: string; name: string; photoUrl: string }>, { topic: 'process-food-order'; data: { email: string; quantity: number; petId: string } }>
     'ArrayStep': ApiRouteHandler<Array<{ pet: { name: string; photoUrl: string }; foodOrder?: { quantity: number } }>, ApiResponse<200, Array<{ id: string; name: string; photoUrl: string }>>, { topic: 'process-food-order'; data: { email: string; quantity: number; petId: string } }>
     'StaffDashboardAPI': ApiRouteHandler<{}, unknown, never>
+    'RealtimeUpdates': ApiRouteHandler<Record<string, unknown>, unknown, never>
+    'HelloWorld': ApiRouteHandler<Record<string, unknown>, unknown, never>
     'HealthCheck': ApiRouteHandler<{}, unknown, never>
+    'CustomerPortalAPI': ApiRouteHandler<{ packageType?: string; businessData?: Record<string, unknown> }, unknown, never>
     'BrainService': ApiRouteHandler<{ businessData: Record<string, unknown>; directory: string; useAI?: boolean }, unknown, never>
     'Test State With Python': EventHandler<unknown, { topic: 'test-state-check'; data: { key: string; expected?: unknown } }>
     'Test Event': EventHandler<never, { topic: 'tested'; data: never }>

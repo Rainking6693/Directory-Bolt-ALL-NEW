@@ -3,7 +3,9 @@ export const config = {
   name: 'HelloWorld',
   type: 'api',
   path: '/hello',
-  method: 'GET'
+  method: 'GET',
+  emits: [],
+  flows: ['directory-bolt'],
 };
 
 export const handler = async (req: any, { logger }: { logger: any }) => {

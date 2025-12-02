@@ -15,11 +15,11 @@ export class DirectoryBoltDB {
     const { data, error } = await this.supabase
       .from('customers')
       .select('*')
-      .eq('id', customerId)
-      .single()
+      .eq('customer_id', customerId)
+      .limit(1)
 
     if (error) throw new Error(`Failed to fetch customer: ${error.message}`)
-    return data
+    return Array.isArray(data) ? data[0] : data
   }
 
   async getCustomerJobs(customerId: string) {

@@ -2,7 +2,9 @@ export const config = {
   name: 'RealtimeUpdates',
   type: 'api',
   path: '/api/realtime/subscribe',
-  method: 'POST'
+  method: 'POST',
+  emits: [],
+  flows: ['directory-bolt'],
 };
 
 export const handler = async (req: any, { logger }: { logger: any }) => {
