@@ -1,35 +1,37 @@
 import type { CronConfig, Handlers } from 'motia'
+import { getSupabaseClient } from '../utils/supabaseClient'
 
 export const config: CronConfig = {
   name: 'StaleJobMonitor',
   type: 'cron',
   cron: '0 */30 * * * *', // Every 30 minutes
   flows: ['directory-bolt'],
-  emits: []
-};
+  emits: [],
+}
 
-export const handler: Handlers['StaleJobMonitor'] = async (input, { logger }) => {
-  logger.info('Running stale job monitor');
+export const handler: Handlers['StaleJobMonitor'] = async ({ logger }) => {
+  logger.info('Running stale job monitor')
 
-  // Check for stale jobs in Supabase
-  const staleJobs: any[] = await findStaleJobs();
+  const supabase = getSupabaseClient()
+  const thresholdMinutes = Number.parseInt(process.env.STALE_JOB_MINUTES || '30', 10)
+  const cutoffIso = new Date(Date.now() - thresholdMinutes * 60 * 1000).toISOString()
 
-  for (const job of staleJobs) {
-    // Log or alert on stale jobs
-    logger.warn(`Stale job detected: ${job.id}`, job);
+  const { data: staleJobs, error } = await supabase
+    .from('jobs')
+    .select('id, status, updated_at, customer_id')
+    .eq('status', 'in_progress')
+    .lt('updated_at', cutoffIso)
 
-    // You could emit an event to handle the stale job
-    // or send notifications, etc.
+  if (error) {
+    logger.error('Failed to query stale jobs', { error })
+    return
   }
 
-  return {
-    status: "completed",
-    monitoredJobs: staleJobs.length
-  };
-};
+  if (staleJobs?.length) {
+    staleJobs.forEach((job: any) => {
+      logger.warn(`Stale job detected: ${job.id}`, job)
+    })
+  }
 
-async function findStaleJobs() {
-  // Implementation to find stale jobs in Supabase
-  // Jobs that have been in_progress for too long
-  return []; // Placeholder
+  logger.info('Stale job monitor complete', { monitoredJobs: staleJobs?.length ?? 0 })
 }

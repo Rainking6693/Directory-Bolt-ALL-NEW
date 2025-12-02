@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
-    "lib": ["ES2020"],
+    "lib": ["ES2020", "DOM"],
     "allowJs": true,
     "outDir": "./dist",
     "rootDir": "./",
@@ -10,10 +10,12 @@
     "noImplicitAny": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx"
   },
   "include": [
-    "steps/**/*"
+    "steps/**/*",
+    "types.d.ts"
   ],
   "exclude": [
     "node_modules",

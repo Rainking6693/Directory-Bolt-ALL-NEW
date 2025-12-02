@@ -82,23 +82,6 @@
     }
   },
   {
-    "id": "test-state",
-    "config": {
-      "steps/testState/testStateCheck.step.ts": {
-        "x": 490,
-        "y": 34
-      },
-      "steps/testState/testState.api.step.ts": {
-        "x": 0,
-        "y": 0
-      },
-      "steps/testState/test_state_step.py": {
-        "x": 235,
-        "y": 60
-      }
-    }
-  },
-  {
     "id": "parallel-merge",
     "config": {
       "steps/parallelMergeState/stepA.step.ts": {
@@ -149,27 +132,40 @@
     }
   },
   {
+    "id": "test-state",
+    "config": {
+      "steps\\testState\\testStateCheck.step.ts": {
+        "x": 490,
+        "y": 34
+      },
+      "steps\\testState\\testState.api.step.ts": {
+        "x": 0,
+        "y": 0
+      },
+      "steps\\testState\\test_state_step.py": {
+        "x": 235,
+        "y": 60
+      }
+    }
+  },
+  {
     "id": "basic-tutorial",
     "config": {
-      "steps/basic-tutorial/state-audit-cron.step.ts": {
-        "x": -175,
-        "y": 219,
-        "sourceHandlePosition": "right"
+      "steps\\basic-tutorial\\state-audit-cron.step.ts": {
+        "x": 139,
+        "y": -790
       },
-      "steps/basic-tutorial/process-food-order.step.ts": {
-        "x": 144,
-        "y": 17,
-        "sourceHandlePosition": "bottom"
+      "steps\\basic-tutorial\\process-food-order.step.ts": {
+        "x": 138,
+        "y": -543
       },
-      "steps/basic-tutorial/notification.step.ts": {
-        "x": 331,
-        "y": 261,
-        "sourceHandlePosition": "bottom"
+      "steps\\basic-tutorial\\notification.step.ts": {
+        "x": 635,
+        "y": -447
       },
-      "steps/basic-tutorial/api.step.ts": {
-        "x": -175,
-        "y": 3,
-        "sourceHandlePosition": "right"
+      "steps\\basic-tutorial\\api.step.ts": {
+        "x": -364,
+        "y": -749
       }
     }
   }

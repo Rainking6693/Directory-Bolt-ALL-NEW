@@ -3,35 +3,34 @@ import { z } from 'zod'
 
 export const config: EventConfig = {
   type: 'event',
-  name: 'ProcessFoodOrder', // Keeping the name for now as I don't know the intended name, maybe 'JobProcessor'?
-  description: 'Job processor event step',
-  flows: ['directory-bolt'], // Changed from basic-tutorial
-  subscribes: ['process-job'], // Changed to something generic
-  emits: ['notification'],
+  name: 'JobProcessor',
+  description: 'Processes directory submission jobs and emits status updates',
+  flows: ['directory-bolt'],
+  subscribes: ['process-job'],
+  emits: ['job-processed'],
   input: z.object({
     jobId: z.string(),
-    type: z.string(),
-    data: z.any()
+    customerId: z.string(),
+    directory: z.string(),
+    payload: z.record(z.string(), z.any()),
   }),
 }
 
-export const handler: Handlers['ProcessFoodOrder'] = async (input, { traceId, logger, state, emit }) => {
+export const handler: Handlers['JobProcessor'] = async (input, { traceId, logger, emit }) => {
   logger.info('Processing job', { input, traceId })
 
-  // Placeholder logic
-  logger.info('Job processed', { jobId: input.jobId })
+  // TODO: wire to Playwright runner / worker pipeline
+  const jobStatus = {
+    jobId: input.jobId,
+    directory: input.directory,
+    status: 'processed',
+    processedAt: new Date().toISOString(),
+  }
 
-  /*
   await emit({
-    topic: 'notification',
-    data: {
-      email: 'test@example.com',
-      templateId: 'job-completed',
-      templateData: {
-        jobId: input.jobId,
-        status: 'completed'
-      },
-    },
+    topic: 'job-processed',
+    data: jobStatus,
   })
-  */
+
+  logger.info('Job processed', jobStatus)
 }

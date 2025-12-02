@@ -18,7 +18,11 @@ export const config: ApiRouteConfig = {
 };
 
 export const handler: Handlers['CustomerPortalAPI'] = async (req, { logger }) => {
-  logger.info('Customer portal API accessed', { path: req.path });
+  const requestPath = (req as any).path ?? (req as any).url ?? ''
+  const requestMethod = (req as any).method ?? (req as any).httpMethod ?? ''
+  const queryParams = ((req as any).query ?? {}) as any
+
+  logger.info('Customer portal API accessed', { path: requestPath });
 
   try {
     // Initialize services
@@ -34,7 +38,7 @@ export const handler: Handlers['CustomerPortalAPI'] = async (req, { logger }) =>
     const customerId = (req.headers['x-customer-id'] as string) || 'test-customer-id';
 
     // Route based on path
-    if (req.path === '/api/customer/profile') {
+    if (requestPath === '/api/customer/profile') {
       // Get customer profile
       const customer = await db.getCustomerById(customerId);
       return {
@@ -43,7 +47,7 @@ export const handler: Handlers['CustomerPortalAPI'] = async (req, { logger }) =>
       };
     }
 
-    else if (req.path === '/api/customer/jobs') {
+    else if (requestPath === '/api/customer/jobs') {
       // Get customer jobs
       const jobs = await db.getCustomerJobs(customerId);
       return {
@@ -52,9 +56,9 @@ export const handler: Handlers['CustomerPortalAPI'] = async (req, { logger }) =>
       };
     }
 
-    else if (req.path.startsWith('/api/customer/jobs/') && req.path.endsWith('/status')) {
+    else if (requestPath.startsWith('/api/customer/jobs/') && requestPath.endsWith('/status')) {
       // Get specific job status
-      const jobId = req.path.split('/')[4];
+      const jobId = requestPath.split('/')[4];
       const status = await submissionService.getSubmissionStatus(jobId);
       return {
         status: 200,
@@ -62,7 +66,7 @@ export const handler: Handlers['CustomerPortalAPI'] = async (req, { logger }) =>
       };
     }
 
-    else if (req.path === '/api/customer/directories') {
+    else if (requestPath === '/api/customer/directories') {
       // Get customer directories
       const directories = await db.getCustomerDirectories(customerId);
       return {
@@ -71,7 +75,7 @@ export const handler: Handlers['CustomerPortalAPI'] = async (req, { logger }) =>
       };
     }
 
-    else if (req.path === '/api/customer/stats') {
+    else if (requestPath === '/api/customer/stats') {
       // Get customer stats
       const stats = await db.getCustomerStats(customerId);
       return {
@@ -80,9 +84,9 @@ export const handler: Handlers['CustomerPortalAPI'] = async (req, { logger }) =>
       };
     }
 
-    else if (req.path === '/api/customer/analytics/performance') {
+    else if (requestPath === '/api/customer/analytics/performance') {
       // Get performance report
-      const { start, end } = req.query as any;
+      const { start, end } = queryParams;
 
       if (!start || !end) {
         return {
@@ -98,7 +102,7 @@ export const handler: Handlers['CustomerPortalAPI'] = async (req, { logger }) =>
       };
     }
 
-    else if (req.path === '/api/customer/analytics/directories') {
+    else if (requestPath === '/api/customer/analytics/directories') {
       // Get directory success rates
       const rates = await analyticsService.getCustomerDirectorySuccessRates(customerId);
       return {
@@ -107,7 +111,7 @@ export const handler: Handlers['CustomerPortalAPI'] = async (req, { logger }) =>
       };
     }
 
-    else if (req.path === '/api/customer/submission' && req.method === 'POST') {
+    else if (requestPath === '/api/customer/submission' && requestMethod === 'POST') {
       // Create new submission
       const { packageType, businessData } = req.body;
 
@@ -125,9 +129,9 @@ export const handler: Handlers['CustomerPortalAPI'] = async (req, { logger }) =>
       };
     }
 
-    else if (req.path.startsWith('/api/customer/submission/') && req.method === 'DELETE') {
+    else if (requestPath.startsWith('/api/customer/submission/') && requestMethod === 'DELETE') {
       // Cancel submission
-      const jobId = req.path.split('/')[4];
+      const jobId = requestPath.split('/')[4];
       const result = await submissionService.cancelSubmission(jobId);
       return {
         status: 200,

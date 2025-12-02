@@ -1,5 +1,6 @@
 import type { ApiRouteConfig, Handlers } from 'motia'
 import { z } from 'zod'
+import { getSupabaseClient } from '../utils/supabaseClient';
 
 export const config: ApiRouteConfig = {
   name: 'StaffDashboardAPI',
@@ -12,15 +13,18 @@ export const config: ApiRouteConfig = {
 };
 
 export const handler: Handlers['StaffDashboardAPI'] = async (req, { logger }) => {
-  logger.info('Staff dashboard API accessed', { path: req.path });
+  const requestPath = (req as any).path ?? (req as any).url ?? ''
+  const queryParams = ((req as any).query ?? {}) as any
+
+  logger.info('Staff dashboard API accessed', { path: requestPath });
 
   const supabase = getSupabaseClient();
 
   try {
     // Route based on the specific endpoint
-    if (req.path === '/api/staff/jobs') {
+    if (requestPath === '/api/staff/jobs') {
       // Get all jobs with pagination
-      const { limit = 100, offset = 0, status } = req.query as any;
+      const { limit = 100, offset = 0, status } = queryParams;
 
       let query: any = supabase
         .from('jobs')
@@ -47,7 +51,7 @@ export const handler: Handlers['StaffDashboardAPI'] = async (req, { logger }) =>
       };
     }
 
-    else if (req.path === '/api/staff/jobs/active') {
+    else if (requestPath === '/api/staff/jobs/active') {
       // Get active jobs (pending or in_progress)
       const { data, error }: any = await supabase
         .from('jobs')
@@ -67,9 +71,9 @@ export const handler: Handlers['StaffDashboardAPI'] = async (req, { logger }) =>
       };
     }
 
-    else if (req.path.startsWith('/api/staff/jobs/') && req.path.endsWith('/results')) {
+    else if (requestPath.startsWith('/api/staff/jobs/') && requestPath.endsWith('/results')) {
       // Extract job ID from path: /api/staff/jobs/{jobId}/results
-      const jobId = req.path.split('/')[4];
+      const jobId = requestPath.split('/')[4];
 
       const { data, error }: any = await supabase
         .from('job_results')
@@ -89,9 +93,9 @@ export const handler: Handlers['StaffDashboardAPI'] = async (req, { logger }) =>
       };
     }
 
-    else if (req.path.startsWith('/api/staff/jobs/') && req.path.endsWith('/history')) {
+    else if (requestPath.startsWith('/api/staff/jobs/') && requestPath.endsWith('/history')) {
       // Extract job ID from path: /api/staff/jobs/{jobId}/history
-      const jobId = req.path.split('/')[4];
+      const jobId = requestPath.split('/')[4];
 
       const { data, error }: any = await supabase
         .from('queue_history')
@@ -112,7 +116,7 @@ export const handler: Handlers['StaffDashboardAPI'] = async (req, { logger }) =>
       };
     }
 
-    else if (req.path === '/api/staff/stats') {
+    else if (requestPath === '/api/staff/stats') {
       // Get statistics
       const { data: allJobs, error }: any = await supabase
         .from('jobs')
@@ -156,28 +160,3 @@ export const handler: Handlers['StaffDashboardAPI'] = async (req, { logger }) =>
     };
   }
 };
-
-// Helper function to get Supabase client (implementation would use real credentials)
-function getSupabaseClient() {
-  // In a real implementation, this would initialize with actual Supabase credentials
-  // For now, we're providing a mock implementation
-  return {
-    from: (table: string) => ({
-      select: (columns: string = '*') => {
-        let query: any = {
-          data: [],
-          error: null
-        };
-
-        // Add query methods
-        query.eq = () => query;
-        query.in = () => query;
-        query.order = () => query;
-        query.limit = () => query;
-        query.range = () => query;
-
-        return query;
-      }
-    })
-  };
-}
