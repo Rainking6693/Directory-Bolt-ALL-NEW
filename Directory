@@ -1,0 +1,10 @@
+npx
+motia
+cloud
+deploy
+--project-name
+directory-bolt
+--env-file
+.env
+Bolt
+Motia\motia-deploy\deploy.bat

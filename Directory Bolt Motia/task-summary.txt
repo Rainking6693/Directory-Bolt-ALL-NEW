@@ -1,0 +1,48 @@
+Project: DirectoryBolt - Motia Backend Implementation
+Task: Complete DirectoryBolt Backend Migration to Motia Framework
+
+Overview:
+DirectoryBolt is migrating from 4 separate Render apps to a single Motia backend implementation. The migration is partially complete but needs finalization to deploy the full application with all functionality.
+
+Current Status:
+- Environment variables are configured in .env file with all necessary API keys
+- All step files have been created with core functionality implemented
+- Some step files need formatting fixes to match Motia requirements
+- A basic version has been deployed to Motia Cloud but with rate limiting issues
+
+Required Tasks:
+1. Fix step file formatting to match Motia requirements:
+   - Add proper type annotations (ApiRouteConfig, Handlers)
+   - Ensure all config objects have correct properties (emits, etc.)
+   - Fix cron step to use 'cron' instead of 'schedule'
+   - Reference working example: steps/basic-tutorial/api.step.ts
+
+2. Test and validate all API endpoints:
+   - Brain Service (/plan) - AI field mapping
+   - Customer Portal (/api/customer/*) - Customer-facing APIs
+   - Staff Dashboard (/api/staff/*) - Staff monitoring APIs
+   - Health Check (/health) - Service health endpoint
+
+3. Verify AI service integration:
+   - Anthropic Claude API
+   - Google Gemini API
+
+4. Confirm database connectivity with Supabase
+
+5. Deploy complete application to Motia Cloud
+   - Use API key: motia-Yjc2ZGIyMTUtYzU1Zi00MWFkLWJhOTEt
+   - Project name: directory-bolt
+
+Key Files to Review:
+- steps/api/brain.step.ts
+- steps/api/customerPortal.step.ts
+- steps/api/staffDashboard.step.ts
+- steps/api/health.step.ts
+- steps/events/jobProcessor.step.ts
+- steps/events/sqsProcessor.step.ts
+- steps/cron/staleJobMonitor.step.ts
+
+Reference Implementation:
+- steps/basic-tutorial/api.step.ts (working example)
+
+Deliverable: Fully functional DirectoryBolt backend deployed to Motia Cloud with all API endpoints working correctly.

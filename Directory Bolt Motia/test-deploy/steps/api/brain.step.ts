@@ -1,31 +1,23 @@
-import type { ApiRouteConfig, Handlers } from 'motia'
-import { z } from 'zod'
 import { AnthropicService } from '../ai/anthropicService';
 import { GeminiService } from '../ai/geminiService';
 
-export const config: ApiRouteConfig = {
+export const config = {
   name: 'BrainService',
   type: 'api',
   path: '/plan',
   method: 'POST',
-  flows: ['directory-bolt'],
-  emits: [],
-  bodySchema: z.object({
-    businessData: z.record(z.string(), z.any()),
-    directory: z.string(),
-    useAI: z.boolean().optional()
-  })
+  emits: []
 };
 
-export const handler: Handlers['BrainService'] = async (req, { logger }) => {
+export const handler = async (req: any, { logger }: { logger: any }) => {
   logger.info('Brain service - field mapping request received');
-
+  
   // Extract business data and directory info from request
   const { businessData, directory, useAI = true } = req.body;
-
+  
   try {
     let plan;
-
+    
     if (useAI) {
       // Use AI to generate field mapping plan
       plan = await generateAIFieldMapping(businessData, directory);
@@ -33,7 +25,7 @@ export const handler: Handlers['BrainService'] = async (req, { logger }) => {
       // Use rule-based approach (fallback)
       plan = generateRuleBasedPlan(businessData, directory);
     }
-
+    
     return {
       status: 200,
       body: plan
@@ -53,9 +45,9 @@ async function generateAIFieldMapping(businessData: any, directory: string) {
   // Initialize AI services based on environment variables
   const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
   const geminiApiKey = process.env.GEMINI_API_KEY;
-
+  
   let aiService;
-
+  
   // Prefer Anthropic if available, otherwise use Gemini
   if (anthropicApiKey) {
     aiService = new AnthropicService(anthropicApiKey);
@@ -64,7 +56,7 @@ async function generateAIFieldMapping(businessData: any, directory: string) {
   } else {
     throw new Error('No AI API key configured');
   }
-
+  
   // Prompt for field mapping
   const prompt = `
     Analyze this business directory website and create a submission plan.
@@ -92,9 +84,9 @@ async function generateAIFieldMapping(businessData: any, directory: string) {
     - Description
     - Categories/Keywords
   `;
-
+  
   const aiResponse = await aiService.generateFieldMapping(prompt, businessData, { url: directory });
-
+  
   try {
     // Try to parse the AI response as JSON
     return JSON.parse(aiResponse);

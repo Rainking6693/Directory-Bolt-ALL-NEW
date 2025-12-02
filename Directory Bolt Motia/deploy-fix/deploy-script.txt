@@ -1,0 +1,1 @@
+npx motia cloud deploy --project-name directory-bolt --env-file .env

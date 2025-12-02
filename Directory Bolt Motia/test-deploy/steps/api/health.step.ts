@@ -1,24 +1,19 @@
-import type { ApiRouteConfig, Handlers } from 'motia'
-import { z } from 'zod'
 import { AnthropicService } from '../ai/anthropicService';
 import { GeminiService } from '../ai/geminiService';
 
-export const config: ApiRouteConfig = {
+export const config = {
   name: 'HealthCheck',
   type: 'api',
   path: '/health',
-  method: 'GET',
-  flows: ['directory-bolt'],
-  emits: [],
-  bodySchema: z.object({})
+  method: 'GET'
 };
 
-export const handler: Handlers['HealthCheck'] = async (req, { logger }) => {
+export const handler = async (req, { logger }) => {
   logger.info('Health check endpoint accessed');
-
+  
   // Check AI service connectivity
   const aiStatus = await checkAIServices();
-
+  
   return {
     status: 200,
     body: {
@@ -35,7 +30,7 @@ async function checkAIServices() {
     anthropic: { available: false, error: null },
     gemini: { available: false, error: null }
   };
-
+  
   // Check Anthropic
   const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
   if (anthropicApiKey) {
@@ -47,7 +42,7 @@ async function checkAIServices() {
       status.anthropic.error = error.message;
     }
   }
-
+  
   // Check Gemini
   const geminiApiKey = process.env.GEMINI_API_KEY;
   if (geminiApiKey) {
@@ -59,6 +54,6 @@ async function checkAIServices() {
       status.gemini.error = error.message;
     }
   }
-
+  
   return status;
 }

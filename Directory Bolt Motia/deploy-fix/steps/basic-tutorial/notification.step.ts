@@ -3,10 +3,10 @@ import { z } from 'zod'
 
 export const config: EventConfig = {
   type: 'event',
-  name: 'SqsNotification',
-  description: 'Sends notifications to users (Directory Bolt)',
-  flows: ['directory-bolt'],
-  subscribes: ['directory-bolt-notification'],
+  name: 'Notification',
+  description: 'Sends notifications to users',
+  flows: ['basic-tutorial'],
+  subscribes: ['notification'],
   emits: [],
   input: z.object({
     templateId: z.string(),
@@ -15,7 +15,7 @@ export const config: EventConfig = {
   }),
 }
 
-export const handler: Handlers['SqsNotification'] = async (input, { traceId, logger }) => {
+export const handler: Handlers['Notification'] = async (input, { traceId, logger }) => {
   const { email, ...data } = input
   const redactedEmail = email.replace(/(?<=.{2}).(?=.*@)/g, '*')
 

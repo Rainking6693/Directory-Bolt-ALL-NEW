@@ -27,13 +27,18 @@ declare module 'motia' {
     'JoinComplete': EventHandler<{ stepA: { msg: string; timestamp: number }; stepB: { msg: string; timestamp: number }; stepC: { msg: string; timestamp: number }; mergedAt: string }, never>
     'CallOpenAi': EventHandler<{ message: string; assistantMessageId: string; threadId: string }, never>
     'OpenAiApi': ApiRouteHandler<{ message: string }, ApiResponse<200, { message: string; from: 'user' | 'assistant'; status: 'created' | 'pending' | 'completed' }>, { topic: 'openai-prompt'; data: { message: string; assistantMessageId: string; threadId: string } }>
+    'SqsNotification': EventHandler<{ templateId: string; email: string; templateData: Record<string, unknown> }, never>
+    'ProcessFoodOrder': EventHandler<{ email: string; quantity: number; petId: string }, { topic: 'notification'; data: { templateId: string; email: string; templateData: Record<string, unknown> } }>
     'PeriodicJobHandled': EventHandler<{ message: string }, { topic: 'tested'; data: never }>
     'HandlePeriodicJob': CronHandler<{ topic: 'periodic-job-handled'; data: { message: string } }>
+    'StaleJobMonitor': CronHandler<never>
     'StateAuditJob': CronHandler<{ topic: 'notification'; data: { templateId: string; email: string; templateData: Record<string, unknown> } }>
-    'ProcessFoodOrder': EventHandler<{ email: string; quantity: number; petId: string }, { topic: 'notification'; data: { templateId: string; email: string; templateData: Record<string, unknown> } }>
     'Notification': EventHandler<{ templateId: string; email: string; templateData: Record<string, unknown> }, never>
     'ApiTrigger': ApiRouteHandler<{ pet: { name: string; photoUrl: string }; foodOrder?: { quantity: number } }, ApiResponse<200, { id: string; name: string; photoUrl: string }>, { topic: 'process-food-order'; data: { email: string; quantity: number; petId: string } }>
     'ArrayStep': ApiRouteHandler<Array<{ pet: { name: string; photoUrl: string }; foodOrder?: { quantity: number } }>, ApiResponse<200, Array<{ id: string; name: string; photoUrl: string }>>, { topic: 'process-food-order'; data: { email: string; quantity: number; petId: string } }>
+    'StaffDashboardAPI': ApiRouteHandler<{}, unknown, never>
+    'HealthCheck': ApiRouteHandler<{}, unknown, never>
+    'BrainService': ApiRouteHandler<{ businessData: Record<string, unknown>; directory: string; useAI?: boolean }, unknown, never>
     'Test State With Python': EventHandler<unknown, { topic: 'test-state-check'; data: { key: string; expected?: unknown } }>
     'Test Event': EventHandler<never, { topic: 'tested'; data: never }>
     'Tested Event': EventHandler<never, never>
