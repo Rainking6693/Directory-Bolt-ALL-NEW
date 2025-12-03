@@ -71,6 +71,9 @@
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/*.spec.ts",
-    "**/*.spec.tsx"
+    "**/*.spec.tsx",
+    "Directory Bolt Motia/**/*",
+    "backend/**/*",
+    "Genesis Agents for build/**/*"
   ]
 }
