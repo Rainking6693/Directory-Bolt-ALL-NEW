@@ -44,7 +44,7 @@ interface StreamRbacState {
 
 export const useStreamRbacStore = create<StreamRbacState>((set) => ({
   // Initial State
-  wsUrl: 'ws://localhost:3000',
+  wsUrl: process.env.MOTIA_WS_URL || 'ws://localhost:4001',
   groupId: 'demo-thread' as const,
   authToken: 'token-nodejs' as const,
   streamName: 'rbac_message' as const,

@@ -3,91 +3,26 @@ import Link from 'next/link'
 import Header from '../components/Header'
 import Footer from '../components/layout/Footer'
 import { StartTrialButton } from '../components/CheckoutButton'
+import { PRICING_TIERS, PricingTier } from '../lib/config/pricing'
 
 export default function PricingPage() {
-  const plans = [
-    {
-      name: 'Starter',
-      price: '$49',
-      period: '/month',
-      description: 'Perfect for small businesses getting started',
-      features: [
-        '50 directory submissions',
-        'AI-powered optimization',
-        'Basic analytics',
-        'Email support',
-        'Monthly reports',
-      ],
-      cta: 'Get Started',
-      popular: false,
-      priceId: process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || 'starter',
-    },
-    {
-      name: 'Growth',
-      price: '$99',
-      period: '/month',
-      description: 'For growing businesses that need more visibility',
-      features: [
-        '150 directory submissions',
-        'AI-powered optimization',
-        'Advanced analytics',
-        'Priority support',
-        'Weekly reports',
-        'Custom business profiles',
-        'Competitor analysis',
-      ],
-      cta: 'Get Started',
-      popular: true,
-      priceId: process.env.NEXT_PUBLIC_STRIPE_GROWTH_PRICE_ID || 'growth',
-    },
-    {
-      name: 'Professional',
-      price: '$199',
-      period: '/month',
-      description: 'For established businesses maximizing their reach',
-      features: [
-        '300 directory submissions',
-        'AI-powered optimization',
-        'Premium analytics',
-        'Dedicated support',
-        'Daily reports',
-        'Custom business profiles',
-        'Competitor analysis',
-        'White-label reports',
-        'API access',
-      ],
-      cta: 'Get Started',
-      popular: false,
-      priceId: process.env.NEXT_PUBLIC_STRIPE_PROFESSIONAL_PRICE_ID || 'professional',
-    },
-    {
-      name: 'Enterprise',
-      price: 'Custom',
-      period: '',
-      description: 'For large organizations with custom needs',
-      features: [
-        'Unlimited submissions',
-        'AI-powered optimization',
-        'Enterprise analytics',
-        '24/7 dedicated support',
-        'Real-time reports',
-        'Custom integrations',
-        'Multi-location support',
-        'White-label solution',
-        'API access',
-        'Custom SLA',
-      ],
-      cta: 'Contact Sales',
-      popular: false,
-      priceId: 'enterprise',
-    },
-  ]
+  // Convert PRICING_TIERS to array format compatible with existing component
+  const plans = Object.values(PRICING_TIERS).map((tier: PricingTier) => ({
+    name: tier.name,
+    price: `$${tier.price}`,
+    period: '', // One-time purchase, no period
+    description: tier.shortDescription,
+    features: tier.features,
+    cta: tier.id === 'enterprise' ? 'Contact Sales' : 'Get Started',
+    popular: tier.popular || false,
+    priceId: tier.id,
+  }))
 
   return (
     <>
       <Head>
         <title>Pricing - DirectoryBolt | AI-Powered Directory Submissions</title>
-        <meta name="description" content="Choose the perfect plan for your business. Get AI-powered directory submissions starting at $149. One-time purchase, no monthly fees." />
+        <meta name="description" content="Choose the perfect plan for your business. Get AI-powered business intelligence starting at $149. One-time purchase, lifetime results. Save 93% vs consultants." />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://directorybolt.com/pricing" />
       </Head>
@@ -105,7 +40,7 @@ export default function PricingPage() {
               </span>
             </h1>
             <p className="text-xl text-secondary-200 max-w-3xl mx-auto">
-              Choose the perfect plan for your business. One-time purchase, lifetime results.
+              Get AI-powered business intelligence for a one-time fee. Replace $2,000-5,000 consultant fees with permanent business assets.
             </p>
           </div>
 

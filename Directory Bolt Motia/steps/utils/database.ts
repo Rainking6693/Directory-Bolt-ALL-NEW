@@ -12,10 +12,13 @@ export class DirectoryBoltDB {
 
   // Customer-specific database operations
   async getCustomerById(customerId: string) {
+    // Allow schema differences: default to customer_id, override via CUSTOMER_ID_COLUMN
+    const idColumn = process.env.CUSTOMER_ID_COLUMN || 'customer_id'
+
     const { data, error } = await this.supabase
       .from('customers')
       .select('*')
-      .eq('customer_id', customerId)
+      .eq(idColumn, customerId)
       .limit(1)
 
     if (error) throw new Error(`Failed to fetch customer: ${error.message}`)

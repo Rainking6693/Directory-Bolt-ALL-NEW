@@ -3,7 +3,7 @@ export class DirectorySubmissionService {
   private db: any; // Database instance
   private brainServiceUrl: string;
   
-  constructor(database: any, brainServiceUrl: string = 'http://localhost:3000') {
+  constructor(database: any, brainServiceUrl: string = (process.env.MOTIA_API_URL || 'http://localhost:4001')) {
     this.db = database;
     this.brainServiceUrl = brainServiceUrl;
   }

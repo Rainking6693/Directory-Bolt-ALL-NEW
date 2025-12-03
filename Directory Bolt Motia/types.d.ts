@@ -28,7 +28,8 @@ declare module 'motia' {
     'CallOpenAi': EventHandler<{ message: string; assistantMessageId: string; threadId: string }, never>
     'OpenAiApi': ApiRouteHandler<{ message: string }, ApiResponse<200, { message: string; from: 'user' | 'assistant'; status: 'created' | 'pending' | 'completed' }>, { topic: 'openai-prompt'; data: { message: string; assistantMessageId: string; threadId: string } }>
     'SqsNotification': EventHandler<{ templateId: string; email: string; templateData: Record<string, unknown> }, never>
-    'JobProcessor': EventHandler<{ jobId: string; customerId: string; directory: string; payload: Record<string, unknown> }, never>
+    'JobProcessor': EventHandler<{ jobId: string; customerId: string; directory: string; payload: Record<string, unknown> }, { topic: 'job-processed'; data: { jobId: string; directory: string; status: string; processedAt: string; details?: unknown } }>
+    'JobProcessedSubscriber': EventHandler<{ jobId: string; directory: string; status: string; processedAt: string; details?: unknown }, never>
     'PeriodicJobHandled': EventHandler<{ message: string }, { topic: 'tested'; data: never }>
     'HandlePeriodicJob': CronHandler<{ topic: 'periodic-job-handled'; data: { message: string } }>
     'StaleJobMonitor': CronHandler<never>

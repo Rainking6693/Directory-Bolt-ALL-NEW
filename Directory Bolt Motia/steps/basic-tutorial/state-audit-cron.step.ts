@@ -11,7 +11,11 @@ export const config: CronConfig = {
 }
 
 export const handler: Handlers['StateAuditJob'] = async ({ logger, state, emit }) => {
-  const stateValue = await state.getGroup<Order>('orders')
+  // Some runtimes don't implement getGroup; fall back to a safe default if unavailable
+  const stateValue: Order[] =
+    typeof (state as any).getGroup === 'function'
+      ? await (state as any).getGroup<Order>('orders')
+      : []
 
   for (const item of stateValue) {
     // check if current date is after item.shipDate

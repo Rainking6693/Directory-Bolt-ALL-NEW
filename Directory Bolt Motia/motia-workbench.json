@@ -152,8 +152,8 @@
     "id": "basic-tutorial",
     "config": {
       "steps\\basic-tutorial\\state-audit-cron.step.ts": {
-        "x": 139,
-        "y": -790
+        "x": 127,
+        "y": -781
       },
       "steps\\basic-tutorial\\process-food-order.step.ts": {
         "x": 138,
