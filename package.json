@@ -98,6 +98,11 @@
     "@google/generative-ai": "^0.21.0",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
+    "@motiadev/core": "0.13.1-beta.162",
+    "@motiadev/plugin-endpoint": "0.13.1-beta.162",
+    "@motiadev/plugin-logs": "0.13.1-beta.162",
+    "@motiadev/plugin-observability": "0.13.1-beta.162",
+    "@motiadev/plugin-states": "0.13.1-beta.162",
     "@netlify/functions": "^4.2.6",
     "@sparticuz/chromium": "^116.0.0",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
@@ -182,12 +187,7 @@
     "workbox-strategies": "^7.3.0",
     "workbox-webpack-plugin": "^7.3.0",
     "workbox-window": "^7.3.0",
-    "ws": "^8.18.3",
-    "@motiadev/core": "0.13.1-beta.162",
-    "@motiadev/plugin-logs": "0.13.1-beta.162",
-    "@motiadev/plugin-states": "0.13.1-beta.162",
-    "@motiadev/plugin-endpoint": "0.13.1-beta.162",
-    "@motiadev/plugin-observability": "0.13.1-beta.162"
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.4",

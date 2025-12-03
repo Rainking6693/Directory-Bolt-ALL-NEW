@@ -5,6 +5,13 @@ import Footer from '../components/layout/Footer'
 import { StartTrialButton } from '../components/CheckoutButton'
 import { PRICING_TIERS, PricingTier } from '../lib/config/pricing'
 
+// Ensure page is rendered on server side
+export async function getServerSideProps() {
+  return {
+    props: {}
+  }
+}
+
 export default function PricingPage() {
   // Convert PRICING_TIERS to array format compatible with existing component
   const plans = Object.values(PRICING_TIERS).map((tier: PricingTier) => ({
