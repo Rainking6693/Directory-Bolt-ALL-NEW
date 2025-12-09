@@ -38,6 +38,11 @@ The system uses Motia's Step-based architecture where each backend function is i
 
 ### Queue Management
 - Job queuing and processing
+
+## Deployment Notes (avoid accidental new projects)
+- Always target the existing Motia project and environment: add `--project-id 27825800-47d1-4f61-b2fa-4dced473cfb5` and `--environment-name default` to `npx motia cloud deploy`.
+- Keep using the shared `.env` (root or this folder) so the CLI picks up the correct keys and version metadata.
+- If you see a “My First Project” appear, it means the CLI created a default project because those flags were missing; delete it in the Motia dashboard and redeploy with the flags above.
 - Idempotency protection
 - Error handling and retries
 
