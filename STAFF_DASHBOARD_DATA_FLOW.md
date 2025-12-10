@@ -612,3 +612,4 @@ This is why you need BOTH deployed:
 
 They communicate through the Supabase database! 🎯
 
+

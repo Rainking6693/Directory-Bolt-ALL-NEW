@@ -563,3 +563,4 @@ python workers/submission_runner.py
 
 **Bottom Line:** Your Python worker is the engine that does the actual work. Motia is the control panel that manages it. Deploy both, connect them through Supabase, and you're golden! 🚀
 
+

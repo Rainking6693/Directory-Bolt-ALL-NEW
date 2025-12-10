@@ -158,7 +158,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-secondary-400 text-sm mb-4 md:mb-0">
-              © {currentYear} DirectoryBolt. All rights reserved.
+              © {currentYear} Bullrush Investments LLC. All rights reserved.
             </div>
             <div className="flex flex-wrap justify-center md:justify-end gap-6 text-sm">
               <Link href="/privacy" className="text-secondary-400 hover:text-white transition-colors">
@@ -186,6 +186,7 @@ export default function Footer() {
             "@context": "https://schema.org",
             "@type": "Organization",
             "name": "DirectoryBolt",
+            "legalName": "Bullrush Investments LLC",
             "url": "https://directorybolt.com",
             "logo": "https://directorybolt.com/images/logo.png",
             "contactPoint": {

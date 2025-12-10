@@ -68,7 +68,7 @@ export default function TermsPage() {
                 <strong>4.2 Subscription Plans:</strong> After the trial period, you must subscribe to a paid plan to continue using the Service.
               </p>
               <p className="text-secondary-200 mb-4">
-                <strong>4.3 Billing:</strong> Subscriptions are billed monthly or annually in advance. All fees are non-refundable except as required by law.
+                <strong>4.3 Billing:</strong> Subscriptions are billed monthly or annually in advance. All fees are non-refundable.
               </p>
               <p className="text-secondary-200 mb-4">
                 <strong>4.4 Cancellation:</strong> You may cancel your subscription at any time. Cancellation takes effect at the end of the current billing period.
@@ -165,8 +165,15 @@ export default function TermsPage() {
               </p>
             </div>
 
+            <div className="bg-secondary-800/50 backdrop-blur-sm rounded-xl border border-secondary-700 p-8 mb-8">
+              <h2 className="text-2xl font-bold text-volt-400 mb-4">14. Ownership</h2>
+              <p className="text-secondary-200">
+                This Service is owned and operated by Bullrush Investments LLC.
+              </p>
+            </div>
+
             <div className="bg-secondary-800/50 backdrop-blur-sm rounded-xl border border-secondary-700 p-8">
-              <h2 className="text-2xl font-bold text-volt-400 mb-4">14. Contact Information</h2>
+              <h2 className="text-2xl font-bold text-volt-400 mb-4">15. Contact Information</h2>
               <p className="text-secondary-200 mb-4">
                 If you have any questions about these Terms, please contact us:
               </p>

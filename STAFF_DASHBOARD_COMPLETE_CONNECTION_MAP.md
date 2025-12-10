@@ -534,3 +534,4 @@ SELECT * FROM worker_heartbeats ORDER BY last_heartbeat DESC LIMIT 5;
 
 **Bottom Line:** Your staff dashboard has Netlify Functions that SHOULD work now. The Python worker needs to be checked/deployed on Render and configured to call your Motia API for brain service. Test the dashboard first, then tackle the worker! 🚀
 
+
