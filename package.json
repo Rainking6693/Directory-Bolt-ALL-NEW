@@ -90,7 +90,7 @@
     "test:production": "node scripts/production-deployment-test.js",
     "deploy:ready": "npm run test:production && echo '✅ Deployment ready for production'",
     "supabase:gen-types": "supabase gen types typescript --linked > types/supabase-generated.ts && node -e \"const fs=require('fs'); let content=fs.readFileSync('types/supabase-generated.ts','utf8'); if(content.includes('Initialising')){content=content.replace(/^Initialising.*?\\n/,''); fs.writeFileSync('types/supabase-generated.ts',content);} fs.copyFileSync('types/supabase-generated.ts','types/supabase.ts');\"",
-    "postinstall": "node -e \"if(process.platform==='win32'){require('child_process').spawnSync('powershell',['-ExecutionPolicy','Bypass','-File','./sanitize-repo-light.ps1','-Force'],{stdio:'inherit'})}\" && npx playwright install chromium"
+    "postinstall": "node -e \"if(process.platform==='win32'){require('child_process').spawnSync('powershell',['-ExecutionPolicy','Bypass','-File','./sanitize-repo-light.ps1','-Force'],{stdio:'inherit'})}\" && node -e \"if(process.env.NODE_ENV!=='production'){require('child_process').execSync('npx playwright install chromium',{stdio:'inherit'})}\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.1",
