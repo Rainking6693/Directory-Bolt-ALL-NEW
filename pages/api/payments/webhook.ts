@@ -371,13 +371,13 @@ async function initializeUsageTrackingWithRetry(customerRecord: any, transaction
 async function sendNotificationsWithGracefulFailure(customerData: any): Promise<void> {
   try {
     await sendWelcomeEmail(customerData.email, customerData.tier)
-    log.info('Welcome email sent successfully', {
+    logger.info('Welcome email sent successfully', {
       customerId: customerData.customerId,
       email: customerData.email
     } as any)
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
-    log.warn('Welcome email failed - customer access not affected', {
+      logger.warn('Welcome email failed - customer access not affected', {
       customerId: customerData.customerId,
       email: customerData.email,
       error: err.message
@@ -392,14 +392,14 @@ async function triggerAIProcessingWithGracefulFailure(customerData: any): Promis
   try {
     if (['growth', 'pro', 'enterprise'].includes(customerData.tier)) {
       await triggerAIAnalysisProcess(customerData)
-      log.info('AI processing triggered successfully', {
+      logger.info('AI processing triggered successfully', {
         customerId: customerData.customerId,
         tier: customerData.tier
       } as any)
     }
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
-    log.warn('AI processing trigger failed - customer access not affected', {
+      logger.warn('AI processing trigger failed - customer access not affected', {
       customerId: customerData.customerId,
       tier: customerData.tier,
       error: err.message
@@ -462,10 +462,10 @@ async function handleCheckoutCompletedWithRecovery(session: any): Promise<void> 
     // Step 5: Trigger AI processing (non-critical)
     await triggerAIProcessingWithGracefulFailure(customerRecord)
     
-    log.info('Checkout processing completed successfully', {
+    logger.info('Checkout processing completed successfully', {
       transactionId: transactionId,
       customerId: customerRecord.customerId
-    } as any)
+    })
     
   } catch (error) {
     // Implement comprehensive error recovery
@@ -524,7 +524,7 @@ async function handleCheckoutCompleted(event: StripeWebhookEvent): Promise<void>
     throw new Error('Missing required metadata in checkout session')
   }
   
-  console.logger.info(`💰 Checkout completed for user ${userId}: ${credits} credits`)
+  logger.info(`Checkout completed for user ${userId}: ${credits} credits`)
   
   // Use comprehensive error recovery system
   await handleCheckoutCompletedWithRecovery(session)
@@ -534,7 +534,7 @@ async function handlePaymentSucceeded(event: StripeWebhookEvent): Promise<void> 
   const paymentIntent = event.data.object
   const transactionId = generateTransactionId()
   
-  console.logger.info(`✅ Payment succeeded: ${paymentIntent.id}`)
+  logger.info(`Payment succeeded: ${paymentIntent.id}`)
   
   try {
     // Step 1: Update payment record with retry
@@ -546,7 +546,7 @@ async function handlePaymentSucceeded(event: StripeWebhookEvent): Promise<void> 
       await logPaymentProcessedWithRetry(payment.user_id, payment.credits_purchased, paymentIntent.id, transactionId)
     }
     
-    log.info('Payment processing completed successfully', {
+    logger.info('Payment processing completed successfully', {
       transactionId: transactionId,
       paymentIntentId: paymentIntent.id
     } as any)
@@ -562,7 +562,7 @@ async function handlePaymentFailed(event: StripeWebhookEvent): Promise<void> {
   const paymentIntent = event.data.object
   const transactionId = generateTransactionId()
   
-  console.logger.info(`❌ Payment failed: ${paymentIntent.id}`)
+  logger.info(`❌ Payment failed: ${paymentIntent.id}`)
   
   try {
     // Step 1: Update payment record with retry
@@ -581,7 +581,7 @@ async function handlePaymentFailed(event: StripeWebhookEvent): Promise<void> {
       await sendAdminPaymentFailureAlert(payment, paymentIntent, transactionId)
     }
     
-    log.info('Payment failure processing completed', {
+    logger.info('Payment failure processing completed', {
       transactionId: transactionId,
       paymentIntentId: paymentIntent.id
     } as any)
@@ -598,7 +598,7 @@ async function handleSubscriptionPayment(event: StripeWebhookEvent): Promise<voi
   const customerId = invoice.customer
   const transactionId = generateTransactionId()
   
-  console.logger.info(`💳 Subscription payment succeeded for customer: ${customerId}`)
+  logger.info(`💳 Subscription payment succeeded for customer: ${customerId}`)
   
   try {
     // Step 1: Get user with retry
@@ -617,11 +617,11 @@ async function handleSubscriptionPayment(event: StripeWebhookEvent): Promise<voi
       await sendSubscriptionRenewalConfirmationWithGracefulFailure(user, invoice)
     }
     
-    log.info('Subscription payment processing completed successfully', {
+    logger.info('Subscription payment processing completed successfully', {
       transactionId: transactionId,
       customerId: customerId,
       invoiceId: invoice.id
-    } as any)
+    })
     
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
@@ -634,7 +634,7 @@ async function handleSubscriptionUpdated(event: StripeWebhookEvent): Promise<voi
   const subscription = event.data.object
   const customerId = subscription.customer
   
-  console.logger.info(`🔄 Subscription updated for customer: ${customerId}`)
+  logger.info(`🔄 Subscription updated for customer: ${customerId}`)
   
   const user = await getUserByStripeCustomerId(customerId)
   if (user) {
@@ -650,7 +650,7 @@ async function handleSubscriptionCancelled(event: StripeWebhookEvent): Promise<v
   const subscription = event.data.object
   const customerId = subscription.customer
   
-  console.logger.info(`🚫 Subscription cancelled for customer: ${customerId}`)
+  logger.info(`🚫 Subscription cancelled for customer: ${customerId}`)
   
   const user = await getUserByStripeCustomerId(customerId)
   if (user) {
@@ -668,7 +668,7 @@ async function handleSubscriptionCancelled(event: StripeWebhookEvent): Promise<v
 
 async function processPayment(paymentData: any): Promise<any> {
   // Mock implementation - replace with actual payment processing
-  console.logger.info('💳 Processing payment:', paymentData)
+  logger.info('💳 Processing payment:', paymentData)
   return { success: true, paymentId: generateTransactionId() }
 }
 
@@ -681,33 +681,33 @@ async function createCustomerRecord(session: any): Promise<any> {
     credits: parseInt(session.metadata?.credits || '0'),
     sessionId: session.id
   }
-  console.logger.info('👤 Created customer record:', customerRecord)
+  logger.info('👤 Created customer record:', customerRecord)
   return customerRecord
 }
 
 async function createAccessLevel(customerRecord: any): Promise<void> {
   // Mock implementation - replace with actual access control setup
-  console.logger.info('🔑 Created access level for customer:', customerRecord.customerId)
+  logger.info('🔑 Created access level for customer:', customerRecord.customerId)
 }
 
 async function initializeUsageTracking(customerRecord: any): Promise<void> {
   // Mock implementation - replace with actual usage tracking setup
-  console.logger.info('📊 Initialized usage tracking for customer:', customerRecord.customerId)
+  logger.info('📊 Initialized usage tracking for customer:', customerRecord.customerId)
 }
 
 async function sendWelcomeEmail(email: string, tier: string): Promise<void> {
   // Mock implementation - replace with actual email service
-  console.logger.info(`📧 Sent welcome email to ${email} for ${tier} tier`)
+  logger.info(`📧 Sent welcome email to ${email} for ${tier} tier`)
 }
 
 async function triggerAIAnalysisProcess(customerData: any): Promise<void> {
   // Mock implementation - replace with actual AI service integration
-  console.logger.info('🤖 Triggered AI analysis for customer:', customerData.customerId)
+  logger.info('🤖 Triggered AI analysis for customer:', customerData.customerId)
 }
 
 async function queueEmailForRetry(type: string, customerData: any, error: Error): Promise<void> {
   // Mock implementation - replace with actual queue service
-  console.logger.info(`📬 Queued ${type} email for retry:`, {
+  logger.info(`📬 Queued ${type} email for retry:`, {
     customerId: customerData.customerId,
     email: customerData.email,
     error: error.message
@@ -716,7 +716,7 @@ async function queueEmailForRetry(type: string, customerData: any, error: Error)
 
 async function queueAIProcessingForRetry(customerData: any, error: Error): Promise<void> {
   // Mock implementation - replace with actual queue service
-  console.logger.info('🤖 Queued AI processing for retry:', {
+  logger.info('🤖 Queued AI processing for retry:', {
     customerId: customerData.customerId,
     error: error.message
   })
@@ -724,17 +724,17 @@ async function queueAIProcessingForRetry(customerData: any, error: Error): Promi
 
 async function storePaymentFailureRecord(failureRecord: any): Promise<void> {
   // Mock implementation - replace with actual database storage
-  console.logger.info('💾 Stored payment failure record:', failureRecord)
+  logger.info('💾 Stored payment failure record:', failureRecord)
 }
 
 async function storeCheckoutFailureRecord(failureRecord: any): Promise<void> {
   // Mock implementation - replace with actual database storage
-  console.logger.info('💾 Stored checkout failure record:', failureRecord)
+  logger.info('💾 Stored checkout failure record:', failureRecord)
 }
 
 async function sendUrgentAdminAlert(subject: string, details: any): Promise<void> {
   // Mock implementation - replace with actual admin notification system
-  console.logger.info(`🚨 URGENT ADMIN ALERT: ${subject}`, details)
+  logger.info(`🚨 URGENT ADMIN ALERT: ${subject}`, details)
   
   // In production, this would send to multiple channels:
   // - Email to admin team
@@ -745,7 +745,7 @@ async function sendUrgentAdminAlert(subject: string, details: any): Promise<void
 
 async function sendCustomerProcessingDelayNotification(email: string, details: any): Promise<void> {
   // Mock implementation - replace with actual customer notification
-  console.logger.info(`📧 Sent processing delay notification to ${email}:`, details)
+  logger.info(`📧 Sent processing delay notification to ${email}:`, details)
 }
 
 async function updatePaymentStatus(paymentIntentId: string, status: 'succeeded' | 'failed'): Promise<void> {
@@ -758,13 +758,13 @@ async function updatePaymentStatus(paymentIntentId: string, status: 'succeeded' 
   //   }
   // })
   
-  console.logger.info(`💾 Updated payment ${paymentIntentId} status to: ${status}`)
+  logger.info(`💾 Updated payment ${paymentIntentId} status to: ${status}`)
 }
 
 async function addCreditsToUser(userId: string, credits: number): Promise<void> {
   const maxRetries = 3
   const transactionId = generateTransactionId()
-  const logger = createErrorRecoveryLogger('add_credits_to_user', transactionId)
+  const recoveryLogger = createErrorRecoveryLogger('add_credits_to_user', transactionId)
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -777,18 +777,18 @@ async function addCreditsToUser(userId: string, credits: number): Promise<void> 
       //   }
       // })
       
-      console.logger.info(`💎 Added ${credits} credits to user ${userId} (attempt ${attempt})`)
+      logger.info(`💎 Added ${credits} credits to user ${userId} (attempt ${attempt})`)
       
       if (attempt > 1) {
-        logger.logRecoverySuccess(attempt)
+        recoveryLogger.logRecoverySuccess(attempt)
       }
       return
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
-      logger.logRecoveryAttempt(attempt, err)
+      recoveryLogger.logRecoveryAttempt(attempt, err)
       
       if (attempt === maxRetries) {
-        logger.logRecoveryFailure(maxRetries, err)
+        recoveryLogger.logRecoveryFailure(maxRetries, err)
         
         // Critical failure - alert admin immediately
         await sendUrgentAdminAlert('CRITICAL: Failed to add credits to user', {
@@ -860,7 +860,7 @@ async function getUserByStripeCustomerId(stripeCustomerId: string): Promise<User
 
 async function updateSubscriptionStatus(userId: string, status: string): Promise<void> {
   // TODO: Implement database update
-  console.logger.info(`💾 Updated subscription status for user ${userId}: ${status}`)
+  logger.info(`💾 Updated subscription status for user ${userId}: ${status}`)
 }
 
 async function addSubscriptionCredits(userId: string, tier: string): Promise<void> {
@@ -874,7 +874,7 @@ async function addSubscriptionCredits(userId: string, tier: string): Promise<voi
 
 async function updateUserSubscription(userId: string, updates: Partial<User>): Promise<void> {
   // TODO: Implement database update
-  console.logger.info(`💾 Updated subscription for user ${userId}:`, updates)
+  logger.info(`💾 Updated subscription for user ${userId}:`, updates)
 }
 
 // Utility functions
@@ -894,10 +894,10 @@ function getSubscriptionTier(priceId: string): 'free' | 'starter' | 'growth' | '
 async function sendPurchaseConfirmationEmail(userId: string, credits: number): Promise<void> {
   try {
     // TODO: Implement actual email sending
-    console.logger.info(`📧 Purchase confirmation email sent to user ${userId} for ${credits} credits`)
+    logger.info(`📧 Purchase confirmation email sent to user ${userId} for ${credits} credits`)
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
-    log.warn('Purchase confirmation email failed - will retry later', {
+      logger.warn('Purchase confirmation email failed - will retry later', {
       userId: userId,
       credits: credits,
       error: err.message
@@ -909,11 +909,11 @@ async function sendPurchaseConfirmationEmail(userId: string, credits: number): P
 }
 
 async function sendPaymentFailureEmail(userId: string, errorMessage?: string): Promise<void> {
-  console.logger.info(`📧 Payment failure email sent to user ${userId}. Error: ${errorMessage}`)
+  logger.info(`📧 Payment failure email sent to user ${userId}. Error: ${errorMessage}`)
 }
 
 async function sendSubscriptionCancelledEmail(userId: string): Promise<void> {
-  console.logger.info(`📧 Subscription cancellation email sent to user ${userId}`)
+  logger.info(`📧 Subscription cancellation email sent to user ${userId}`)
 }
 
 // Logging functions
@@ -932,7 +932,7 @@ async function logPurchaseSuccess(userId: string, credits: number, paymentIntent
     }
     
     // TODO: Store in audit log database
-    console.logger.info(`📝 Purchase success:`, logEntry)
+    logger.info(`📝 Purchase success:`, logEntry)
     
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
@@ -950,42 +950,42 @@ async function logPurchaseSuccess(userId: string, credits: number, paymentIntent
 }
 
 async function logPaymentProcessed(userId: string, credits: number, paymentIntentId: string): Promise<void> {
-  console.logger.info(`📝 Payment processed: User ${userId}, Credits: ${credits}, Payment: ${paymentIntentId}`)
+  logger.info(`📝 Payment processed: User ${userId}, Credits: ${credits}, Payment: ${paymentIntentId}`)
 }
 
 async function logPaymentFailure(userId: string, paymentIntentId: string, error?: string): Promise<void> {
-  console.logger.info(`📝 Payment failed: User ${userId}, Payment: ${paymentIntentId}, Error: ${error}`)
+  logger.info(`📝 Payment failed: User ${userId}, Payment: ${paymentIntentId}, Error: ${error}`)
 }
 
 async function logSubscriptionPayment(userId: string, amount: number): Promise<void> {
-  console.logger.info(`📝 Subscription payment: User ${userId}, Amount: $${(amount / 100).toFixed(2)}`)
+  logger.info(`📝 Subscription payment: User ${userId}, Amount: $${(amount / 100).toFixed(2)}`)
 }
 
 async function logWebhookFailure(eventId: string, eventType: string, error: string): Promise<void> {
-  console.logger.info(`📝 Webhook failure: Event ${eventId} (${eventType}), Error: ${error}`)
+  logger.info(`📝 Webhook failure: Event ${eventId} (${eventType}), Error: ${error}`)
 }
 
 // ========== ENHANCED DATABASE FUNCTIONS WITH ERROR RECOVERY ==========
 
 async function updatePaymentStatusWithRetry(paymentIntentId: string, status: 'succeeded' | 'failed', transactionId: string): Promise<void> {
-  const logger = createErrorRecoveryLogger('update_payment_status', transactionId)
+  const recoveryLogger = createErrorRecoveryLogger('update_payment_status', transactionId)
   const maxRetries = 3
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       // TODO: Implement actual database update
-      console.logger.info(`💾 Updated payment ${paymentIntentId} status to: ${status} (attempt ${attempt})`)
+      logger.info(`💾 Updated payment ${paymentIntentId} status to: ${status} (attempt ${attempt})`)
       
       if (attempt > 1) {
-        logger.logRecoverySuccess(attempt)
+        recoveryLogger.logRecoverySuccess(attempt)
       }
       return
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
-      logger.logRecoveryAttempt(attempt, err)
+      recoveryLogger.logRecoveryAttempt(attempt, err)
       
       if (attempt === maxRetries) {
-        logger.logRecoveryFailure(maxRetries, err)
+        recoveryLogger.logRecoveryFailure(maxRetries, err)
         throw err
       }
       
@@ -1085,23 +1085,23 @@ async function getUserByStripeCustomerIdWithRetry(stripeCustomerId: string, tran
 }
 
 async function updateSubscriptionStatusWithRetry(userId: string, status: string, transactionId: string): Promise<void> {
-  const logger = createErrorRecoveryLogger('update_subscription_status', transactionId)
+  const recoveryLogger = createErrorRecoveryLogger('update_subscription_status', transactionId)
   const maxRetries = 3
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.logger.info(`💾 Updated subscription status for user ${userId}: ${status} (attempt ${attempt})`)
+      logger.info(`💾 Updated subscription status for user ${userId}: ${status} (attempt ${attempt})`)
       
       if (attempt > 1) {
-        logger.logRecoverySuccess(attempt)
+        recoveryLogger.logRecoverySuccess(attempt)
       }
       return
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
-      logger.logRecoveryAttempt(attempt, err)
+      recoveryLogger.logRecoveryAttempt(attempt, err)
       
       if (attempt === maxRetries) {
-        logger.logRecoveryFailure(maxRetries, err)
+        recoveryLogger.logRecoveryFailure(maxRetries, err)
         throw err
       }
       
@@ -1143,19 +1143,19 @@ async function addSubscriptionCreditsWithRetry(userId: string, tier: string, tra
 // ========== ENHANCED LOGGING FUNCTIONS WITH ERROR RECOVERY ==========
 
 async function logPaymentProcessedWithRetry(userId: string, credits: number, paymentIntentId: string, transactionId: string): Promise<void> {
-  const logger = createErrorRecoveryLogger('log_payment_processed', transactionId)
+  const recoveryLogger = createErrorRecoveryLogger('log_payment_processed', transactionId)
   const maxRetries = 2
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.logger.info(`📝 Payment processed: User ${userId}, Credits: ${credits}, Payment: ${paymentIntentId}`)
+      logger.info(`📝 Payment processed: User ${userId}, Credits: ${credits}, Payment: ${paymentIntentId}`)
       if (attempt > 1) {
-        logger.logRecoverySuccess(attempt)
+        recoveryLogger.logRecoverySuccess(attempt)
       }
       return
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
-      logger.logRecoveryAttempt(attempt, err)
+      recoveryLogger.logRecoveryAttempt(attempt, err)
       
       if (attempt === maxRetries) {
         console.warn(`Failed to log payment processing after ${maxRetries} attempts:`, err.message)
@@ -1168,19 +1168,19 @@ async function logPaymentProcessedWithRetry(userId: string, credits: number, pay
 }
 
 async function logPaymentFailureWithRetry(userId: string, paymentIntentId: string, error: string | undefined, transactionId: string): Promise<void> {
-  const logger = createErrorRecoveryLogger('log_payment_failure', transactionId)
+  const recoveryLogger = createErrorRecoveryLogger('log_payment_failure', transactionId)
   const maxRetries = 2
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.logger.info(`📝 Payment failed: User ${userId}, Payment: ${paymentIntentId}, Error: ${error}`)
+      logger.info(`📝 Payment failed: User ${userId}, Payment: ${paymentIntentId}, Error: ${error}`)
       if (attempt > 1) {
-        logger.logRecoverySuccess(attempt)
+        recoveryLogger.logRecoverySuccess(attempt)
       }
       return
     } catch (logError) {
       const err = logError instanceof Error ? logError : new Error(String(logError))
-      logger.logRecoveryAttempt(attempt, err)
+      recoveryLogger.logRecoveryAttempt(attempt, err)
       
       if (attempt === maxRetries) {
         console.warn(`Failed to log payment failure after ${maxRetries} attempts:`, err.message)
@@ -1193,19 +1193,19 @@ async function logPaymentFailureWithRetry(userId: string, paymentIntentId: strin
 }
 
 async function logSubscriptionPaymentWithRetry(userId: string, amount: number, transactionId: string): Promise<void> {
-  const logger = createErrorRecoveryLogger('log_subscription_payment', transactionId)
+  const recoveryLogger = createErrorRecoveryLogger('log_subscription_payment', transactionId)
   const maxRetries = 2
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.logger.info(`📝 Subscription payment: User ${userId}, Amount: $${(amount / 100).toFixed(2)}`)
+      logger.info(`📝 Subscription payment: User ${userId}, Amount: $${(amount / 100).toFixed(2)}`)
       if (attempt > 1) {
-        logger.logRecoverySuccess(attempt)
+        recoveryLogger.logRecoverySuccess(attempt)
       }
       return
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
-      logger.logRecoveryAttempt(attempt, err)
+      recoveryLogger.logRecoveryAttempt(attempt, err)
       
       if (attempt === maxRetries) {
         console.warn(`Failed to log subscription payment after ${maxRetries} attempts:`, err.message)
@@ -1221,10 +1221,10 @@ async function logSubscriptionPaymentWithRetry(userId: string, amount: number, t
 
 async function sendPaymentFailureEmailWithGracefulFailure(userId: string, errorMessage?: string): Promise<void> {
   try {
-    console.logger.info(`📧 Payment failure email sent to user ${userId}. Error: ${errorMessage}`)
+    logger.info(`📧 Payment failure email sent to user ${userId}. Error: ${errorMessage}`)
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
-    log.warn('Payment failure email failed - will retry later', {
+      logger.warn('Payment failure email failed - will retry later', {
       userId: userId,
       errorMessage: errorMessage,
       error: err.message
@@ -1236,10 +1236,10 @@ async function sendPaymentFailureEmailWithGracefulFailure(userId: string, errorM
 
 async function sendSubscriptionRenewalConfirmationWithGracefulFailure(user: User, invoice: any): Promise<void> {
   try {
-    console.logger.info(`📧 Subscription renewal confirmation sent to user ${user.id}`)
+    logger.info(`📧 Subscription renewal confirmation sent to user ${user.id}`)
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
-    log.warn('Subscription renewal confirmation failed - will retry later', {
+      logger.warn('Subscription renewal confirmation failed - will retry later', {
       userId: user.id,
       invoiceId: invoice.id,
       error: err.message

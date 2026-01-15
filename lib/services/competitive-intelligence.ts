@@ -105,13 +105,17 @@ export class CompetitiveIntelligenceService {
     clientData: ScrapedBusinessData
   ): Promise<Competitor[]> {
     try {
+      const keyServices = clientProfile.keyServices?.length
+        ? clientProfile.keyServices.join(', ')
+        : 'Not specified'
+
       const prompt = `Find the top 5 competitors for this business:
 
 Business Name: ${clientProfile.name}
 Industry: ${clientProfile.industry}
 Category: ${clientProfile.category}
 Location: ${clientData.address || 'Not specified'}
-Key Services: ${clientProfile.keyServices.join(', ')}
+Key Services: ${keyServices}
 
 Provide a JSON array of competitors with this structure:
 [
@@ -218,12 +222,16 @@ Be specific and realistic. Use actual competitor patterns.`
     competitors: Competitor[]
   ): Promise<CompetitiveAnalysis['insights']> {
     try {
+      const keyServices = clientProfile.keyServices?.length
+        ? clientProfile.keyServices.join(', ')
+        : 'Not specified'
+
       const prompt = `Analyze competitive positioning and provide insights:
 
 Client: ${clientProfile.name}
 Industry: ${clientProfile.industry}
 Current Directory Listings: ${clientData.existingDirectoryListings.length}
-Key Services: ${clientProfile.keyServices.join(', ')}
+Key Services: ${keyServices}
 
 Competitors:
 ${competitors.map(c => `- ${c.name}: ${c.directoryListings} listings, SEO ${c.seoScore}`).join('\n')}

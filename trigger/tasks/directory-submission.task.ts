@@ -75,7 +75,7 @@ export const directorySubmissionTask = task({
               break
           }
         } catch (error) {
-          ctx.logger.warn(`Failed to fill field ${fieldName}: ${error}`)
+          logger.warn(`Failed to fill field ${fieldName}: ${error instanceof Error ? error.message : String(error)}`)
           // Continue with other fields
         }
       }
