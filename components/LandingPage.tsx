@@ -5,6 +5,15 @@ import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import Header from './Header'
 import SampleAnalysisModal from './demo/SampleAnalysisModal'
+import {
+  formatCurrency,
+  HERO_ONE_TIME_PRICE,
+  HERO_VALUE,
+  MONEY_BACK_LABEL,
+  PRICE_MAX,
+  PRICE_START,
+  TRIAL_LABEL,
+} from '../lib/pricing/constants'
 
 // Lazy load below-the-fold components
 const TestimonialsSection = dynamic(() => import('./sections/TestimonialsSection'), { ssr: false })
@@ -14,6 +23,9 @@ export default function LandingPage() {
   const router = useRouter()
   const [isVisible, setIsVisible] = useState(false)
   const [showSampleModal, setShowSampleModal] = useState(false)
+  const heroValueText = formatCurrency(HERO_VALUE)
+  const heroPriceText = formatCurrency(HERO_ONE_TIME_PRICE)
+  const priceRangeText = `$${PRICE_START.toLocaleString()}-$${PRICE_MAX.toLocaleString()}`
 
   useEffect(() => {
     setIsVisible(true)
@@ -84,7 +96,7 @@ export default function LandingPage() {
             <div className="text-left lg:text-left">
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-volt-500/20 to-volt-600/10 border border-volt-500/30 px-4 py-2 rounded-full text-sm font-bold text-volt-300 mb-6 backdrop-blur-sm">
                 <span className="text-volt-400">💡</span>
-                Get $4,300 Worth of Business Intelligence for $299 ONE-TIME
+                Get {heroValueText} Worth of Business Intelligence for {heroPriceText} ONE-TIME
               </div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 bg-gradient-to-r from-volt-400 to-volt-600 bg-clip-text text-transparent leading-tight animate-slide-up">
                 AI-Powered Business Intelligence That Replaces Your Entire Marketing Stack
@@ -111,7 +123,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="text-center mt-4 text-success-400 font-bold">
-                  <span className="text-xl">→ Your Price: $299 ONE-TIME (Save 93%)</span>
+                  <span className="text-xl">→ Your Price: {heroPriceText} ONE-TIME (Save 93%)</span>
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -132,7 +144,7 @@ export default function LandingPage() {
                   <span className="ml-2">🔍</span>
                 </button>
               </div>
-              <p className="mt-4 text-sm sm:text-base text-secondary-400 animate-fade-in" style={{ animationDelay: '0.6s' }}>One-time purchase | Results in 48 hours | 30-day money-back guarantee</p>
+              <p className="mt-4 text-sm sm:text-base text-secondary-400 animate-fade-in" style={{ animationDelay: '0.6s' }}>One-time purchase | Results in 48 hours | {MONEY_BACK_LABEL}</p>
             </div>
             <div className="relative">
               <Image

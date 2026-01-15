@@ -5,12 +5,12 @@ import { Suspense } from 'react'
 import { directoryBoltSchema } from '../lib/seo/enhanced-schema'
 import { generateFAQSchema, directorySubmissionFAQs } from '../lib/seo/faq-schema'
 
-const LandingPage = dynamic(() => import('../components/NewLandingPage').then(mod => ({ default: mod.default })), {
+const LandingPage = dynamic(() => import('../components/NewLandingPage.v2').then(mod => ({ default: mod.default })), {
   loading: () => (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center bg-role-bg-primary">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Loading...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-role-border-default mx-auto"></div>
+        <p className="mt-4 text-role-text-secondary">Loading...</p>
       </div>
     </div>
   ),

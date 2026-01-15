@@ -2,12 +2,32 @@ import type { AppProps, NextWebVitalsMetric } from 'next/app'
 import Head from 'next/head'
 import Script from 'next/script'
 import { useEffect } from 'react'
+import { Inter, JetBrains_Mono, Source_Serif_4 } from 'next/font/google'
 import '../styles/globals.css'
 import { ErrorBoundary } from '../components/ui/ErrorBoundary'
 import { NotificationProvider } from '../components/ui/NotificationSystem'
 import { enhancedGA4Config } from '../lib/analytics/enhanced-ga4'
 import { inlineCriticalCSS } from '../lib/utils/critical-css'
 import CookieConsent from '../components/CookieConsent'
+
+// Font wiring for v2 redesign
+const inter = Inter({ 
+  subsets: ["latin"], 
+  variable: "--font-inter",
+  display: "swap",
+})
+
+const jetbrains = JetBrains_Mono({ 
+  subsets: ["latin"], 
+  variable: "--font-jetbrains",
+  display: "swap",
+})
+
+const serifAccent = Source_Serif_4({ 
+  subsets: ["latin"], 
+  variable: "--font-serif-accent",
+  display: "swap",
+})
 
 const GA = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 
@@ -171,12 +191,14 @@ export default function App({ Component, pageProps }: AppProps) {
         `}
       </Script>
       
-      <ErrorBoundary>
-        <NotificationProvider>
-          <Component {...pageProps} />
-          <CookieConsent />
-        </NotificationProvider>
-      </ErrorBoundary>
+      <div className={`${inter.variable} ${jetbrains.variable} ${serifAccent.variable}`}>
+        <ErrorBoundary>
+          <NotificationProvider>
+            <Component {...pageProps} />
+            <CookieConsent />
+          </NotificationProvider>
+        </ErrorBoundary>
+      </div>
     </>
   )
 }

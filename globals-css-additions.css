@@ -1,0 +1,65 @@
+/* styles/globals.css - Additional styles for artifact aesthetic */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Artifact shadow variable */
+:root {
+  --artifact-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+/* Base styles */
+html, body {
+  background: #ffffff;
+  color: #171717;
+}
+
+/* Optional: reusable "artifact card" feel */
+.artifact-card {
+  border-radius: 14px;
+  box-shadow: var(--artifact-shadow);
+  border: 1px solid #e5e5e5;
+  background: #ffffff;
+}
+
+/* Dark mode base (Tailwind handles via dark: too) */
+.dark html, .dark body {
+  background: #0a0a0a;
+  color: #fafafa;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus states - always visible */
+*:focus-visible {
+  outline: 3px solid #a8e600;
+  outline-offset: 2px;
+}
+
+/* Custom scrollbar (optional) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fafafa;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d4;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a3a3a3;
+}

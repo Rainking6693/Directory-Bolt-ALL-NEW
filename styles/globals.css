@@ -38,7 +38,13 @@
 
   /* Focus styles for accessibility */
   *:focus {
-    @apply outline-none ring-2 ring-volt-500 ring-offset-2;
+    @apply outline-none ring-2 ring-volt ring-offset-2;
+  }
+
+  /* Focus-visible for keyboard navigation */
+  *:focus-visible {
+    outline: 3px solid #a8e600;
+    outline-offset: 2px;
   }
 
   /* Custom scrollbar */
@@ -47,15 +53,51 @@
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-secondary-800;
+    @apply bg-neutral-100;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-volt-500 rounded-full;
+    @apply bg-neutral-300 rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-volt-400;
+    @apply bg-neutral-400;
+  }
+
+  /* Artifact shadow variable */
+  :root {
+    --artifact-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  }
+
+  /* Base styles for v2 */
+  html, body {
+    background: #ffffff;
+    color: #171717;
+  }
+
+  /* Artifact card utility */
+  .artifact-card {
+    border-radius: 14px;
+    box-shadow: var(--artifact-shadow);
+    border: 1px solid #e5e5e5;
+    background: #ffffff;
+  }
+
+  /* Dark mode base */
+  .dark html, .dark body {
+    background: #0a0a0a;
+    color: #fafafa;
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
@@ -66,19 +108,19 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-bold rounded-xl text-secondary-900 bg-gradient-to-r from-volt-500 to-volt-600 hover:from-volt-400 hover:to-volt-500 focus:ring-volt-500 transform hover:scale-105 transition-all duration-300 shadow-2xl hover:shadow-volt-500/50 min-h-[48px] min-w-[48px] touch-manipulation;
+    @apply inline-flex items-center justify-center px-6 py-3 font-semibold rounded-md text-role-text-primary bg-volt-500 hover:bg-volt-400 focus:ring-2 focus:ring-volt focus:ring-offset-2 transition-all min-h-[44px];
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-6 py-3 border-2 border-volt-500 text-base font-bold rounded-xl text-volt-500 bg-transparent hover:bg-volt-500 hover:text-secondary-900 focus:ring-volt-500 transform hover:scale-105 transition-all duration-300 min-h-[48px] min-w-[48px] touch-manipulation;
+    @apply inline-flex items-center justify-center px-6 py-3 font-semibold rounded-md border-2 border-role-border-default text-role-text-primary bg-transparent hover:border-volt-500 hover:text-volt-600 focus:ring-2 focus:ring-volt focus:ring-offset-2 transition-all min-h-[44px];
   }
 
   .card {
-    @apply bg-secondary-800 rounded-xl shadow-2xl border border-secondary-700 p-6 backdrop-blur-sm;
+    @apply bg-role-bg-surface border border-role-border-default rounded-artifact shadow-artifact p-6;
   }
 
   .input-field {
-    @apply block w-full px-4 py-3 bg-secondary-900 border-2 border-secondary-600 rounded-xl text-white placeholder-secondary-300 focus:ring-volt-500 focus:border-volt-500 transition-all duration-300;
+    @apply block w-full px-4 py-3 bg-role-bg-surface border border-role-border-default rounded-md text-role-text-primary placeholder-neutral-400 focus:ring-2 focus:ring-volt focus:ring-offset-2 transition-all;
   }
 }
 
