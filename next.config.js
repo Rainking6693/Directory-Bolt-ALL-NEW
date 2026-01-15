@@ -35,7 +35,7 @@ const nextConfig = {
   },
 
   // Narrow the dev watcher to avoid Windows reserved filenames and repo junk
-  webpack: (config, { dev }) => {
+  webpack: (config, { dev, isServer }) => {
     if (dev) {
       const ignored = [
         '**/node_modules/**',
@@ -44,6 +44,9 @@ const nextConfig = {
         '**/.cache/**',
         // Root junk like "--date=iso"
         '**/--*',
+        // Example files that shouldn't be compiled
+        '**/*-example.tsx',
+        '**/*-example.ts',
       ]
       if (isWindows) {
         ignored.push('**/NUL', '**/CON', '**/PRN', '**/AUX')
@@ -58,6 +61,7 @@ const nextConfig = {
           : {}),
       }
     }
+    
     return config
   },
 }
