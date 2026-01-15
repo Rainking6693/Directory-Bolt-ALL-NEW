@@ -177,8 +177,9 @@ export class IntegratedSEOAIService {
         analysisId,
         businessName: request.businessProfile.name,
         userTier: request.userTier,
-        duration: Date.now() - startTime
-      }, error)
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : String(error)
+      }, error instanceof Error ? error : undefined)
       
       throw error
     }

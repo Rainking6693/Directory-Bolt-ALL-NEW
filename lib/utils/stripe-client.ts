@@ -2,7 +2,7 @@
 // Provides a validated Stripe client instance with comprehensive error handling
 
 import Stripe from 'stripe';
-import { log } from './logger';
+import { logger } from './logger';
 
 let stripeInstance: Stripe | null = null;
 
@@ -30,7 +30,7 @@ export function getStripeClient(): Stripe {
       maxNetworkRetries: 3,
     });
     
-    log.info('Stripe client initialized successfully', {
+    logger.info('Stripe client initialized successfully', {
       keyType: process.env.STRIPE_SECRET_KEY.startsWith('sk_live_') ? 'live' : 'test',
       apiVersion: '2023-08-16',
       environment: process.env.NODE_ENV
@@ -67,7 +67,7 @@ export async function testStripeConnection(): Promise<{
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     
-    log.error('Stripe connection test failed', {
+    logger.error('Stripe connection test failed', {
       error: errorMessage,
       errorType: error instanceof Stripe.errors.StripeError ? error.type : 'unknown'
     } as any);
@@ -193,16 +193,16 @@ export function handleStripeError(error: unknown, context?: string): {
     }
     
     // Log the error with context
-    log.error('Stripe error occurred', {
+    logger.error('Stripe error occurred', {
       context,
       errorType: stripeError.type,
       errorCode: stripeError.code,
       errorMessage: stripeError.message,
       requestId: (stripeError as any).requestId,
       statusCode: (stripeError as any).statusCode
-    } as any);
+    }, stripeError);
   } else if (error instanceof Error) {
-    log.error('Non-Stripe error in payment context', {
+    logger.error('Non-Stripe error in payment context', {
       context,
       errorMessage: error.message,
       stack: error.stack
@@ -238,12 +238,12 @@ export function verifyWebhookSignature(
     
     return stripe.webhooks.constructEvent(body, signature, secret);
   } catch (error) {
-    log.error('Webhook signature verification failed', {
+    logger.error('Webhook signature verification failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
       hasSignature: !!signature,
       hasCustomSecret: !!webhookSecret,
       securityContext: 'webhook_verification_failure'
-    } as any);
+    }, error instanceof Error ? error : undefined);
     
     throw new Error('Webhook signature verification failed');
   }

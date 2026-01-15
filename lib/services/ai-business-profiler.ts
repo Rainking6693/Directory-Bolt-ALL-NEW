@@ -13,19 +13,9 @@ import { getAnthropicClient, callAI } from '../utils/anthropic-client'
 import { logger } from '../utils/logger'
 import type { ScrapedBusinessData } from './enhanced-website-scraper'
 
-export interface BusinessProfile {
-  name: string
-  industry: string
-  category: string
-  description: string
-  targetAudience: string[]
-  businessModel: string
-  keyServices: string[]
-  competitiveAdvantages: string[]
-  marketPosition: string
-  uniqueSellingPoints: string[]
-  valueProposition: string
-}
+import type { BusinessProfile as AIBusinessProfile } from '../types/ai.types'
+
+export type BusinessProfile = AIBusinessProfile
 
 /**
  * AI Business Profiler Service
@@ -139,6 +129,7 @@ Key principles:
         description: parsed.description || scrapedData.description || '',
         targetAudience: Array.isArray(parsed.targetAudience) ? parsed.targetAudience : [],
         businessModel: parsed.businessModel || 'Service Provider',
+        website: scrapedData.url,
         keyServices: Array.isArray(parsed.keyServices) ? parsed.keyServices : scrapedData.keyServices,
         competitiveAdvantages: Array.isArray(parsed.competitiveAdvantages) ? parsed.competitiveAdvantages : [],
         marketPosition: parsed.marketPosition || 'Established Provider',
@@ -158,19 +149,20 @@ Key principles:
    * Create fallback profile when AI fails
    */
   private createFallbackProfile(scrapedData: ScrapedBusinessData): BusinessProfile {
-    return {
-      name: scrapedData.businessName,
-      industry: 'Professional Services',
-      category: 'Business Services',
-      description: scrapedData.description || `Professional business services from ${scrapedData.businessName}`,
-      targetAudience: ['Business Professionals', 'Local Customers'],
-      businessModel: 'Service Provider',
-      keyServices: scrapedData.keyServices.length > 0 ? scrapedData.keyServices : scrapedData.services.slice(0, 5),
-      competitiveAdvantages: ['Quality Service', 'Customer Focus'],
-      marketPosition: 'Established Provider',
-      uniqueSellingPoints: [],
-      valueProposition: `Professional services from ${scrapedData.businessName}`
-    }
+      return {
+        name: scrapedData.businessName,
+        industry: 'Professional Services',
+        category: 'Business Services',
+        description: scrapedData.description || `Professional business services from ${scrapedData.businessName}`,
+        targetAudience: ['Business Professionals', 'Local Customers'],
+        businessModel: 'Service Provider',
+        website: scrapedData.url,
+        keyServices: scrapedData.keyServices.length > 0 ? scrapedData.keyServices : scrapedData.services.slice(0, 5),
+        competitiveAdvantages: ['Quality Service', 'Customer Focus'],
+        marketPosition: 'Established Provider',
+        uniqueSellingPoints: [],
+        valueProposition: `Professional services from ${scrapedData.businessName}`
+      }
   }
 }
 

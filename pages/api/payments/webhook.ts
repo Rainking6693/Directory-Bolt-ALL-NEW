@@ -5,7 +5,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { handleApiError, ExternalServiceError } from '../../../lib/utils/errors'
 import { verifyWebhookSignature, handleStripeError } from '../../../lib/utils/stripe-client'
 // Removed broken import: stripe-environment-validator
-import { log } from '../../../lib/utils/logger'
+import { logger } from '../../../lib/utils/logger'
 import type { Payment, User } from '../../../lib/database/schema'
 
 // Initialize configuration safely at runtime
@@ -136,7 +136,7 @@ async function handleWebhook(
   // Check idempotency - prevent duplicate processing
   const existingEvent = processedEvents.get(event.id)
   if (existingEvent && (Date.now() - existingEvent.timestamp) < IDEMPOTENCY_WINDOW) {
-    console.log(`⚡ Webhook event ${event.id} already processed, skipping`)
+    logger.info(`Webhook event ${event.id} already processed, skipping`)
     return res.status(200).json({
       success: true,
       message: 'Event already processed',
@@ -145,7 +145,7 @@ async function handleWebhook(
     })
   }
   
-  console.log(`⚡ Processing Stripe webhook: ${event.type} (${event.id})`)
+  logger.info(`Processing Stripe webhook: ${event.type} (${event.id})`)
   
   try {
     // Process the event based on type
@@ -175,7 +175,7 @@ async function handleWebhook(
         break
         
       default:
-        console.log(`⚠️ Unhandled webhook event type: ${event.type}`)
+        logger.info(`Unhandled webhook event type: ${event.type}`)
         break
     }
     
@@ -210,11 +210,11 @@ function verifyWebhookSignatureInternal(body: any, signature: string): StripeWeb
     // Use our centralized webhook verification
     return verifyWebhookSignature(body, signature) as StripeWebhookEvent
   } catch (error) {
-    log.error('Webhook signature verification failed', {
+    logger.error('Webhook signature verification failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
       hasSignature: !!signature,
       hasWebhookSecret: !!(getConfigSafely()?.webhookSecret)
-    } as any)
+    }, error instanceof Error ? error : undefined)
     
     throw new ExternalServiceError('Stripe', 'Webhook signature verification failed')
   }
@@ -234,7 +234,7 @@ function generateTransactionId(): string {
 function createErrorRecoveryLogger(operation: string, transactionId: string) {
   return {
     logRecoveryAttempt: (attempt: number, error: Error) => {
-      log.warn(`Error recovery attempt ${attempt} for ${operation}`, {
+      logger.warn(`Error recovery attempt ${attempt} for ${operation}`, {
         operation: operation,
         transactionId: transactionId,
         attempt: attempt,
@@ -244,15 +244,15 @@ function createErrorRecoveryLogger(operation: string, transactionId: string) {
     },
     
     logRecoverySuccess: (attempt: number) => {
-      log.info(`Error recovery successful for ${operation} after ${attempt} attempts`, {
+      logger.info(`Error recovery successful for ${operation} after ${attempt} attempts`, {
         operation: operation,
         transactionId: transactionId,
         finalAttempt: attempt
-      } as any)
+      })
     },
     
     logRecoveryFailure: (totalAttempts: number, finalError: Error) => {
-      log.error(`Error recovery failed for ${operation} after ${totalAttempts} attempts`, {
+      logger.error(`Error recovery failed for ${operation} after ${totalAttempts} attempts`, {
         operation: operation,
         transactionId: transactionId,
         totalAttempts: totalAttempts,
@@ -524,7 +524,7 @@ async function handleCheckoutCompleted(event: StripeWebhookEvent): Promise<void>
     throw new Error('Missing required metadata in checkout session')
   }
   
-  console.log(`💰 Checkout completed for user ${userId}: ${credits} credits`)
+  console.logger.info(`💰 Checkout completed for user ${userId}: ${credits} credits`)
   
   // Use comprehensive error recovery system
   await handleCheckoutCompletedWithRecovery(session)
@@ -534,7 +534,7 @@ async function handlePaymentSucceeded(event: StripeWebhookEvent): Promise<void> 
   const paymentIntent = event.data.object
   const transactionId = generateTransactionId()
   
-  console.log(`✅ Payment succeeded: ${paymentIntent.id}`)
+  console.logger.info(`✅ Payment succeeded: ${paymentIntent.id}`)
   
   try {
     // Step 1: Update payment record with retry
@@ -562,7 +562,7 @@ async function handlePaymentFailed(event: StripeWebhookEvent): Promise<void> {
   const paymentIntent = event.data.object
   const transactionId = generateTransactionId()
   
-  console.log(`❌ Payment failed: ${paymentIntent.id}`)
+  console.logger.info(`❌ Payment failed: ${paymentIntent.id}`)
   
   try {
     // Step 1: Update payment record with retry
@@ -598,7 +598,7 @@ async function handleSubscriptionPayment(event: StripeWebhookEvent): Promise<voi
   const customerId = invoice.customer
   const transactionId = generateTransactionId()
   
-  console.log(`💳 Subscription payment succeeded for customer: ${customerId}`)
+  console.logger.info(`💳 Subscription payment succeeded for customer: ${customerId}`)
   
   try {
     // Step 1: Get user with retry
@@ -634,7 +634,7 @@ async function handleSubscriptionUpdated(event: StripeWebhookEvent): Promise<voi
   const subscription = event.data.object
   const customerId = subscription.customer
   
-  console.log(`🔄 Subscription updated for customer: ${customerId}`)
+  console.logger.info(`🔄 Subscription updated for customer: ${customerId}`)
   
   const user = await getUserByStripeCustomerId(customerId)
   if (user) {
@@ -650,7 +650,7 @@ async function handleSubscriptionCancelled(event: StripeWebhookEvent): Promise<v
   const subscription = event.data.object
   const customerId = subscription.customer
   
-  console.log(`🚫 Subscription cancelled for customer: ${customerId}`)
+  console.logger.info(`🚫 Subscription cancelled for customer: ${customerId}`)
   
   const user = await getUserByStripeCustomerId(customerId)
   if (user) {
@@ -668,7 +668,7 @@ async function handleSubscriptionCancelled(event: StripeWebhookEvent): Promise<v
 
 async function processPayment(paymentData: any): Promise<any> {
   // Mock implementation - replace with actual payment processing
-  console.log('💳 Processing payment:', paymentData)
+  console.logger.info('💳 Processing payment:', paymentData)
   return { success: true, paymentId: generateTransactionId() }
 }
 
@@ -681,33 +681,33 @@ async function createCustomerRecord(session: any): Promise<any> {
     credits: parseInt(session.metadata?.credits || '0'),
     sessionId: session.id
   }
-  console.log('👤 Created customer record:', customerRecord)
+  console.logger.info('👤 Created customer record:', customerRecord)
   return customerRecord
 }
 
 async function createAccessLevel(customerRecord: any): Promise<void> {
   // Mock implementation - replace with actual access control setup
-  console.log('🔑 Created access level for customer:', customerRecord.customerId)
+  console.logger.info('🔑 Created access level for customer:', customerRecord.customerId)
 }
 
 async function initializeUsageTracking(customerRecord: any): Promise<void> {
   // Mock implementation - replace with actual usage tracking setup
-  console.log('📊 Initialized usage tracking for customer:', customerRecord.customerId)
+  console.logger.info('📊 Initialized usage tracking for customer:', customerRecord.customerId)
 }
 
 async function sendWelcomeEmail(email: string, tier: string): Promise<void> {
   // Mock implementation - replace with actual email service
-  console.log(`📧 Sent welcome email to ${email} for ${tier} tier`)
+  console.logger.info(`📧 Sent welcome email to ${email} for ${tier} tier`)
 }
 
 async function triggerAIAnalysisProcess(customerData: any): Promise<void> {
   // Mock implementation - replace with actual AI service integration
-  console.log('🤖 Triggered AI analysis for customer:', customerData.customerId)
+  console.logger.info('🤖 Triggered AI analysis for customer:', customerData.customerId)
 }
 
 async function queueEmailForRetry(type: string, customerData: any, error: Error): Promise<void> {
   // Mock implementation - replace with actual queue service
-  console.log(`📬 Queued ${type} email for retry:`, {
+  console.logger.info(`📬 Queued ${type} email for retry:`, {
     customerId: customerData.customerId,
     email: customerData.email,
     error: error.message
@@ -716,7 +716,7 @@ async function queueEmailForRetry(type: string, customerData: any, error: Error)
 
 async function queueAIProcessingForRetry(customerData: any, error: Error): Promise<void> {
   // Mock implementation - replace with actual queue service
-  console.log('🤖 Queued AI processing for retry:', {
+  console.logger.info('🤖 Queued AI processing for retry:', {
     customerId: customerData.customerId,
     error: error.message
   })
@@ -724,17 +724,17 @@ async function queueAIProcessingForRetry(customerData: any, error: Error): Promi
 
 async function storePaymentFailureRecord(failureRecord: any): Promise<void> {
   // Mock implementation - replace with actual database storage
-  console.log('💾 Stored payment failure record:', failureRecord)
+  console.logger.info('💾 Stored payment failure record:', failureRecord)
 }
 
 async function storeCheckoutFailureRecord(failureRecord: any): Promise<void> {
   // Mock implementation - replace with actual database storage
-  console.log('💾 Stored checkout failure record:', failureRecord)
+  console.logger.info('💾 Stored checkout failure record:', failureRecord)
 }
 
 async function sendUrgentAdminAlert(subject: string, details: any): Promise<void> {
   // Mock implementation - replace with actual admin notification system
-  console.log(`🚨 URGENT ADMIN ALERT: ${subject}`, details)
+  console.logger.info(`🚨 URGENT ADMIN ALERT: ${subject}`, details)
   
   // In production, this would send to multiple channels:
   // - Email to admin team
@@ -745,7 +745,7 @@ async function sendUrgentAdminAlert(subject: string, details: any): Promise<void
 
 async function sendCustomerProcessingDelayNotification(email: string, details: any): Promise<void> {
   // Mock implementation - replace with actual customer notification
-  console.log(`📧 Sent processing delay notification to ${email}:`, details)
+  console.logger.info(`📧 Sent processing delay notification to ${email}:`, details)
 }
 
 async function updatePaymentStatus(paymentIntentId: string, status: 'succeeded' | 'failed'): Promise<void> {
@@ -758,7 +758,7 @@ async function updatePaymentStatus(paymentIntentId: string, status: 'succeeded' 
   //   }
   // })
   
-  console.log(`💾 Updated payment ${paymentIntentId} status to: ${status}`)
+  console.logger.info(`💾 Updated payment ${paymentIntentId} status to: ${status}`)
 }
 
 async function addCreditsToUser(userId: string, credits: number): Promise<void> {
@@ -777,7 +777,7 @@ async function addCreditsToUser(userId: string, credits: number): Promise<void> 
       //   }
       // })
       
-      console.log(`💎 Added ${credits} credits to user ${userId} (attempt ${attempt})`)
+      console.logger.info(`💎 Added ${credits} credits to user ${userId} (attempt ${attempt})`)
       
       if (attempt > 1) {
         logger.logRecoverySuccess(attempt)
@@ -860,7 +860,7 @@ async function getUserByStripeCustomerId(stripeCustomerId: string): Promise<User
 
 async function updateSubscriptionStatus(userId: string, status: string): Promise<void> {
   // TODO: Implement database update
-  console.log(`💾 Updated subscription status for user ${userId}: ${status}`)
+  console.logger.info(`💾 Updated subscription status for user ${userId}: ${status}`)
 }
 
 async function addSubscriptionCredits(userId: string, tier: string): Promise<void> {
@@ -874,7 +874,7 @@ async function addSubscriptionCredits(userId: string, tier: string): Promise<voi
 
 async function updateUserSubscription(userId: string, updates: Partial<User>): Promise<void> {
   // TODO: Implement database update
-  console.log(`💾 Updated subscription for user ${userId}:`, updates)
+  console.logger.info(`💾 Updated subscription for user ${userId}:`, updates)
 }
 
 // Utility functions
@@ -894,7 +894,7 @@ function getSubscriptionTier(priceId: string): 'free' | 'starter' | 'growth' | '
 async function sendPurchaseConfirmationEmail(userId: string, credits: number): Promise<void> {
   try {
     // TODO: Implement actual email sending
-    console.log(`📧 Purchase confirmation email sent to user ${userId} for ${credits} credits`)
+    console.logger.info(`📧 Purchase confirmation email sent to user ${userId} for ${credits} credits`)
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
     log.warn('Purchase confirmation email failed - will retry later', {
@@ -909,11 +909,11 @@ async function sendPurchaseConfirmationEmail(userId: string, credits: number): P
 }
 
 async function sendPaymentFailureEmail(userId: string, errorMessage?: string): Promise<void> {
-  console.log(`📧 Payment failure email sent to user ${userId}. Error: ${errorMessage}`)
+  console.logger.info(`📧 Payment failure email sent to user ${userId}. Error: ${errorMessage}`)
 }
 
 async function sendSubscriptionCancelledEmail(userId: string): Promise<void> {
-  console.log(`📧 Subscription cancellation email sent to user ${userId}`)
+  console.logger.info(`📧 Subscription cancellation email sent to user ${userId}`)
 }
 
 // Logging functions
@@ -932,7 +932,7 @@ async function logPurchaseSuccess(userId: string, credits: number, paymentIntent
     }
     
     // TODO: Store in audit log database
-    console.log(`📝 Purchase success:`, logEntry)
+    console.logger.info(`📝 Purchase success:`, logEntry)
     
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
@@ -950,19 +950,19 @@ async function logPurchaseSuccess(userId: string, credits: number, paymentIntent
 }
 
 async function logPaymentProcessed(userId: string, credits: number, paymentIntentId: string): Promise<void> {
-  console.log(`📝 Payment processed: User ${userId}, Credits: ${credits}, Payment: ${paymentIntentId}`)
+  console.logger.info(`📝 Payment processed: User ${userId}, Credits: ${credits}, Payment: ${paymentIntentId}`)
 }
 
 async function logPaymentFailure(userId: string, paymentIntentId: string, error?: string): Promise<void> {
-  console.log(`📝 Payment failed: User ${userId}, Payment: ${paymentIntentId}, Error: ${error}`)
+  console.logger.info(`📝 Payment failed: User ${userId}, Payment: ${paymentIntentId}, Error: ${error}`)
 }
 
 async function logSubscriptionPayment(userId: string, amount: number): Promise<void> {
-  console.log(`📝 Subscription payment: User ${userId}, Amount: $${(amount / 100).toFixed(2)}`)
+  console.logger.info(`📝 Subscription payment: User ${userId}, Amount: $${(amount / 100).toFixed(2)}`)
 }
 
 async function logWebhookFailure(eventId: string, eventType: string, error: string): Promise<void> {
-  console.log(`📝 Webhook failure: Event ${eventId} (${eventType}), Error: ${error}`)
+  console.logger.info(`📝 Webhook failure: Event ${eventId} (${eventType}), Error: ${error}`)
 }
 
 // ========== ENHANCED DATABASE FUNCTIONS WITH ERROR RECOVERY ==========
@@ -974,7 +974,7 @@ async function updatePaymentStatusWithRetry(paymentIntentId: string, status: 'su
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       // TODO: Implement actual database update
-      console.log(`💾 Updated payment ${paymentIntentId} status to: ${status} (attempt ${attempt})`)
+      console.logger.info(`💾 Updated payment ${paymentIntentId} status to: ${status} (attempt ${attempt})`)
       
       if (attempt > 1) {
         logger.logRecoverySuccess(attempt)
@@ -1090,7 +1090,7 @@ async function updateSubscriptionStatusWithRetry(userId: string, status: string,
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`💾 Updated subscription status for user ${userId}: ${status} (attempt ${attempt})`)
+      console.logger.info(`💾 Updated subscription status for user ${userId}: ${status} (attempt ${attempt})`)
       
       if (attempt > 1) {
         logger.logRecoverySuccess(attempt)
@@ -1148,7 +1148,7 @@ async function logPaymentProcessedWithRetry(userId: string, credits: number, pay
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`📝 Payment processed: User ${userId}, Credits: ${credits}, Payment: ${paymentIntentId}`)
+      console.logger.info(`📝 Payment processed: User ${userId}, Credits: ${credits}, Payment: ${paymentIntentId}`)
       if (attempt > 1) {
         logger.logRecoverySuccess(attempt)
       }
@@ -1173,7 +1173,7 @@ async function logPaymentFailureWithRetry(userId: string, paymentIntentId: strin
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`📝 Payment failed: User ${userId}, Payment: ${paymentIntentId}, Error: ${error}`)
+      console.logger.info(`📝 Payment failed: User ${userId}, Payment: ${paymentIntentId}, Error: ${error}`)
       if (attempt > 1) {
         logger.logRecoverySuccess(attempt)
       }
@@ -1198,7 +1198,7 @@ async function logSubscriptionPaymentWithRetry(userId: string, amount: number, t
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`📝 Subscription payment: User ${userId}, Amount: $${(amount / 100).toFixed(2)}`)
+      console.logger.info(`📝 Subscription payment: User ${userId}, Amount: $${(amount / 100).toFixed(2)}`)
       if (attempt > 1) {
         logger.logRecoverySuccess(attempt)
       }
@@ -1221,7 +1221,7 @@ async function logSubscriptionPaymentWithRetry(userId: string, amount: number, t
 
 async function sendPaymentFailureEmailWithGracefulFailure(userId: string, errorMessage?: string): Promise<void> {
   try {
-    console.log(`📧 Payment failure email sent to user ${userId}. Error: ${errorMessage}`)
+    console.logger.info(`📧 Payment failure email sent to user ${userId}. Error: ${errorMessage}`)
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
     log.warn('Payment failure email failed - will retry later', {
@@ -1236,7 +1236,7 @@ async function sendPaymentFailureEmailWithGracefulFailure(userId: string, errorM
 
 async function sendSubscriptionRenewalConfirmationWithGracefulFailure(user: User, invoice: any): Promise<void> {
   try {
-    console.log(`📧 Subscription renewal confirmation sent to user ${user.id}`)
+    console.logger.info(`📧 Subscription renewal confirmation sent to user ${user.id}`)
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
     log.warn('Subscription renewal confirmation failed - will retry later', {

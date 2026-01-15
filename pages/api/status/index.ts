@@ -137,7 +137,7 @@ async function handler(
     
     // Log status check
     const duration = Date.now() - startTime
-    logger.apiResponse?.({
+    logger.info('Status check completed', {
       requestId,
       method: 'GET',
       url: '/api/status',

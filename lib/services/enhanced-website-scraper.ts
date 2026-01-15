@@ -539,31 +539,5 @@ export class EnhancedWebsiteScraper {
   }
 }
 
-/**
- * Extract about/description text (moved outside class)
- */
-function extractAboutText($: cheerio.CheerioAPI): string | undefined {
-    const aboutSelectors = [
-      '[class*="about"]',
-      '[id*="about"]',
-      '[class*="description"]',
-      '[class*="intro"]',
-      'main p'
-    ]
-
-    for (const selector of aboutSelectors) {
-      const text = $(selector).first().text().trim()
-      if (text.length > 100) {
-        return text.substring(0, MAX_TEXT_LENGTH).trim()
-      }
-    }
-
-    // Fallback: get first few paragraphs
-    const paragraphs = $('p').map((_, el) => $(el).text().trim()).get()
-    const combined = paragraphs.slice(0, 3).join(' ').trim()
-    return combined.length > 100 ? combined.substring(0, MAX_TEXT_LENGTH) : undefined
-  }
-}
-
 // Export singleton instance
 export const enhancedWebsiteScraper = new EnhancedWebsiteScraper()

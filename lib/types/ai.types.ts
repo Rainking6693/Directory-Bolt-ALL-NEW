@@ -17,6 +17,9 @@ export interface BusinessProfile {
   keyServices?: string[]
   uniqueSellingProposition?: string
   marketPosition?: string
+  competitiveAdvantages?: string[]
+  uniqueSellingPoints?: string[]
+  valueProposition?: string
 }
 
 export interface CompetitiveAnalysis {
@@ -121,13 +124,29 @@ export interface RevenueProjection {
 
 export interface AIInsights {
   businessProfile: BusinessProfile
-  marketInsights: MarketInsights
-  competitiveAnalysis: CompetitiveAnalysis
-  seoAnalysis: SEOAnalysis
-  revenueProjections: RevenueProjection
-  actionableRecommendations: string[]
-  priorityScore: number
-  confidenceLevel: number
+  insights?: {
+    competitiveAdvantages?: string[]
+    improvementSuggestions?: string[]
+    marketInsights?: {
+      industryTrends?: string[]
+      growthOpportunities?: string[]
+      riskFactors?: string[]
+      recommendations?: string[]
+      directoryDensity?: {
+        client: number
+        average: number
+        leader: number
+      }
+    }
+  }
+  // Legacy fields (for backward compatibility)
+  marketInsights?: MarketInsights
+  competitiveAnalysis?: CompetitiveAnalysis
+  seoAnalysis?: SEOAnalysis
+  revenueProjections?: RevenueProjection
+  actionableRecommendations?: string[]
+  priorityScore?: number
+  confidenceLevel?: number
 }
 
 export interface UpgradePrompts {

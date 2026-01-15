@@ -154,7 +154,7 @@ export class SEOTierAccessControl {
       }
 
     } catch (error) {
-      logger.error('Error checking SEO feature access', { userId, userTier, featureId }, error)
+      logger.error('Error checking SEO feature access', { userId, userTier, featureId, error: error instanceof Error ? error.message : String(error) }, error instanceof Error ? error : undefined)
       return {
         allowed: false,
         reason: 'Access check failed'
@@ -216,7 +216,7 @@ export class SEOTierAccessControl {
 
       return true
     } catch (error) {
-      logger.error('Error tracking SEO feature usage', { userId, userTier, featureId }, error)
+      logger.error('Error tracking SEO feature usage', { userId, userTier, featureId, error: error instanceof Error ? error.message : String(error) }, error instanceof Error ? error : undefined)
       return false
     }
   }

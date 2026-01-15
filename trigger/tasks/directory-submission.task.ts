@@ -7,6 +7,7 @@
 
 import { task } from "@trigger.dev/sdk/v3"
 import { chromium } from "playwright"
+import { logger } from "../../lib/utils/logger"
 
 interface DirectorySubmissionPayload {
   jobId: string
@@ -105,7 +106,9 @@ export const directorySubmissionTask = task({
 
     } catch (error) {
       await browser.close()
-      throw new Error(`Directory submission failed for ${directory}: ${error instanceof Error ? error.message : String(error)}`)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      logger.error(`Directory submission failed for ${directory}`, { error: errorMessage }, error instanceof Error ? error : undefined)
+      throw new Error(`Directory submission failed for ${directory}: ${errorMessage}`)
     }
   },
 })

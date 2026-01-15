@@ -9,6 +9,7 @@
 
 import { task } from "@trigger.dev/sdk/v3"
 import { chromium } from "playwright"
+import { logger } from "../../lib/utils/logger"
 
 interface CoreDirectorySubmissionPayload {
   jobId: string
@@ -173,7 +174,7 @@ export const coreDirectorySubmissionTask = task({
 
     } catch (error) {
       await browser.close()
-      ctx.logger.error(`Core directory submission failed for ${directory}`, { error })
+      logger.error(`Core directory submission failed for ${directory}`, { error }, error instanceof Error ? error : undefined)
       throw error
     }
   },

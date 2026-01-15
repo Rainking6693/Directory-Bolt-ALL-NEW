@@ -8,11 +8,14 @@
  * - Clean, professional design
  */
 
-import { jsPDF } from 'jspdf'
-import type { BusinessIntelligenceResponse } from '../types/ai.types'
-import type { BusinessProfile } from './ai-business-profiler'
-import type { CompetitiveAnalysis } from './competitive-intelligence'
+import type { BusinessIntelligenceResponse, AIInsights } from '../types/ai.types'
 import { logger } from '../utils/logger'
+
+// Dynamic import to avoid SSR issues
+const getJsPDF = async () => {
+  const { jsPDF } = await import('jspdf')
+  return jsPDF
+}
 
 export interface PDFGenerationOptions {
   branding?: {
@@ -40,6 +43,8 @@ export class EnhancedPDFGenerator {
     try {
       logger.info('Generating PDF report', { url: analysisData.url })
 
+      // Dynamic import to avoid SSR issues
+      const jsPDF = await getJsPDF()
       const doc = new jsPDF('p', 'mm', 'a4')
       const pageWidth = doc.internal.pageSize.getWidth()
       const pageHeight = doc.internal.pageSize.getHeight()
@@ -157,7 +162,7 @@ export class EnhancedPDFGenerator {
         doc.text('Strategic Insights', margin, yPosition)
         yPosition += 10
 
-        if (insights.competitiveAdvantages && insights.competitiveAdvantages.length > 0) {
+        if (insights.competitiveAdvantages && Array.isArray(insights.competitiveAdvantages) && insights.competitiveAdvantages.length > 0) {
           doc.setFont('helvetica', 'semibold')
           doc.setFontSize(11)
           doc.text('Competitive Advantages:', margin, yPosition)
@@ -166,13 +171,13 @@ export class EnhancedPDFGenerator {
           doc.setFont('helvetica', 'normal')
           doc.setFontSize(10)
           doc.setTextColor(82, 82, 82)
-          insights.competitiveAdvantages.slice(0, 5).forEach(advantage => {
+          insights.competitiveAdvantages.slice(0, 5).forEach((advantage: string) => {
             yPosition += addWrappedText(`• ${advantage}`, margin + 5, yPosition, pageWidth - 45)
           })
           yPosition += 5
         }
 
-        if (insights.improvementSuggestions && insights.improvementSuggestions.length > 0) {
+        if (insights.improvementSuggestions && Array.isArray(insights.improvementSuggestions) && insights.improvementSuggestions.length > 0) {
           doc.setFont('helvetica', 'semibold')
           doc.setFontSize(11)
           doc.setTextColor(23, 23, 23)
@@ -182,8 +187,51 @@ export class EnhancedPDFGenerator {
           doc.setFont('helvetica', 'normal')
           doc.setFontSize(10)
           doc.setTextColor(82, 82, 82)
-          insights.improvementSuggestions.slice(0, 5).forEach(suggestion => {
+          insights.improvementSuggestions.slice(0, 5).forEach((suggestion: string) => {
             yPosition += addWrappedText(`• ${suggestion}`, margin + 5, yPosition, pageWidth - 45)
+          })
+        }
+        yPosition += 15
+      }
+      
+      // Competitive Analysis Section (if using legacy structure)
+      if (analysisData.aiAnalysis?.competitiveAnalysis) {
+        checkPageBreak(50)
+        const compAnalysis = analysisData.aiAnalysis.competitiveAnalysis
+
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(14)
+        doc.setTextColor(23, 23, 23)
+        doc.text('Competitive Analysis', margin, yPosition)
+        yPosition += 10
+
+        if (compAnalysis.competitiveAdvantages && Array.isArray(compAnalysis.competitiveAdvantages) && compAnalysis.competitiveAdvantages.length > 0) {
+          doc.setFont('helvetica', 'semibold')
+          doc.setFontSize(11)
+          doc.text('Competitive Advantages:', margin, yPosition)
+          yPosition += 7
+
+          doc.setFont('helvetica', 'normal')
+          doc.setFontSize(10)
+          doc.setTextColor(82, 82, 82)
+          compAnalysis.competitiveAdvantages.slice(0, 5).forEach((advantage: string) => {
+            yPosition += addWrappedText(`• ${advantage}`, margin + 5, yPosition, pageWidth - 45)
+          })
+          yPosition += 5
+        }
+
+        if (compAnalysis.recommendedStrategies && Array.isArray(compAnalysis.recommendedStrategies) && compAnalysis.recommendedStrategies.length > 0) {
+          doc.setFont('helvetica', 'semibold')
+          doc.setFontSize(11)
+          doc.setTextColor(23, 23, 23)
+          doc.text('Recommended Strategies:', margin, yPosition)
+          yPosition += 7
+
+          doc.setFont('helvetica', 'normal')
+          doc.setFontSize(10)
+          doc.setTextColor(82, 82, 82)
+          compAnalysis.recommendedStrategies.slice(0, 5).forEach((strategy: string) => {
+            yPosition += addWrappedText(`• ${strategy}`, margin + 5, yPosition, pageWidth - 45)
           })
         }
         yPosition += 15

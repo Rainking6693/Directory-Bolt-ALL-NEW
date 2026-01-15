@@ -32,6 +32,6 @@ export default defineConfig({
   
   // Machine configuration (optional)
   machine: {
-    preset: "small-1x", // Can be upgraded for more resources
+    preset: "small-1x" as const, // Can be upgraded for more resources
   },
 })
