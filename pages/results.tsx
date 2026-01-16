@@ -394,6 +394,41 @@ export default function ResultsPage() {
             </div>
           )}
 
+          {/* Email Capture Section - Save Full Report */}
+          <div className="bg-secondary-800/50 backdrop-blur-sm rounded-2xl border border-volt-500/30 p-8 mb-16">
+            <h2 className="text-2xl font-bold text-white mb-2 text-center">
+              Save Your Full Report
+            </h2>
+            <p className="text-secondary-200 text-center mb-6">
+              Enter your email to save this report and get access to additional insights
+            </p>
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault()
+                const email = (e.currentTarget.elements.namedItem('email') as HTMLInputElement)?.value
+                if (email) {
+                  // TODO: Implement email capture backend
+                  alert('Thank you! We\'ll send your full report to: ' + email)
+                }
+              }}
+              className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+            >
+              <input
+                type="email"
+                name="email"
+                placeholder="your@email.com"
+                required
+                className="flex-1 px-4 py-3 bg-secondary-900/50 border border-volt-500/30 text-white placeholder-secondary-400 rounded-lg focus:outline-none focus:border-volt-500 focus:ring-2 focus:ring-volt-500/20"
+              />
+              <button
+                type="submit"
+                className="bg-volt-500 hover:bg-volt-600 text-secondary-900 font-bold py-3 px-6 rounded-lg transition-all duration-300 whitespace-nowrap"
+              >
+                Get Report
+              </button>
+            </form>
+          </div>
+
           {/* Additional CTA Section */}
           {!isFreeAnalysis && (
             <div className="bg-secondary-800/50 backdrop-blur-sm rounded-2xl border border-volt-500/30 p-8 text-center mb-16">

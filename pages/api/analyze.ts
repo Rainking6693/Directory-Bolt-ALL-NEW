@@ -138,7 +138,7 @@ function validateUrl(inputUrl: string): { valid: boolean; url?: URL; error?: str
 function generatePaidDirectories(maxDirectories: number): any[] {
   // Use expanded directory database
   const expandedDirectories = generateDirectoriesForTier(maxDirectories)
-  
+
   // Convert to API format
   return expandedDirectories.map(dir => ({
     name: dir.name,
@@ -341,7 +341,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       // Scrape website
       scrapedData = await enhancedWebsiteScraper.scrapeWebsite(normalizedUrl)
       currentListings = scrapedData.existingDirectoryListings.length || Math.floor(Math.random() * 8) + 2
-      
+
       // Phase 1: Real SEO audit (replaces Math.random())
       if (tier !== 'free' || tierConfig.includeSEOAnalysis) {
         try {
@@ -361,7 +361,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       if (tier !== 'free' && tierConfig.includeAIAnalysis && scrapedData) {
         try {
           businessProfile = await aiBusinessProfiler.generateBusinessProfile(scrapedData)
-          
+
           // Phase 1: Competitive intelligence (for Growth+ tiers)
           if (tierConfig.includeCompetitiveAnalysis && businessProfile) {
             try {
@@ -381,7 +381,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
 
     } catch (scrapeError) {
-      logger.warn('Website scraping failed, using fallback data', { 
+      logger.warn('Website scraping failed, using fallback data', {
         error: scrapeError instanceof Error ? scrapeError.message : String(scrapeError)
       })
       // Continue with fallback data below
@@ -393,12 +393,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const visibility = Math.floor(((currentListings || 2) / ((currentListings || 2) + missedOpportunities)) * 100)
 
     // Generate directory opportunities based on tier
-    const directoryOpportunities = tier === 'free' ? generateFreePreview(url).previewDirectories :
+    const directoryOpportunities = tier === 'free' ? generateFreePreview(normalizedUrl).previewDirectories :
       generatePaidDirectories(tierConfig.maxDirectories)
 
     // Create response
     const response: BusinessIntelligenceResponse = {
-      url,
+      url: normalizedUrl, // Use normalized URL in response
       title: scrapedData?.title || `Website Analysis for ${domain}`,
       description: scrapedData?.description || `Business analysis showing ${currentListings} current listings and ${missedOpportunities}+ opportunities`,
       tier: tierConfig.name,
@@ -426,10 +426,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           marketPosition: businessProfile.marketPosition
         },
         insights: {
-          competitiveAdvantages: competitiveAnalysis?.insights.opportunities || 
+          competitiveAdvantages: competitiveAnalysis?.insights.opportunities ||
             businessProfile.competitiveAdvantages.length > 0 ? businessProfile.competitiveAdvantages :
             ['Strong online presence potential', 'Untapped directory opportunities'],
-          improvementSuggestions: competitiveAnalysis?.insights.recommendations || 
+          improvementSuggestions: competitiveAnalysis?.insights.recommendations ||
             ['Optimize directory presence', 'Improve SEO metadata', 'Enhance local listings'],
           marketInsights: tierConfig.includeMarketInsights && competitiveAnalysis ? {
             industryTrends: ['Digital transformation', 'Local SEO importance'],
@@ -494,7 +494,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (tier !== 'free') {
       try {
         await tasks.trigger("analyze-website", {
-          url,
+          url: normalizedUrl, // Use normalized URL
           customerId: sessionId, // Use sessionId as temporary customerId if none provided
           tier
         });
@@ -506,7 +506,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     logger.info('Website analysis completed', {
       metadata: {
-        url,
+        url: normalizedUrl,
         tier: tierConfig.name,
         directoryCount: response.directoryOpportunities.length,
         hasAIAnalysis: !!response.aiAnalysis,
@@ -517,7 +517,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     // Create customer record from analysis (for non-free tiers)
     if (tier !== 'free') {
       try {
-        const newCustomer = await createCustomerFromAnalysis(url, tier, response)
+        const newCustomer = await createCustomerFromAnalysis(normalizedUrl, tier, response)
         if (newCustomer) {
           response.customerCreated = {
             customer_id: newCustomer.customer_id,

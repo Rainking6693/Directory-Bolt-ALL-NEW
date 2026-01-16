@@ -1,0 +1,52 @@
+<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ccff0a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a8d500;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="400" height="300" fill="#f5f5f5"/>
+  
+  <!-- Border -->
+  <rect width="400" height="300" fill="none" stroke="#ddd" stroke-width="1"/>
+  
+  <!-- Header -->
+  <rect width="400" height="60" fill="url(#grad1)"/>
+  
+  <!-- Header text -->
+  <text x="20" y="40" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#000">
+    Business Report
+  </text>
+  
+  <!-- Content area -->
+  <g fill="none" stroke="#ccc" stroke-width="1">
+    <!-- Title -->
+    <text x="20" y="90" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#333">
+      Analysis Results
+    </text>
+    
+    <!-- Lines representing text -->
+    <line x1="20" y1="110" x2="380" y2="110" stroke="#ddd"/>
+    <line x1="20" y1="125" x2="380" y2="125" stroke="#ddd"/>
+    <line x1="20" y1="140" x2="350" y2="140" stroke="#ddd"/>
+    
+    <!-- Metrics -->
+    <text x="20" y="170" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      Directories Found: 127
+    </text>
+    <text x="20" y="190" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      Opportunities: 85
+    </text>
+    <text x="20" y="210" font-family="Arial, sans-serif" font-size="12" fill="#666">
+      Submission Ready: 72
+    </text>
+    
+    <!-- Chart placeholder -->
+    <rect x="20" y="230" width="360" height="50" fill="none" stroke="#ddd" stroke-dasharray="5,5"/>
+    <text x="180" y="260" font-family="Arial, sans-serif" font-size="11" fill="#999" text-anchor="middle">
+      Chart Area
+    </text>
+  </g>
+</svg>

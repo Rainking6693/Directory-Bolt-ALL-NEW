@@ -36,19 +36,19 @@ export default function NewLandingPage() {
       id: '1',
       title: 'Market Analysis Report',
       caption: 'Comprehensive competitor intelligence and market positioning',
-      image: '/samples/report-1-placeholder.jpg',
+      image: '/samples/report-1-placeholder.svg',
     },
     {
       id: '2',
       title: 'Directory Opportunities',
       caption: '500+ high-authority directory recommendations with approval probabilities',
-      image: '/samples/report-2-placeholder.jpg',
+      image: '/samples/report-2-placeholder.svg',
     },
     {
       id: '3',
       title: 'Portal Dashboard',
       caption: 'Real-time submission tracking and status updates',
-      image: '/samples/portal-placeholder.jpg',
+      image: '/samples/portal-placeholder.svg',
     },
   ]
 

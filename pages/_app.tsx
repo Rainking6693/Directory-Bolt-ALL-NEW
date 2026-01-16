@@ -81,7 +81,6 @@ export default function App({ Component, pageProps }: AppProps) {
         
         {/* Preload critical resources */}
         <link rel="preload" href="/hero.svg" as="image" />
-        <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         
         {/* Prefetch likely next pages */}
         <link rel="prefetch" href="/pricing" />
