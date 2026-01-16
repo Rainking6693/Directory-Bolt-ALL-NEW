@@ -15,6 +15,7 @@ export default function OnboardingPage() {
     const [loading, setLoading] = useState(false)
     const [formData, setFormData] = useState({
         businessName: '',
+        email: '',
         website: '',
         description: '',
         phone: '',
@@ -94,16 +95,29 @@ export default function OnboardingPage() {
                                     />
                                 </div>
                                 <div>
-                                    <Label htmlFor="website">Website URL</Label>
+                                    <Label htmlFor="email">Work Email</Label>
                                     <Input
-                                        id="website"
-                                        name="website"
-                                        value={formData.website}
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        value={formData.email}
                                         onChange={handleChange}
                                         required
-                                        placeholder="https://example.com"
+                                        placeholder="you@company.com"
                                     />
                                 </div>
+                            </div>
+
+                            <div>
+                                <Label htmlFor="website">Website URL</Label>
+                                <Input
+                                    id="website"
+                                    name="website"
+                                    value={formData.website}
+                                    onChange={handleChange}
+                                    required
+                                    placeholder="https://example.com"
+                                />
                             </div>
 
                             <div>

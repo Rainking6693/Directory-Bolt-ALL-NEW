@@ -1,7 +1,7 @@
-
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import { directorySubmissionTask } from '../../trigger/submission'
+import { AutoBoltNotificationService } from '../../lib/services/autobolt-notifications'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
@@ -19,19 +19,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
         const {
-            businessName, website, description, phone,
+            businessName, email, website, description, phone,
             address, city, state, zip, category, keywords,
             customerId, plan
         } = req.body
 
-        // 1. Update Customer in Supabase
-        // We assume the customer might already exist from Stripe webhook, or we create new.
-        // If customerId is provided (from stripe session), use it. Otherwise generate or use email.
-
-        // For now, we'll upsert based on business_name or website if customerId is weak, 
-        // but ideally we should have a robust ID.
         const dbData = {
             business_name: businessName,
+            email,
             website,
             description,
             phone,
@@ -40,9 +35,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             state,
             zip,
             category,
-            business_data: { keywords: keywords.split(',').map((k: string) => k.trim()) },
             status: 'active',
-            // If we had customer_id from stripe, we'd use it in the WHERE clause or as PK
+            business_data: { keywords: keywords.split(',').map((k: string) => k.trim()) },
             ...(customerId ? { customer_id: customerId } : { customer_id: `cust_${Date.now()}` })
         }
 
@@ -56,6 +50,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             console.error('Supabase Error:', dbError)
             return res.status(500).json({ error: 'Failed to save customer data' })
         }
+
+        // Send Welcome Notification (Non-blocking)
+        AutoBoltNotificationService.sendWelcomeNotification(
+            customer.customer_id,
+            email,
+            businessName,
+            plan || 'Starter'
+        ).catch(err => console.error('Failed to send welcome email:', err))
 
         // 2. Determine Directory Limit based on Plan
         // Default to 'starter' if plan is invalid or missing
@@ -86,7 +88,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return res.status(500).json({ error: 'Failed to fetch directories' })
         }
 
-        // 4. Trigger "4 Workers" (Split into 4 batches)
+        // 2. Create Master Job Record
+        const { data: job, error: jobError } = await supabase
+            .from('jobs')
+            .insert({
+                customer_id: customer.customer_id,
+                status: 'processing',
+                package_type: plan || 'starter',
+                package_size: limit,
+                directory_limit: limit,
+                business_name: businessName,
+                website: website,
+                email: email,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .select()
+            .single()
+
+        if (jobError) {
+            console.error('Job Creation Error:', jobError)
+            return res.status(500).json({ error: 'Failed to create job' })
+        }
+
+        // 3. Split into 4 batches and trigger workers
         const BATCH_COUNT = 4
         const batchSize = Math.ceil(directories.length / BATCH_COUNT)
         const triggerResults = []
@@ -99,9 +124,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             if (batchDirs.length > 0) {
                 console.log(`Triggering batch ${i + 1} with ${batchDirs.length} directories`)
                 const handle = await directorySubmissionTask.trigger({
-                    jobId: `job_${customer.customer_id}_batch_${i + 1}`,
+                    jobId: job.id, // Use the master Job ID
                     businessData: dbData,
-                    targetDirectories: batchDirs
+                    targetDirectories: batchDirs,
+                    batchIndex: i + 1,
+                    totalBatches: BATCH_COUNT
                 })
                 triggerResults.push(handle)
             }

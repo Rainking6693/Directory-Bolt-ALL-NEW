@@ -5,17 +5,62 @@
 
 import nodemailer from 'nodemailer';
 
+interface ProgressData {
+  businessName: string;
+  customerId: string;
+  progress: {
+    totalDirectories: number;
+    completed: number;
+    successful: number;
+    percentage: number;
+    successRate: number;
+    currentDirectory?: string;
+  };
+  dashboardUrl: string;
+}
+
+interface CompletionData {
+  businessName: string;
+  customerId: string;
+  totalSubmissions: number;
+  successfulCount: number;
+  failedCount: number;
+  successRate: number;
+  successfulListings: any[];
+  failedListings: any[];
+  reportUrl: string;
+  dashboardUrl: string;
+}
+
+interface ErrorData {
+  businessName: string;
+  customerId: string;
+  error: string;
+  supportEmail: string;
+  dashboardUrl: string;
+}
+
+interface WelcomeData {
+  businessName: string;
+  customerId: string;
+  packageType: string;
+  directoryLimits: number;
+  estimatedTime: string;
+  dashboardUrl: string;
+  supportEmail: string;
+}
+
 export class AutoBoltNotificationService {
-  static transporter = null;
+  static transporter: any = null;
 
   /**
    * Initialize email transporter
    */
   static initializeTransporter() {
     if (!this.transporter) {
-      this.transporter = nodemailer.createTransporter({
+      this.transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
+        port: parseInt(process.env.SMTP_PORT || '587'),
         secure: process.env.SMTP_SECURE === 'true',
         auth: {
           user: process.env.SMTP_USER,
@@ -29,15 +74,15 @@ export class AutoBoltNotificationService {
   /**
    * Send progress update notification
    */
-  static async sendProgressUpdate(customerId, progress, customerEmail, businessName) {
+  static async sendProgressUpdate(customerId: string, progress: any, customerEmail: string, businessName: string) {
     try {
       console.log(`📧 Sending progress update to ${customerEmail}`);
 
       const transporter = this.initializeTransporter();
-      
+
       const progressPercentage = Math.round((progress.completed / progress.totalDirectories) * 100);
-      const successRate = progress.completed > 0 
-        ? Math.round((progress.successful / progress.completed) * 100) 
+      const successRate = progress.completed > 0
+        ? Math.round((progress.successful / progress.completed) * 100)
         : 0;
 
       const emailHtml = this.generateProgressEmailTemplate({
@@ -48,7 +93,7 @@ export class AutoBoltNotificationService {
           percentage: progressPercentage,
           successRate: successRate
         },
-        dashboardUrl: `https://directorybolt.com/dashboard?customer=${customerId}`
+        dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?customer=${customerId}`
       });
 
       const mailOptions = {
@@ -61,7 +106,7 @@ export class AutoBoltNotificationService {
       await transporter.sendMail(mailOptions);
       console.log(`✅ Progress update sent to ${customerEmail}`);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Failed to send progress update:', error);
       throw new Error(`Progress notification failed: ${error.message}`);
     }
@@ -70,12 +115,12 @@ export class AutoBoltNotificationService {
   /**
    * Send completion report notification
    */
-  static async sendCompletionReport(customerId, results, customerEmail, businessName) {
+  static async sendCompletionReport(customerId: string, results: any[], customerEmail: string, businessName: string) {
     try {
       console.log(`📧 Sending completion report to ${customerEmail}`);
 
       const transporter = this.initializeTransporter();
-      
+
       const successfulSubmissions = results.filter(r => r.status === 'success');
       const failedSubmissions = results.filter(r => r.status === 'failed');
       const successRate = Math.round((successfulSubmissions.length / results.length) * 100);
@@ -89,8 +134,8 @@ export class AutoBoltNotificationService {
         successRate: successRate,
         successfulListings: successfulSubmissions,
         failedListings: failedSubmissions,
-        reportUrl: `https://directorybolt.com/reports/${customerId}`,
-        dashboardUrl: `https://directorybolt.com/dashboard?customer=${customerId}`
+        reportUrl: `${process.env.NEXT_PUBLIC_APP_URL}/reports/${customerId}`,
+        dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?customer=${customerId}`
       });
 
       const mailOptions = {
@@ -103,7 +148,7 @@ export class AutoBoltNotificationService {
       await transporter.sendMail(mailOptions);
       console.log(`✅ Completion report sent to ${customerEmail}`);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Failed to send completion report:', error);
       throw new Error(`Completion notification failed: ${error.message}`);
     }
@@ -112,7 +157,7 @@ export class AutoBoltNotificationService {
   /**
    * Send error notification
    */
-  static async sendErrorNotification(customerId, error, customerEmail, businessName) {
+  static async sendErrorNotification(customerId: string, error: string, customerEmail: string, businessName: string) {
     try {
       console.log(`📧 Sending error notification to ${customerEmail}`);
 
@@ -123,7 +168,7 @@ export class AutoBoltNotificationService {
         customerId,
         error: error,
         supportEmail: process.env.SUPPORT_EMAIL || 'support@directorybolt.com',
-        dashboardUrl: `https://directorybolt.com/dashboard?customer=${customerId}`
+        dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?customer=${customerId}`
       });
 
       const mailOptions = {
@@ -136,7 +181,7 @@ export class AutoBoltNotificationService {
       await transporter.sendMail(mailOptions);
       console.log(`✅ Error notification sent to ${customerEmail}`);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Failed to send error notification:', error);
       throw new Error(`Error notification failed: ${error.message}`);
     }
@@ -145,7 +190,7 @@ export class AutoBoltNotificationService {
   /**
    * Send welcome notification
    */
-  static async sendWelcomeNotification(customerId, customerEmail, businessName, packageType) {
+  static async sendWelcomeNotification(customerId: string, customerEmail: string, businessName: string, packageType: string) {
     try {
       console.log(`📧 Sending welcome notification to ${customerEmail}`);
 
@@ -160,7 +205,7 @@ export class AutoBoltNotificationService {
         packageType,
         directoryLimits,
         estimatedTime,
-        dashboardUrl: `https://directorybolt.com/dashboard?customer=${customerId}`,
+        dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?customer=${customerId}`,
         supportEmail: process.env.SUPPORT_EMAIL || 'support@directorybolt.com'
       });
 
@@ -174,7 +219,7 @@ export class AutoBoltNotificationService {
       await transporter.sendMail(mailOptions);
       console.log(`✅ Welcome notification sent to ${customerEmail}`);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Failed to send welcome notification:', error);
       throw new Error(`Welcome notification failed: ${error.message}`);
     }
@@ -183,7 +228,7 @@ export class AutoBoltNotificationService {
   /**
    * Generate progress email template
    */
-  static generateProgressEmailTemplate(data) {
+  static generateProgressEmailTemplate(data: ProgressData) {
     return `
     <!DOCTYPE html>
     <html>
@@ -262,7 +307,7 @@ export class AutoBoltNotificationService {
   /**
    * Generate completion email template
    */
-  static generateCompletionEmailTemplate(data) {
+  static generateCompletionEmailTemplate(data: CompletionData) {
     return `
     <!DOCTYPE html>
     <html>
@@ -366,7 +411,7 @@ export class AutoBoltNotificationService {
   /**
    * Generate error email template
    */
-  static generateErrorEmailTemplate(data) {
+  static generateErrorEmailTemplate(data: ErrorData) {
     return `
     <!DOCTYPE html>
     <html>
@@ -436,7 +481,7 @@ export class AutoBoltNotificationService {
   /**
    * Generate welcome email template
    */
-  static generateWelcomeEmailTemplate(data) {
+  static generateWelcomeEmailTemplate(data: WelcomeData) {
     return `
     <!DOCTYPE html>
     <html>
@@ -510,8 +555,8 @@ export class AutoBoltNotificationService {
   }
 
   // Helper methods
-  static getDirectoryLimits(packageType) {
-    const limits = {
+  static getDirectoryLimits(packageType: string): number {
+    const limits: Record<string, number> = {
       'Starter': 25,
       'Growth': 100,
       'Pro': 150,
@@ -520,10 +565,10 @@ export class AutoBoltNotificationService {
     return limits[packageType] || 50;
   }
 
-  static estimateCompletionTime(directoryCount) {
+  static estimateCompletionTime(directoryCount: number): string {
     const avgTimePerDirectory = 2.5; // minutes
     const totalMinutes = directoryCount * avgTimePerDirectory;
-    
+
     if (totalMinutes < 60) {
       return `${Math.round(totalMinutes)} minutes`;
     } else {

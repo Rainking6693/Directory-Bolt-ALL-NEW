@@ -60,9 +60,6 @@ export default function RealTimeCustomerDashboard() {
     if (!router.isReady) return
 
     if (!customerId) {
-      // Allow valid query param ?onboarding=complete to stay, checking auth...
-      // but if no ID, show error or redirect
-      // Logic moved to DashboardPage wrapper, but double check here
       setLoading(false)
       return
     }
@@ -132,7 +129,7 @@ export default function RealTimeCustomerDashboard() {
         </div>
         <div>
           {jobs.some(j => j.status === 'processing' || j.status === 'pending') && (
-            <Badge variant="warning" className="animate-pulse">
+            <Badge variant="warn" className="animate-pulse">
               ⚡ Submissions in Progress
             </Badge>
           )}
@@ -161,7 +158,7 @@ export default function RealTimeCustomerDashboard() {
 
       {/* Active Jobs */}
       {jobs.length > 0 && (
-        <Card variant="default" className="p-6">
+        <Card variant="artifact" className="p-6">
           <h2 className="text-xl font-bold text-role-text-primary mb-4">Active Jobs</h2>
           <div className="space-y-4">
             {jobs.map(job => (
@@ -171,7 +168,7 @@ export default function RealTimeCustomerDashboard() {
                   <div className="text-role-text-primary font-medium">Batch Processing</div>
                 </div>
                 <div className="text-right">
-                  <Badge variant={job.status === 'completed' ? 'success' : job.status === 'failed' ? 'error' : 'warning'}>
+                  <Badge variant={job.status === 'completed' ? 'success' : job.status === 'failed' ? 'error' : 'warn'}>
                     {job.status.toUpperCase()}
                   </Badge>
                   <div className="text-xs text-role-text-secondary mt-1">
@@ -188,13 +185,13 @@ export default function RealTimeCustomerDashboard() {
       <div className="space-y-4">
         <h2 className="text-2xl font-bold text-role-text-primary">Submission Evidence</h2>
         {completedLogs.length === 0 ? (
-          <Card variant="default" className="p-12 text-center text-role-text-secondary">
+          <Card variant="subtle" className="p-12 text-center text-role-text-secondary">
             No completed submissions yet. Results will appear here as they finish.
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {completedLogs.map(log => (
-              <Card key={log.id} variant="default" className="overflow-hidden group hover:border-volt-500 transition-colors">
+              <Card key={log.id} variant="artifact" className="overflow-hidden group hover:border-volt-500 transition-colors">
                 <div className="aspect-video bg-gray-900 relative">
                   {log.screenshot_url ? (
                     <img

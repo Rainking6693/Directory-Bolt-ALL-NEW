@@ -1,6 +1,7 @@
 import { task } from "@trigger.dev/sdk/v3";
 import puppeteer from 'puppeteer';
 import { createClient } from '@supabase/supabase-js';
+import { AutoBoltNotificationService } from "../lib/services/autobolt-notifications";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY!;
@@ -8,9 +9,15 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const directorySubmissionTask = task({
     id: "directory-submission",
-    run: async (payload: { jobId: string; businessData: any; targetDirectories: string[] }) => {
+    run: async (payload: {
+        jobId: string;
+        businessData: any;
+        targetDirectories: string[];
+        batchIndex?: number;
+        totalBatches?: number;
+    }) => {
         const { jobId, businessData, targetDirectories } = payload;
-        console.log(`Starting submission job ${jobId} for ${businessData.businessName}`);
+        console.log(`Starting submission job ${jobId} (Batch ${payload.batchIndex}/${payload.totalBatches}) for ${businessData.business_name}`);
 
         const results = [];
 
@@ -30,9 +37,7 @@ export const directorySubmissionTask = task({
                 let errorMessage = null;
 
                 try {
-                    // TODO: In a real scenario, we would lookup the URL for 'directoryName' from the DB
-                    // For this MVP, we will simulate visiting the directory by going to a placeholder or searching it
-                    // effectively proving the "Agent" is working.
+                    // MVP: simulate visiting the directory
                     const targetUrl = `https://www.google.com/search?q=submit+site+to+${encodeURIComponent(directoryName)}`;
                     await page.goto(targetUrl, { waitUntil: 'networkidle0' });
 
@@ -72,7 +77,7 @@ export const directorySubmissionTask = task({
                 // Log result to DB for Dashboard
                 await supabase.from('autobolt_submission_logs').insert({
                     job_id: jobId,
-                    customer_id: businessData.customerId, // Ensure this is passed in payload
+                    customer_id: businessData.customer_id,
                     directory_name: directoryName,
                     status: status === 'success' ? 'submitted' : 'failed',
                     success: status === 'success',
@@ -88,6 +93,48 @@ export const directorySubmissionTask = task({
                     error: errorMessage
                 });
             }
+
+            // Check if entire job is complete (across all batches)
+            const { count: currentLogsCount } = await supabase
+                .from('autobolt_submission_logs')
+                .select('*', { count: 'exact', head: true })
+                .eq('job_id', jobId);
+
+            const { data: jobData } = await supabase
+                .from('jobs')
+                .select('directory_limit, email, business_name, customer_id')
+                .eq('id', jobId)
+                .single();
+
+            if (jobData && currentLogsCount && currentLogsCount >= jobData.directory_limit) {
+                console.log(`Job ${jobId} is now 100% complete! Sending report...`);
+
+                // Update master job status
+                await supabase.from('jobs').update({
+                    status: 'completed',
+                    completed_at: new Date().toISOString()
+                }).eq('id', jobId);
+
+                // Fetch all results for the report
+                const { data: allLogs } = await supabase
+                    .from('autobolt_submission_logs')
+                    .select('directory_name, success, screenshot_url')
+                    .eq('job_id', jobId);
+
+                // Send Completion Report
+                if (jobData.email) {
+                    await AutoBoltNotificationService.sendCompletionReport(
+                        jobData.customer_id,
+                        (allLogs || []).map(l => ({
+                            directoryName: l.directory_name,
+                            status: l.success ? 'success' : 'failed'
+                        })),
+                        jobData.email,
+                        jobData.business_name
+                    ).catch(err => console.error('Failed to send completion email:', err));
+                }
+            }
+
         } finally {
             await browser.close();
         }
