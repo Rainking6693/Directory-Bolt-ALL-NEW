@@ -39,7 +39,7 @@ export default function CheckoutPage() {
         },
         body: JSON.stringify({
           plan: plan as string,
-          successUrl: `${window.location.origin}/checkout-success?plan=${plan}`,
+          successUrl: `${window.location.origin}/onboarding?plan=${plan}`,
           cancelUrl: `${window.location.origin}/checkout?plan=${plan}`,
         }),
       })
@@ -50,7 +50,7 @@ export default function CheckoutPage() {
       }
 
       const data = await response.json()
-      
+
       if (data.url) {
         window.location.href = data.url
       } else {
