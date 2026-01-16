@@ -47,6 +47,11 @@ export default function OnboardingPage() {
 
             if (!res.ok) throw new Error('Submission failed')
 
+            // Save customer ID for dashboard access
+            if (customer_id) {
+                localStorage.setItem('customerId', customer_id as string)
+            }
+
             router.push('/dashboard?onboarding=complete')
         } catch (error) {
             console.error(error)

@@ -22,21 +22,23 @@ interface DashboardDataResponse {
     jobs: Array<{
       id: string
       status: string
-      progress_percentage: number
-      directories_completed: number
-      directories_failed: number
       directories_to_process: number
       created_at: string
       updated_at: string
     }>
     submissions: Array<{
       id: string
-      directory_name: string
+      directory_url: string
       status: string
-      submitted_at?: string
-      approved_at?: string
-      failed_at?: string
-      error_message?: string
+      created_at: string
+      result_message?: string
+    }>
+    completed_logs: Array<{
+      id: string
+      directory_name: string
+      screenshot_url: string | null
+      success: boolean | null
+      timestamp: string | null
     }>
     stats: {
       total_submissions: number
@@ -71,45 +73,50 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     if (customerError || !customer) {
       return res.status(404).json({
-        success: false, 
-        error: 'Customer not found' 
+        success: false,
+        error: 'Customer not found'
       })
     }
 
-    // Get customer's jobs
+    // Get customer's jobs (Queue Status)
     const { data: jobs, error: jobsError } = await supabase
       .from('jobs')
-      .select('*')
+      .select('id, status, created_at, updated_at, directory_limit')
       .eq('customer_id', customerId)
       .order('created_at', { ascending: false })
 
-    if (jobsError) {
-      console.error('Error fetching jobs:', jobsError)
-    }
+    if (jobsError) console.error('Error fetching jobs:', jobsError)
 
-    // Get customer's submissions
+    // Get customer's submissions (Queue Details)
+    // NOTE: 'directory_submissions' contains the QUEUE state
     const { data: submissions, error: submissionsError } = await supabase
       .from('directory_submissions')
-      .select(`
-        *,
-        directories:directory_id (
-          name,
-          website
-        )
-      `)
+      .select('id, directory_url, status, created_at, result_message')
       .eq('customer_id', customerId)
       .order('created_at', { ascending: false })
 
-    if (submissionsError) {
-      console.error('Error fetching submissions:', submissionsError)
-    }
+    if (submissionsError) console.error('Error fetching submissions:', submissionsError)
+
+    // Get actual completed logs with screenshots
+    // NOTE: 'autobolt_submission_logs' contains the RESULT state
+    const { data: completedLogs, error: logsError } = await supabase
+      .from('autobolt_submission_logs')
+      .select('id, directory_name, screenshot_url, success, timestamp')
+      .eq('customer_id', customerId)
+      .order('timestamp', { ascending: false })
+
+    if (logsError) console.error('Error fetching logs:', logsError)
 
     // Calculate stats
     const totalSubmissions = submissions?.length || 0
-    const completedSubmissions = submissions?.filter(s => s.status === 'submitted' || s.status === 'approved').length || 0
-    const failedSubmissions = submissions?.filter(s => s.status === 'failed').length || 0
-    const pendingSubmissions = submissions?.filter(s => s.status === 'pending' || s.status === 'submitting').length || 0
-    const successRate = totalSubmissions > 0 ? Math.round((completedSubmissions / totalSubmissions) * 100) : 0
+    const completedSubmissions = completedLogs?.filter(l => l.success).length || 0
+    const failedSubmissions = completedLogs?.filter(l => !l.success).length || 0
+    // Pending is roughly total queued minus processed, or just count 'pending' status in queue
+    const pendingSubmissions = submissions?.filter(s => s.status === 'pending' || s.status === 'queued' || s.status === 'processing').length || 0
+
+    // Success rate based on completed logs
+    const totalProcessed = completedSubmissions + failedSubmissions
+    const successRate = totalProcessed > 0 ? Math.round((completedSubmissions / totalProcessed) * 100) : 0
 
     // Format response
     const dashboardData = {
@@ -122,21 +129,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       jobs: (jobs || []).map(job => ({
         id: job.id,
         status: job.status,
-        progress_percentage: job.progress_percentage || 0,
-        directories_completed: job.directories_completed || 0,
-        directories_failed: job.directories_failed || 0,
-        directories_to_process: job.directories_to_process || 0,
+        directories_to_process: job.directory_limit || 0,
         created_at: job.created_at,
         updated_at: job.updated_at
       })),
       submissions: (submissions || []).map(submission => ({
         id: submission.id,
-        directory_name: submission.directories?.name || 'Unknown Directory',
-        status: submission.status,
-        submitted_at: submission.submitted_at,
-        approved_at: submission.approved_at,
-        failed_at: submission.failed_at,
-        error_message: submission.error_message
+        directory_url: submission.directory_url,
+        status: submission.status || 'unknown',
+        created_at: submission.created_at || new Date().toISOString(),
+        result_message: submission.result_message || ''
+      })),
+      completed_logs: (completedLogs || []).map(log => ({
+        id: log.id,
+        directory_name: log.directory_name,
+        screenshot_url: log.screenshot_url,
+        success: log.success,
+        timestamp: log.timestamp
       })),
       stats: {
         total_submissions: totalSubmissions,
@@ -155,8 +164,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   } catch (error) {
     console.error('[customer.dashboard-data] error', error)
     return res.status(500).json({
-      success: false, 
-      error: 'Internal server error' 
+      success: false,
+      error: 'Internal server error'
     })
   }
 }
