@@ -180,7 +180,6 @@ export default function OnboardingPage() {
 
                             <Button
                                 variant="primary"
-                                size="lg"
                                 className="w-full mt-6"
                                 disabled={loading}
                             >
