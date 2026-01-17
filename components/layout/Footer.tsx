@@ -11,10 +11,10 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="lg:col-span-1">
-            <div className="flex items-center mb-4">
-              <Link href="/" className="flex items-center space-x-2">
-                <img src="/logo.png" alt="DirectoryBolt Logo" className="h-8 w-8 object-contain" />
-                <span className="text-2xl font-bold text-role-text-primary">
+            <div className="flex items-center mb-6">
+              <Link href="/" className="flex items-center space-x-3">
+                <img src="/logo.png" alt="DirectoryBolt Logo" className="h-12 w-12 object-contain" />
+                <span className="text-3xl font-bold text-role-text-primary">
                   DirectoryBolt
                 </span>
               </Link>

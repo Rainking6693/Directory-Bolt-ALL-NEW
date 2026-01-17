@@ -35,14 +35,14 @@ export default function Layout({
       <Head>
         <title>{pageTitle}</title>
         <meta name="description" content={pageDescription} />
-        
+
         {/* Robots */}
         <meta name="robots" content={noIndex ? 'noindex, nofollow' : 'index, follow'} />
         <meta name="googlebot" content={noIndex ? 'noindex, nofollow' : 'index, follow'} />
-        
+
         {/* Canonical URL */}
         {canonical && <link rel="canonical" href={canonical} />}
-        
+
         {/* Open Graph */}
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDescription} />
@@ -53,7 +53,7 @@ export default function Layout({
         <meta property="og:locale" content="en_US" />
         <meta property="og:site_name" content="DirectoryBolt" />
         {canonical && <meta property="og:url" content={canonical} />}
-        
+
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={pageTitle} />
@@ -61,7 +61,7 @@ export default function Layout({
         <meta name="twitter:image" content={pageOgImage} />
         <meta name="twitter:creator" content="@DirectoryBolt" />
         <meta name="twitter:site" content="@DirectoryBolt" />
-        
+
         {/* Additional Meta Tags */}
         <meta name="author" content="DirectoryBolt" />
         <meta name="publisher" content="DirectoryBolt" />
@@ -69,7 +69,7 @@ export default function Layout({
         <meta name="language" content="English" />
         <meta name="distribution" content="global" />
         <meta name="rating" content="general" />
-        
+
         {/* Mobile Optimization */}
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="mobile-web-app-capable" content="yes" />
@@ -77,14 +77,14 @@ export default function Layout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="theme-color" content="#ccff0a" />
         <meta name="msapplication-TileColor" content="#ccff0a" />
-        
+
         {/* Favicons */}
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="icon" href="/logo.png" />
+        <link rel="apple-touch-icon" href="/logo.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/logo.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/logo.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        
+
         {/* JSON-LD Structured Data */}
         {jsonLd.map((schema, index) => (
           <script
@@ -94,7 +94,7 @@ export default function Layout({
           />
         ))}
       </Head>
-      
+
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-1">

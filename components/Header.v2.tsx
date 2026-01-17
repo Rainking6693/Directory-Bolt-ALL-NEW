@@ -15,14 +15,14 @@ export default function Header({ showBackButton = false }: HeaderProps) {
   return (
     <nav className="relative z-20 bg-role-bg-primary/95 backdrop-blur-sm border-b border-role-border-default sticky top-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo - No emoji, neutral text */}
           <div className="flex items-center">
             <Link
               href="/"
-              className="flex items-center space-x-2 text-2xl font-bold text-role-text-primary hover:text-volt-600 transition-colors cursor-pointer"
+              className="flex items-center space-x-3 text-3xl font-bold text-role-text-primary hover:text-volt-600 transition-colors cursor-pointer"
             >
-              <img src="/logo.png" alt="DirectoryBolt Logo" className="h-10 w-10 object-contain" />
+              <img src="/logo.png" alt="DirectoryBolt Logo" className="h-16 w-16 object-contain" />
               <span>DirectoryBolt</span>
             </Link>
           </div>
