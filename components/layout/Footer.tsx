@@ -12,9 +12,12 @@ export default function Footer() {
           {/* Company Info */}
           <div className="lg:col-span-1">
             <div className="flex items-center mb-4">
-              <span className="text-2xl font-bold text-role-text-primary">
-                DirectoryBolt
-              </span>
+              <Link href="/" className="flex items-center space-x-2">
+                <img src="/logo.png" alt="DirectoryBolt Logo" className="h-8 w-8 object-contain" />
+                <span className="text-2xl font-bold text-role-text-primary">
+                  DirectoryBolt
+                </span>
+              </Link>
             </div>
             <p className="text-role-text-secondary mb-4 text-sm">
               AI-powered directory submission service helping businesses get listed on 480+ directories for maximum online visibility.
@@ -149,7 +152,7 @@ export default function Footer() {
             "name": "DirectoryBolt",
             "legalName": "Bullrush Investments LLC",
             "url": "https://directorybolt.com",
-            "logo": "https://directorybolt.com/images/logo.png",
+            "logo": "https://directorybolt.com/logo.png",
             "contactPoint": {
               "@type": "ContactPoint",
               "contactType": "customer service",

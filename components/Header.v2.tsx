@@ -18,29 +18,30 @@ export default function Header({ showBackButton = false }: HeaderProps) {
         <div className="flex justify-between items-center h-16">
           {/* Logo - No emoji, neutral text */}
           <div className="flex items-center">
-            <Link 
+            <Link
               href="/"
-              className="text-2xl font-bold text-role-text-primary hover:text-volt-600 transition-colors cursor-pointer"
+              className="flex items-center space-x-2 text-2xl font-bold text-role-text-primary hover:text-volt-600 transition-colors cursor-pointer"
             >
-              DirectoryBolt
+              <img src="/logo.png" alt="DirectoryBolt Logo" className="h-10 w-10 object-contain" />
+              <span>DirectoryBolt</span>
             </Link>
           </div>
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link 
+            <Link
               href="/analyze"
               className="text-role-text-secondary hover:text-volt-600 transition-colors font-medium p-2 focus:outline-none focus:ring-2 focus:ring-volt-500 focus:ring-offset-2"
             >
               Free Analysis
             </Link>
-            <Link 
+            <Link
               href="/pricing"
               className="text-role-text-secondary hover:text-volt-600 transition-colors font-medium p-2 focus:outline-none focus:ring-2 focus:ring-volt-500 focus:ring-offset-2"
             >
               Pricing
             </Link>
-            <Link 
+            <Link
               href="/customer-portal"
               className="text-role-text-secondary hover:text-volt-600 transition-colors font-medium p-2 focus:outline-none focus:ring-2 focus:ring-volt-500 focus:ring-offset-2"
             >
