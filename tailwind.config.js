@@ -24,6 +24,20 @@ module.exports = {
           900: '#365314',
           DEFAULT: '#84cc16',
         },
+        // Brand blue from logo (#609fae)
+        brandBlue: {
+          50: '#e8f4f6',
+          100: '#c5e3e8',
+          200: '#9dd0d8',
+          300: '#75bdc8',
+          400: '#609fae',
+          500: '#609fae',
+          600: '#4d8a97',
+          700: '#3d6f7a',
+          800: '#2e545d',
+          900: '#1f3a40',
+          DEFAULT: '#609fae',
+        },
         // Role-based semantic colors for consistent theming
         role: {
           'bg-base': '#ffffff',
